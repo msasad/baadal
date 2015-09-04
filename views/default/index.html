@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Index</title>
+    </head>
+    <body>
+        {{=form}}
+    <script src="baadal/static/jquery-2.1.4.min.js"></script>
+
+    <script>
+        (function(){
+            var $buttons = $('.task-button');
+            $buttons.each(function(){
+              var $this = $(this);
+              $this.on('click', function(){
+                $.ajax({
+                    type : 'POST',
+                    url : 'baadal/action/'+ this.name + '.json',
+                    data : {
+                        vmid : $('#vmid').val()
+                    },
+                    success : function (response) {
+                        console.log(response);
+                    }
+                });
+              });
+              console.log(this.name);
+            });
+            /*$('#start').on('click', function() {
+                $.ajax({
+                    type : 'POST',
+                    url : 'baadal/action/start.json',
+                    data : {
+                        vmid : $('#vmid').val()
+                    },
+                    success : function (response) {
+                        console.log(response);
+                    }
+                });
+            });
+            $('#stop').on('click', function() {
+                $.ajax({
+                    type : 'POST',
+                    url : 'baadal/action/stop.json',
+                    data : {
+                        vmid : $('#vmid').val()
+                    },
+                    success : function (response) {
+                        console.log(response);
+                    }
+                });
+            });
+            $('#stop').on('click', function() {
+                $.ajax({
+                    type : 'POST',
+                    url : 'baadal/action/stop.json',
+                    data : {
+                        vmid : $('#vmid').val()
+                    },
+                    success : function (response) {
+                        console.log(response);
+                    }
+                });
+            });
+            */
+        })();
+    </script>
+    </body>
+</html>

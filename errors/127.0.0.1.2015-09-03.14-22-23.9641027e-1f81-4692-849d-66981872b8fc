@@ -1,0 +1,21 @@
+(dp1
+S'output'
+p2
+S"<type 'exceptions.TypeError'> BaadalException() is not JSON serializable"
+p3
+sS'layer'
+p4
+S'/home/archer/Documents/web2py/applications/baadal/controllers/action.py'
+p5
+sS'code'
+p6
+S'import Baadal\nimport json\ndef start():\n    conn = Baadal.Connection("http://10.237.23.178:35357/v2.0", "admin", "admin", "baadal")\n    if conn:\n        try:\n            print request.vars.vmid\n            vm = conn.findBaadalVM(id=request.vars.vmid)\n            if vm:\n                vm.start()\n                pass\n            pass\n        except Exception as e:\n            return json.dumps(dict(exception=e))\n    else:\n        return json.dumps(dict(status=\'failure\'))\n\n\nresponse._vars=response._caller(start)\n'
+p7
+sS'snapshot'
+p8
+(dp9
+sS'traceback'
+p10
+S'Traceback (most recent call last):\n  File "/home/archer/Documents/web2py/gluon/restricted.py", line 227, in restricted\n    exec ccode in environment\n  File "/home/archer/Documents/web2py/applications/baadal/controllers/action.py", line 19, in <module>\n  File "/home/archer/Documents/web2py/gluon/globals.py", line 412, in <lambda>\n    self._caller = lambda f: f()\n  File "/home/archer/Documents/web2py/applications/baadal/controllers/action.py", line 14, in start\n    return json.dumps(dict(exception=e))\n  File "/usr/lib/python2.7/json/__init__.py", line 243, in dumps\n    return _default_encoder.encode(obj)\n  File "/usr/lib/python2.7/json/encoder.py", line 207, in encode\n    chunks = self.iterencode(o, _one_shot=True)\n  File "/usr/lib/python2.7/json/encoder.py", line 270, in iterencode\n    return _iterencode(o, 0)\n  File "/usr/lib/python2.7/json/encoder.py", line 184, in default\n    raise TypeError(repr(o) + " is not JSON serializable")\nTypeError: BaadalException() is not JSON serializable\n'
+p11
+s.

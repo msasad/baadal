@@ -1,0 +1,21 @@
+(dp1
+S'output'
+p2
+S"<class 'applications.baadal.modules.Baadal.BaadalException'> Conflict()"
+p3
+sS'layer'
+p4
+S'/home/archer/Documents/web2py/applications/baadal/controllers/action.py'
+p5
+sS'code'
+p6
+S'import Baadal\nimport json\n\n# work around to stop stupid editors from complaining about undeclared \'request\'\nif False:\n    request = dict()\n\ndef __do(action, vmid):\n    conn = Baadal.Connection("http://10.237.23.178:35357/v2.0", "admin", "admin", "baadal")\n    if conn:\n        vm = conn.findBaadalVM(id=request.vars.vmid)\n        if vm:\n            if action == \'start\':\n                vm.start()\n            elif action == \'shutdown\':\n                vm.shutdown()\n            elif action == \'pause\':\n                vm.pause()\n            elif action == \'reboot\':\n                vm.reboot()\n            elif action == \'delete\':\n                vm.delete()\n        conn.close()\n        return json.dumps(dict(status=\'success\'))\n    else:\n        conn.close()\n        return dict(res = json.dumps(dict(status=\'failure\')))\n\ndef start():\n    __do(\'start\', request.vars.vmid)\n    \ndef shutdown():\n    __do(\'shutdown\', request.vars.vmid)\n    \ndef pause():\n    __do(\'pause\', request.vars.vmid)\n    \ndef reboot():\n    __do(\'reboot\', request.vars.vmid)\n\ndef delete():\n    __do(\'delete\', request.vars.vmid)\n\nresponse._vars=response._caller(start)\n'
+p7
+sS'snapshot'
+p8
+(dp9
+sS'traceback'
+p10
+S'Traceback (most recent call last):\n  File "/home/archer/Documents/web2py/gluon/restricted.py", line 227, in restricted\n    exec ccode in environment\n  File "/home/archer/Documents/web2py/applications/baadal/controllers/action.py", line 44, in <module>\n  File "/home/archer/Documents/web2py/gluon/globals.py", line 412, in <lambda>\n    self._caller = lambda f: f()\n  File "/home/archer/Documents/web2py/applications/baadal/controllers/action.py", line 30, in start\n    __do(\'start\', request.vars.vmid)\n  File "/home/archer/Documents/web2py/applications/baadal/controllers/action.py", line 14, in __do\n    vm.start()\n  File "applications/baadal/modules/Baadal.py", line 61, in start\n    raise BaadalException(e)\nBaadalException: Conflict()\n'
+p11
+s.

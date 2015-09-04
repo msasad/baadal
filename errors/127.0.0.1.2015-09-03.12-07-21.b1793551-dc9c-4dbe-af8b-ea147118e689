@@ -1,0 +1,21 @@
+(dp1
+S'output'
+p2
+S"<type 'exceptions.NameError'> global name 'NotFound' is not defined"
+p3
+sS'layer'
+p4
+S'/home/archer/Documents/web2py/applications/baadal/controllers/action.py'
+p5
+sS'code'
+p6
+S'import Baadal\nimport json\ndef start():\n    conn = Baadal.Connection("http://10.237.23.178:35357/v2.0", "admin", "admin", "baadal")\n    if conn:\n        print request.vars.vmid\n        vm = conn.findBaadalVM(id=request.vars.vmid)\n        if vm:\n            vm.start()\n            pass\n        pass\n    else:\n        return json.dumps(dict(status=\'failure\'))\n\n\nresponse._vars=response._caller(start)\n'
+p7
+sS'snapshot'
+p8
+(dp9
+sS'traceback'
+p10
+S'Traceback (most recent call last):\n  File "/home/archer/Documents/web2py/gluon/restricted.py", line 227, in restricted\n    exec ccode in environment\n  File "/home/archer/Documents/web2py/applications/baadal/controllers/action.py", line 16, in <module>\n  File "/home/archer/Documents/web2py/gluon/globals.py", line 412, in <lambda>\n    self._caller = lambda f: f()\n  File "/home/archer/Documents/web2py/applications/baadal/controllers/action.py", line 7, in start\n    vm = conn.findBaadalVM(id=request.vars.vmid)\n  File "applications/baadal/modules/Baadal.py", line 367, in findBaadalVM\n    except NotFound:\nNameError: global name \'NotFound\' is not defined\n'
+p11
+s.
