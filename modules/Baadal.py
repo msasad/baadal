@@ -1,9 +1,5 @@
 #!/usr/bin/python
 
-import logging
-#from keystoneclient.auth.identity import v2
-#from keystoneclient import session
-import os
 import datetime
 
 class Machine:
@@ -102,7 +98,16 @@ class BaadalVM:
     
     def pause(self, ):
         try:
-            res = self.server.pause()
+            res = self.server.suspend()
+            return res
+        except Exception as e:
+            #debug.log(e)
+            raise BaadalException(e)
+        pass
+
+    def resume(self, ):
+        try:
+            res = self.server.resume()
             return res
         except Exception as e:
             #debug.log(e)
@@ -163,6 +168,7 @@ class BaadalVM:
         STATUS = {
                 'ACTIVE' : 'Running',
                 'SHUTOFF' : 'Shutdown',
+                'PAUSED' : 'Paused',
                 }
         self.refreshStatus()
         return STATUS[self.server.status]
@@ -243,6 +249,22 @@ class BaadalVM:
             raise BaadalException(e)
         pass
 
+    def properties(self):
+        """
+        fetch all properties of a VM to show in the front end.
+        Name, Owner, Organization, Private IP, Host, Memory, vCPUs, Storage, Status
+        """
+        properties = dict()
+        properties['name'] = self.server.name
+        properties['owner'] = ''
+        properties['org'] = ''
+        properties['private_ip'] = []
+        properties['host'] = self.server.__getattr__('OS-EXT-SRV-ATTR:host')
+        flavor = self.__conn['nova'].flavors.find(id=self.server.flavor['id'])
+        properties['memory'] = flavor.__getattr__('ram')
+        properties['vcpus'] = flavor.__getattr__('vcpus')
+        return properties
+        pass
     def update(self, **kwargs):
         #update metadata/config
         pass
@@ -255,9 +277,22 @@ class Image:
         self.type = None
         pass
     
+    def set_metadata(self, prop, value):
+        try:
+            self.__image.manager.set_meta(self.__image, {prop:value})
+        except AttributeError:
+            pass
+        finally:
+            self.__update()
+
     def delete(self):
         pass
     
+    def get_meta(self):
+        return self.__image.metadata
+    
+    def __update(self):
+        self.__image = self.__image.manager.get(self.__image.id)
     pass
 
 class Disk:
@@ -332,6 +367,8 @@ class Connection:
         self.__conn = {}
         self.__conn['nova'] = client.Client('2', session=sess)
         self.__conn['cinder'] = cclient.Client('2', session=sess)
+        self.nova = self.__conn['nova']
+        self.cinder = self.__conn['cinder']
         #self.__cinder = cclient.Client("2", session=sess)
         #self.__conn = client.Client("2", session=sess)
         pass
@@ -367,25 +404,23 @@ class Connection:
             serverList = [ BaadalVM(server=i, conn=self.__conn) for i in serverList ]
             return serverList
         except Exception as e:
-            #raise BaadalException(e)
-            print e
-        
+            raise BaadalException(e.message)
+            
         #wrap each object of the list of novaclient.v2.servers.Server objects into
         #a list of BaadalVM objects and return it
         pass
 
     def findBaadalVM(self, **kwargs):
-        fh = open('/home/archer/test.log','w')
-        fh.write(str(kwargs))
-        #try:
-            
-        baadalVM = self.__conn['nova'].servers.find(**kwargs)
-        return BaadalVM(server=baadalVM, conn=self.__conn)
-        #except Exception as e:
-        #   raise BaadalException(e.message)
-        #pass
+        try:
+            baadalVM = self.__conn['nova'].servers.find(**kwargs)
+            return BaadalVM(server=baadalVM, conn=self.__conn)
+        except Exception as e:
+           raise BaadalException(e.message)
+        pass
 
     def createBaadalVM(self, name, image, template, **kwargs):
+        #underlying command
+        #nova boot --flavor 1 --image 6f0ae131-7190-4230-98e4-8a90285b776a --nic net-id=3893d432-08e9-48b1-975f-e6edae078a1a test07
         server = self.__conn['nova'].servers.create(name, image, template, **kwargs)
         return BaadalVM(server=server, conn=self.__conn)
         pass
@@ -404,7 +439,7 @@ class Connection:
             #imagesList = [ Image(i) for i in imagesList ]
             return imagesList
         except Exception as e:
-            raise BaadalException(e)
+            raise BaadalException(e.message)
         pass
 
     def findImage(self, **kwargs):
@@ -413,7 +448,7 @@ class Connection:
             #return Image(image)
             return image
         except Exception as e:
-            raise BaadalException(e)
+            raise BaadalException(e.message)
         pass
     
     def templates(self):
@@ -421,7 +456,7 @@ class Connection:
             templates = self.__conn['nova'].flavors.list()
             return templates
         except Exception as e:
-            raise BaadalException(e)
+            raise BaadalException(e.message)
         pass
 
     def findTemplate(self, **kwargs):
@@ -429,9 +464,16 @@ class Connection:
             template = self.__conn['nova'].flavors.find(**kwargs)
             return template
         except Exception as e:
-            raise BaadalException(e)
+            raise BaadalException(e.message)
         pass
-
+    
+    def networks(self,):
+        try:
+            networks = self.__conn['nova'].networks.list()
+            return networks
+        except Exception as e:
+            raise BaadalException(e.message)
+        pass
     pass
 
 class BaadalException(Exception):
