@@ -1,0 +1,31 @@
+timestamp: 2015-09-10T21:47:55.347235
+CREATE TABLE vm_request(
+    id INT AUTO_INCREMENT NOT NULL,
+    vm_name VARCHAR(512),
+    flavor INT,
+    sec_domain VARCHAR(512),
+    image VARCHAR(512),
+    owner VARCHAR(512),
+    PRIMARY KEY (id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2015-09-10T21:55:46.707927
+CREATE TABLE vm_requests(
+    id INT AUTO_INCREMENT NOT NULL,
+    vm_name VARCHAR(512),
+    flavor INT,
+    sec_domain VARCHAR(512),
+    image VARCHAR(512),
+    owner VARCHAR(512),
+    PRIMARY KEY (id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+timestamp: 2015-09-10T21:57:06.332259
+CREATE TABLE vm_requests(
+    id INT AUTO_INCREMENT NOT NULL,
+    vm_name VARCHAR(512),
+    flavor INT,
+    sec_domain VARCHAR(512),
+    image VARCHAR(512),
+    owner VARCHAR(512),
+    PRIMARY KEY (id)
+) ENGINE=InnoDB CHARACTER SET utf8;

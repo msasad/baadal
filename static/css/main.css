@@ -1,0 +1,4 @@
+form > label {
+    display: block;
+    line-height: 2rem;
+}
