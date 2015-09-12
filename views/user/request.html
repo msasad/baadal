@@ -83,6 +83,10 @@
       </div>
     </form>
   </div>
+  <div class="panel-footer">
+    <span style="display:none" class="text-danger" id="error-message">There was some error in the form. Please check the values and submit the form again.</span>
+    <span style="display:none" class="text-success" id="success-message">Request successfully posted.</span>
+  </div>
 </div>
 <script src="/baadal/static/js/jquery-2.1.4.min.js"></script>
 <script src="/baadal/static/js/bootstrap.min.js"></script>
@@ -139,11 +143,18 @@
         var data = $('#vm_request').serializeArray();
         data  = serialize(data);
         console.log(data);
+        $('#success-message').hide();
+        $('#error-message').hide();
         $.ajax({
             'type' : 'POST',
             'data' : data,
             'url' : '/baadal/post_request/new_vm.json',
             'success' : function(response){
+                if(response.status == 'success') {
+                  $('#success-message').fadeIn();
+                } else {
+                  $('#error-message').fadeIn();
+                }
                 console.log(response);
             }
         });

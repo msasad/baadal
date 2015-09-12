@@ -1,0 +1,52 @@
+{{extend 'blank-page.html'}}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">New VM Request Form</h3>
+  </div>
+  <div class="panel-body">
+    <table id="requests" class="table table-striped">
+        <thead>
+            <tr>
+                <th>VM Name</th>
+                <th>Requested By</th>
+                <th>Template</th>
+                <th>Configuration</th>
+                <th>Public IP Required</th>
+                <th>Extra Storage</th>
+                <th>Security Domain</th>
+                <th>Request Time</th>
+                <th>Collaborators</th>
+                <!--<th>Purpose</th> -->
+            </tr>
+        </thead>
+    </table>
+  </div>
+  <div class="panel-footer">
+    <span style="display:none" class="text-danger" id="error-message">There was some error in the form. Please check the values and submit the form again.</span>
+    <span style="display:none" class="text-success" id="success-message">Request successfully posted.</span>
+  </div>
+</div>
+<script src="/baadal/static/js/jquery-2.1.4.min.js"></script>
+<script src="/baadal/static/js/bootstrap.min.js"></script>
+<script src="/baadal/static/js/datatables.min.js"></script>
+<script src="/baadal/static/js/dataTables.bootstrap.min.js"></script>
+<script src="/baadal/static/js/baadal.js"></script>
+<script>
+(function(){
+    $('#requests').DataTable( {
+        "ajax": "/baadal/admin/pending_requests.json",
+        "columns": [
+            { "data": "vm_name" },
+            { "data": "owner" },
+            { "data": "image" },
+            { "data": "flavor" },
+            { "data": "public_ip_required" },
+            { "data": "extra_storage" },
+            { "data": "sec_domain" },
+            { "data": "request_time" },
+            { "data": "collaborators" }
+        ]
+    } );
+})();
+</script>
+{{include 'wrap.html'}}
