@@ -1,20 +1,10 @@
-import Baadal
-import json
-import ConfigParser
 
+from gluon import *
 # work around to stop stupid editors from complaining about undeclared 'request'
 if False:
     request = dict()
-config = ConfigParser.ConfigParser()
-config.read('/etc/baadal/baadal.conf')
-authurl = config.get('auth','authurl')
-tenant = config.get('auth','tenant')
-password = config.get('auth','password')
-username = config.get('auth', 'username')
 
 def __do(action, vmid):
-    
-    conn = Baadal.Connection(authurl, tenant, username, password)
     #conn = Baadal.Connection("http://10.237.23.178:35357/v2.0", "admin", "admin", "baadal")
     if conn:
         vm = conn.findBaadalVM(id=request.vars.vmid)
@@ -55,3 +45,9 @@ def delete():
 
 def resume():
     return __do('resume', request.vars.vmid)
+
+def create():
+    rows = db(db.vm_requests.id == request.vars.id).select()
+    return json.dumps({'data': rows.as_list()})
+    pass
+    return dict()
