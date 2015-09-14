@@ -4,7 +4,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title">Modal title</h4>
+        <h4 class="modal-title">Edit pending request</h4>
       </div>
       <div class="modal-body">
         <div class="panel-body">
@@ -12,32 +12,35 @@
             <div class="form-group">
               <label for="vm_name" class="col-sm-3 control-label">VM Name*</label>
               <div class="col-sm-9">
-                <p class="form-control-static">email@example.com</p>
+                <p class="form-control-static" id="edit-vm-name"></p>
               </div>
             </div>
           
             <div class="form-group">
               <label for="template" class="col-sm-3 control-label">Template*</label>
               <div class="col-sm-9">
-                <select id="template" name="template" class="form-control select" required="required">
-                  <option value=""></option>
-                </select>
+                <p class="form-control-static" id="edit-template"></p>
               </div>
             </div>
-          
-            <div class="form-group">
-              <label for="config" class="col-sm-3 control-label">Configuration*</label>
-              <div class="col-sm-9">
-                <select id="config" name="config" class="form-control select" required="required">
-                  <option value=""></option>
-                </select>
-              </div>
-            </div>
-          
+            
             <div class="form-group">
               <label for="sec_domain" class="col-sm-3 control-label">Security Domain*</label>
               <div class="col-sm-9">
-                <select id="sec_domain" name="sec_domain" class="form-control select" required="required">
+                <p class="form-control-static" id="edit-sec-domain"></p>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="purpose" class="col-sm-3 control-label">Purpose</label>
+              <div class="col-sm-9">
+                <p class="form-control-static" id="edit-purpose"></p>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="config" class="col-sm-3 control-label">Configuration*</label>
+              <div class="col-sm-9">
+                <select id="edit-config" name="config" class="form-control select" required="required">
                   <option value=""></option>
                 </select>
               </div>
@@ -46,14 +49,7 @@
             <div class="form-group">
               <label for="storage" class="col-sm-3 control-label">Extra Storage (GB)</label>
               <div class="col-sm-9">
-                <input type="number" id="storage" name="storage" class="form-control">
-              </div>
-            </div>
-          
-            <div class="form-group">
-              <label for="purpose" class="col-sm-3 control-label">Purpose</label>
-              <div class="col-sm-9">
-                <textarea id="purpose" name="purpose" class="form-control textarea"></textarea>
+                <input type="number" max="2048" min="0" id="edit-storage" name="storage" class="form-control">
               </div>
             </div>
           
@@ -62,28 +58,14 @@
               <div class="col-sm-9">
                 <div class="radio radio-inline">
                   <label>
-                    <input type="radio" name="public_ip" id="public_ip" value="yes">Yes
+                    <input type="radio" name="public_ip" id="edit-public_ip" value="yes">Yes
                   </label>
                 </div>
                 <div class="radio radio-inline">
                   <label>
-                    <input type="radio" name="public_ip" id="public_ip" value="No" checked>No
+                    <input type="radio" name="public_ip" id="edit-public_ip" value="No" checked>No
                   </label>
                 </div>
-              </div>
-            </div>
-          
-            <div class="form-group">
-              <label for="collaborators" class="col-sm-3 control-label">Collaborators</label>
-              <div class="col-sm-9">
-                <input type="text" id="collaborators" name="collaborators" class="form-control">
-              </div>
-            </div>
-
-            <div class="form-group">
-              <div class="col-sm-9 col-sm-offset-3">
-                <button class="btn btn-primary" type="submit" id="submit_request">Submit</button>
-                <button class="btn btn-default" type="reset">Reset</button>
               </div>
             </div>
           </form>
@@ -95,7 +77,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Save changes</button>
+        <button type="button" class="btn btn-primary">Modify and Approve</button>
       </div>
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
@@ -133,7 +115,7 @@
 <script src="/baadal/static/js/baadal.js"></script>
 <script>
 (function(){
-    $('#requests').DataTable( {
+    var $table = $('#requests').DataTable( {
         "ajax": "/baadal/admin/pending_requests.json",
         "columns": [
             { "data": "vm_name" },
@@ -162,7 +144,7 @@
                     </div>';
                 }
             },
-            {"visible": false,  "targets": [ 0 ]}
+            {"visible": false,  "targets": [0]}
         ],
         "fnCreatedRow": function( nRow, aData, iDataIndex ) {
             nRow.setAttribute('data-reqid',aData.id);
@@ -184,10 +166,33 @@
         });
     });
     $('#requests').on('click','.btn-edit', function(e) {
-        e.preventDefault();
-        console.log(e);
-        $('#my-modal').modal('show');
+      e.preventDefault();
+      var tr = this.closest('tr');//.getAttribute('data-reqid');
+      var data = $table.row(tr).data();
+      $.ajax({
+        'type': 'GET',
+        'url': '/baadal/ajax/configs.json',
+        'success': function(response) {
+            console.log(response);
+            configSelect = document.getElementById('edit-config');
+            configSelect.options.length = 0;
+            for (i = response.length-1; i>=0; i--) {
+                console.log(response[i]);
+                var curr_config = response[i]
+                var text = curr_config['vcpus'] + 'CPU, ' + curr_config['ram'] + 'MB RAM';
+                configSelect.options[configSelect.options.length] = new Option(text, curr_config['id'], data.flavor == curr_config.id);
+            }
+        }
+      });      
+      document.getElementById('edit-vm-name').innerHTML = data.vm_name;
+      document.getElementById('edit-template').innerHTML = data.image;
+      document.getElementById('edit-sec-domain').innerHTML = data.sec_domain;
+      document.getElementById('edit-purpose').innerHTML = data.purpose || '<i>Not specified</i>';
+      document.getElementById('edit-storage').value = data.extra_storage;
+      console.log(data);
+      $('#my-modal').modal('show');
     });
+    
 })();
 </script>
 {{include 'wrap.html'}}
