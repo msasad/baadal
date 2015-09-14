@@ -6,6 +6,7 @@ def pending_requests():
     l = rows.as_list()
     for i in l:
         i['request_time'] = seconds_to_localtime(i['request_time'])
+        #i['sec_domain']  = conn.findNetwork(id=i['sec_domain']).name
     return json.dumps({'data': l})
     pass
 

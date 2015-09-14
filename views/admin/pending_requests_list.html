@@ -8,6 +8,7 @@
       </div>
       <div class="modal-body">
         <div class="panel-body">
+          <input type="hidden" id="edit-id">
           <form role="form" id="vm_request" name="vm_request" action="/baadal/user/post_request" method="post" class="form-horizontal">
             <div class="form-group">
               <label for="vm_name" class="col-sm-3 control-label">VM Name*</label>
@@ -63,7 +64,7 @@
                 </div>
                 <div class="radio radio-inline">
                   <label>
-                    <input type="radio" name="public_ip" id="edit-public_ip" value="No" checked>No
+                    <input type="radio" name="public_ip" id="edit-public_ip" value="no" checked>No
                   </label>
                 </div>
               </div>
@@ -77,7 +78,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Modify and Approve</button>
+        <button type="button" class="btn btn-primary" id="btn-mod-approve">Modify and Approve</button>
       </div>
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
@@ -189,10 +190,34 @@
       document.getElementById('edit-sec-domain').innerHTML = data.sec_domain;
       document.getElementById('edit-purpose').innerHTML = data.purpose || '<i>Not specified</i>';
       document.getElementById('edit-storage').value = data.extra_storage;
+      document.getElementById('edit-id').value = data.id;
+      var radios = document.getElementsByName('public_ip');
+      var temp = data.public_ip_required == 1 ? 'yes' : 'no';
+      for (var i=radios.length-1; i>=0; i--) {
+        if (radios[i].value == temp) {
+            radios[i].checked = true;
+            break;
+        }
+      }
       console.log(data);
       $('#my-modal').modal('show');
     });
-    
+    $('#btn-mod-approve').one('click', function (e){
+        //save the new request to db
+        //send it to backend for processing
+        $.ajax({
+              'url': '/baadal/action/handle_request',
+              'type': 'post',
+              'data': {
+                  'id':document.getElementById('edit-id').value,
+                  'action': 'approve'
+              },
+              'success': function(response) {
+                  console.log(response);
+                  $('#my-modal').modal('hide');
+              }
+        });
+      });
 })();
 </script>
 {{include 'wrap.html'}}
