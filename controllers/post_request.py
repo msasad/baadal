@@ -12,11 +12,10 @@ def new_vm():
             purpose = request.vars.purpose,
             public_ip_required = 1 if request.vars.public_ip == 'Yes' else 0,
             extra_storage = request.vars.storage,
-            collaborators = requests.vars.collaborators,
+            collaborators = request.vars.collaborators,
             request_time = int(time.time())
         )
         db.commit()
-        return json.dumps({'status':'success'})
+        return jsonify()
     except Exception as e:
-        #response.status = '500'
-        return json.dumps({'status' : 'fail', 'message': str(e.__class__)})
+        return jsonify(status='fail', message=str(e.__class__))

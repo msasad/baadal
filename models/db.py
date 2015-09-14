@@ -17,5 +17,6 @@ db.define_table('vm_requests',
                 Field('public_ip_required','integer'),
                 Field('extra_storage','integer'),
                 Field('collaborators','string'),
-                Field('request_time','integer')
+                Field('request_time','integer'),
+                Field('purpose','string')
                 )

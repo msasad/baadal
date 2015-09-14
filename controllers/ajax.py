@@ -1,7 +1,7 @@
-import Baadal
+"""import Baadal
 import json
 import ConfigParser
-
+from gluon import *
 # work around to stop stupid editors from complaining about undeclared 'request'
 if False:
     request = dict()
@@ -11,10 +11,11 @@ config.read('/etc/baadal/baadal.conf')
 authurl = config.get('auth','authurl')
 tenant = config.get('auth','tenant')
 password = config.get('auth','password')
-username = config.get('auth', 'username')
+username = config.get('auth', 'username')"""
 
+from gluon import *
 def configs():
-    conn = Baadal.Connection(authurl, tenant, username, password)
+    #conn = Baadal.Connection(authurl, tenant, username, password)
     if conn:
         templates = conn.templates()
         values = []
@@ -25,7 +26,7 @@ def configs():
         return json.dumps(values)
             
 def templates():
-    conn = Baadal.Connection(authurl, tenant, username, password)
+    #conn = Baadal.Connection(authurl, tenant, username, password)
     if conn:
         images = conn.images()
         values = []
@@ -37,7 +38,7 @@ def templates():
         return json.dumps(values)
 
 def sdomains():
-    conn = Baadal.Connection(authurl, tenant, username, password)
+    #conn = Baadal.Connection(authurl, tenant, username, password)
     if conn:
         domains = conn.networks()
         values = []

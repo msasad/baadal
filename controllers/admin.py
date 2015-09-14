@@ -3,7 +3,10 @@ import json
 import Baadal
 def pending_requests():
     rows = db().select(db.vm_requests.ALL)
-    return json.dumps({'data': rows.as_list()})
+    l = rows.as_list()
+    for i in l:
+        i['request_time'] = seconds_to_localtime(i['request_time'])
+    return json.dumps({'data': l})
     pass
 
 def pending_requests_list():
