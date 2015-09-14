@@ -70,7 +70,7 @@
         var id = this.closest('tr').getAttribute('data-reqid');
         var action = this.getAttribute('data-action');
         $.ajax({
-            'url': '/baadal/admin/handle_request',
+            'url': '/baadal/action/handle_request',
             'type': 'post',
             'data': {
                 'id':id,

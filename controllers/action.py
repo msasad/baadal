@@ -1,5 +1,6 @@
 
 from gluon import *
+import json
 # work around to stop stupid editors from complaining about undeclared 'request'
 if False:
     request = dict()
@@ -23,10 +24,10 @@ def __do(action, vmid):
                 vm.resume()
 
         conn.close()
-        return json.dumps(dict(status='success', code='OK'))
+        return jsonify()
     else:
         conn.close()
-        return dict(res = json.dumps(dict(status='failure')))
+        return jsonify(status='failure')
 
 def start():
     return __do('start', request.vars.vmid)
@@ -46,8 +47,24 @@ def delete():
 def resume():
     return __do('resume', request.vars.vmid)
 
-def create():
+
+def handle_request():
+    action = request.vars.action
+    if action == 'approve':
+        return __create()
+    elif action == 'edit':
+        pass
+    elif action == 'reject':
+        pass
+            
+
+def __create():
     rows = db(db.vm_requests.id == request.vars.id).select()
     return json.dumps({'data': rows.as_list()})
+
+def __reject():
+    db(db.vm_requests.id == request.vars.id).delete()
+    return jsonify()
+
+def __edit():
     pass
-    return dict()

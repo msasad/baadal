@@ -18,7 +18,7 @@ def handle_request():
             row = db(db.vm_requests.id == request.vars.id).select()[0]
             vm = conn.createBaadalVM(row.name, row.image, row.flavor)
             if vm:
-                return json.dumps({'status':'OK'})
+                return jsonify()
         except Exception as e:
             return json.dumps({'status': 'fail','message':e.message})
         #vm = conn.createBaadalVM()
