@@ -2,7 +2,8 @@ from gluon import *
 import json
 import Baadal
 def pending_requests():
-    rows = db().select(db.vm_requests.ALL)
+    rows = db(db.vm_requests.state == 0).select()
+    #rows = db().select(db.vm_requests.ALL)
     l = rows.as_list()
     for i in l:
         i['request_time'] = seconds_to_localtime(i['request_time'])

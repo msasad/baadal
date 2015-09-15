@@ -18,5 +18,6 @@ db.define_table('vm_requests',
                 Field('extra_storage','integer'),
                 Field('collaborators','string'),
                 Field('request_time','integer'),
-                Field('purpose','string')
+                Field('purpose','string'),
+                Field('state','integer'),
                 )
