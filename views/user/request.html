@@ -4,55 +4,54 @@
     <h3 class="panel-title">New VM Request Form</h3>
   </div>
   <div class="panel-body">
-    <form role="form" id="vm_request" name="vm_request" action="/baadal/user/post_request" method="post" class="form-horizontal">
+    <form role="form" id="vm_request" name="vm_request" action="/baadal/user/post_request" method="post" class="form
+                                                                                                                horizontal">
       <div class="form-group">
         <label for="vm_name" class="col-sm-3 control-label">VM Name*</label>
         <div class="col-sm-9">
           <input type="text" class="form-control" id="vm_name" name="vm_name" placeholder="Name of the requested VM" required="required">
         </div>
       </div>
-    
       <div class="form-group">
         <label for="template" class="col-sm-3 control-label">Template*</label>
         <div class="col-sm-9">
-            <select id="template" name="template" class="form-control select" required="required">
-                <option value=""></option>
-            </select>
+          <select id="template" name="template" class="form-control select" required="required">
+            <option value=""></option>
+          </select>
         </div>
       </div>
-    
       <div class="form-group">
         <label for="config" class="col-sm-3 control-label">Configuration*</label>
         <div class="col-sm-9">
-            <select id="config" name="config" class="form-control select" required="required">
-                <option value=""></option>
-            </select>
+          <select id="config" name="config" class="form-control select" required="required">
+            <option value=""></option>
+          </select>
         </div>
       </div>
-    
+
       <div class="form-group">
         <label for="sec_domain" class="col-sm-3 control-label">Security Domain*</label>
         <div class="col-sm-9">
           <select id="sec_domain" name="sec_domain" class="form-control select" required="required">
-                <option value=""></option>
-            </select>
+            <option value=""></option>
+          </select>
         </div>
       </div>
-    
+
       <div class="form-group">
         <label for="storage" class="col-sm-3 control-label">Extra Storage (GB)</label>
         <div class="col-sm-9">
-            <input type="number" id="storage" name="storage" class="form-control">
+          <input type="number" id="storage" name="storage" class="form-control">
         </div>
       </div>
-    
+  
       <div class="form-group">
         <label for="purpose" class="col-sm-3 control-label">Purpose</label>
         <div class="col-sm-9">
-            <textarea id="purpose" name="purpose" class="form-control textarea"></textarea>
+          <textarea id="purpose" name="purpose" class="form-control textarea"></textarea>
         </div>
       </div>
-    
+  
       <div class="form-group">
         <label class="col-sm-3 control-label">Public IP Required</label>
         <div class="col-sm-9">
@@ -68,13 +67,14 @@
           </div>
         </div>
       </div>
-    
+  
       <div class="form-group">
         <label for="collaborators" class="col-sm-3 control-label">Collaborators</label>
         <div class="col-sm-9">
           <input type="text" id="collaborators" name="collaborators" class="form-control">
         </div>
       </div>
+
       <div class="form-group">
         <div class="col-sm-9 col-sm-offset-3">
           <button class="btn btn-primary" type="submit" id="submit_request">Submit</button>
@@ -83,6 +83,7 @@
       </div>
     </form>
   </div>
+
   <div class="panel-footer">
     <span style="display:none" class="text-danger" id="error-message">There was some error in the form. Please check the values and submit the form again.</span>
     <span style="display:none" class="text-success" id="success-message">Request successfully posted.</span>
@@ -93,72 +94,75 @@
 <script src="/baadal/static/js/baadal.js"></script>
 <script>
 (function(){
+  $.ajax({
+    'type': 'GET',
+    'url': '/baadal/ajax/configs.json',
+    'success': function(response) {
+      console.log(response);
+      configSelect = document.getElementById('config');
+      configSelect.options.length = 0;
+      for (i = response.length-1; i>=0; i--) {
+        console.log(response[i]);
+        var curr_config = response[i]
+        var text = curr_config['vcpus'] + 'CPU, ' + curr_config['ram'] + 'MB RAM';
+        configSelect.options[configSelect.options.length] = new Option(text, curr_config['id']);
+      }
+    }
+  });
+
+  $.ajax({
+    'type': 'GET',
+    'url': '/baadal/ajax/templates.json',
+    'success': function(response) {
+      console.log(response);
+      templateSelect = document.getElementById('template');
+      templateSelect.options.length = 0;
+      for (i = response.length-1; i>=0; i--) {
+        console.log(response[i]);
+        var curr_template = response[i]
+        var text = curr_template['os'] + ' ' + curr_template['release'] + ' ' + curr_template['arch'] + ' ' +
+            curr_template['disk']+'GB';
+        templateSelect.options[templateSelect.options.length] = new Option(text, curr_template['id']);
+      }
+    }
+  });
+
+  $.ajax({
+    'type': 'GET',
+    'url': '/baadal/ajax/sdomains.json',
+    'success': function(response) {
+      console.log(response);
+      secdomainselect = document.getElementById('sec_domain');
+      secdomainselect.options.length = 0;
+      for (i = response.length-1; i>=0; i--) {
+        console.log(response[i]);
+        var curr_domain = response[i];
+        secdomainselect.options[secdomainselect.options.length] = new Option(curr_domain['name'], curr_domain['id']);
+      }
+    }
+  });
+
+  $('#submit_request').on('click', function(e) {
+    e.preventDefault();
+    var data = $('#vm_request').serializeArray();
+    data  = serialize(data);
+    console.log(data);
+    $('#success-message').hide();
+    $('#error-message').hide();
     $.ajax({
-        'type': 'GET',
-        'url': '/baadal/ajax/configs.json',
-        'success': function(response) {
-            console.log(response);
-            configSelect = document.getElementById('config');
-            configSelect.options.length = 0;
-            for (i = response.length-1; i>=0; i--) {
-                console.log(response[i]);
-                var curr_config = response[i]
-                var text = curr_config['vcpus'] + 'CPU, ' + curr_config['ram'] + 'MB RAM';
-                configSelect.options[configSelect.options.length] = new Option(text, curr_config['id']);
-            }
+      'type' : 'POST',
+      'data' : data,
+      'url' : '/baadal/post_request/new_vm.json',
+      'success' : function(response){
+        if(response.status == 'success') {
+          $('#success-message').fadeIn();
+        } else {
+          $('#error-message').fadeIn();
         }
+        console.log(response);
+      }
     });
-    
-    $.ajax({
-        'type': 'GET',
-        'url': '/baadal/ajax/templates.json',
-        'success': function(response) {
-            console.log(response);
-            templateSelect = document.getElementById('template');
-            templateSelect.options.length = 0;
-            for (i = response.length-1; i>=0; i--) {
-                console.log(response[i]);
-                var curr_template = response[i]
-                var text = curr_template['os'] + ' ' + curr_template['release'] + ' ' + curr_template['arch'] + ' ' + curr_template['disk']+'GB';
-                templateSelect.options[templateSelect.options.length] = new Option(text, curr_template['id']);
-            }
-        }
-    });
-    $.ajax({
-        'type': 'GET',
-        'url': '/baadal/ajax/sdomains.json',
-        'success': function(response) {
-            console.log(response);
-            secdomainselect = document.getElementById('sec_domain');
-            secdomainselect.options.length = 0;
-            for (i = response.length-1; i>=0; i--) {
-                console.log(response[i]);
-                var curr_domain = response[i];
-                secdomainselect.options[secdomainselect.options.length] = new Option(curr_domain['name'], curr_domain['id']);
-            }
-        }
-    });
-    $('#submit_request').on('click', function(e) {
-        e.preventDefault();
-        var data = $('#vm_request').serializeArray();
-        data  = serialize(data);
-        console.log(data);
-        $('#success-message').hide();
-        $('#error-message').hide();
-        $.ajax({
-            'type' : 'POST',
-            'data' : data,
-            'url' : '/baadal/post_request/new_vm.json',
-            'success' : function(response){
-                if(response.status == 'success') {
-                  $('#success-message').fadeIn();
-                } else {
-                  $('#error-message').fadeIn();
-                }
-                console.log(response);
-            }
-        });
-    });
+  });
 })();
 </script>
 {{include 'wrap.html'}}
