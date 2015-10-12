@@ -418,11 +418,18 @@ class Connection:
            raise BaadalException(e.message)
         pass
 
-    def createBaadalVM(self, name, image, template, **kwargs):
+    def createBaadalVM(self, name, image, template, nics, **kwargs):
+        """ nics must be None or a list of dictionaries of the format
+        {
+            net-id : uuid of the network,
+            v4-fixed-ip: fixed IPv4 address,
+            port-id: uuid of the port if already defined
+        }
+        """
         #underlying command
         #nova boot --flavor 1 --image 6f0ae131-7190-4230-98e4-8a90285b776a --nic net-id=3893d432-08e9-48b1-975f-e6edae078a1a test07
         try:
-            server = self.__conn['nova'].servers.create(name, image, template, **kwargs)
+            server = self.__conn['nova'].servers.create(name, image, template, nics=nics, **kwargs)
             return BaadalVM(server=server, conn=self.__conn)
         except Exception as e:
             raise BaadalException(e.message)
