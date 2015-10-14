@@ -118,6 +118,9 @@
 (function(){
     var $table = $('#requests').DataTable( {
         "ajax": "/baadal/admin/pending_requests.json",
+        "oLanguage": {
+          "sEmptyTable": "No pending requests!"
+        },
         "columns": [
             { "data": "vm_name" },
             { "data": "owner" },
@@ -160,6 +163,11 @@
             'data': {
                 'id':id,
                 'action': action
+            },
+            'error' : function(response) {
+              if (error = response.getResponseHeader('web2py_error')) {
+                generateTicketLink(error);
+              }
             },
             'success': function(response) {
                 console.log(response);

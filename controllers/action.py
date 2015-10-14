@@ -59,8 +59,14 @@ def handle_request():
             
 
 def __create():
-    rows = db(db.vm_requests.id == request.vars.id).select()
-    return json.dumps({'data': rows.as_list()})
+    #try:
+        row = db(db.vm_requests.id == request.vars.id).select()[0]
+        #return json.dumps(row)
+        vm = conn.createBaadalVM(row.vm_name, row.image, row.flavor, [{'net-id':row.sec_domain}])
+        if vm:
+            return jsonify()
+    #except Exception as e:
+        return jsonify(status='fail', message=e.message)
 
 def __reject():
     db(db.vm_requests.id == request.vars.id).delete()

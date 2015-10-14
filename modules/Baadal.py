@@ -35,145 +35,35 @@ class BaadalVM:
         self.datastore = None
         self.template_id = None
         self.expiry_date = None
-        self.start_time = None
+        self.start_time = self.server.__getattr__('OS-SRV-USG:launched_at')
         self.security_domain = None
         self.snapshots = []
         #self.server = novaclient.v2.servers.Server
         pass
 
-    def start(self, ):
+    def attachDisk(self, disk, device_path):
         """
-        starts the Vritual Machine,
-        params: None
-        return: None
+        attach a disk to a Virtual Machine
+        params:
+            disk: instance of disk to be attached
+            device_path: path in the system where the disk is to be attached
+        return: 
         """
 
         try:
-            self.server.start()
+            self.__conn['cinder'].volumes.create_server_volume(self.server.id, disk.id, device_path)
         except Exception as e:
             #debug.log(e)
             raise BaadalException(e)
         pass
 
-    def shutdown(self, force=False):
-        """
-        shutdown the Virtual Machine
-        params:
-            force: bool, True for forced shutdown, False for graceful shutdown, default False
-        return: None
-        """
-
+    def attachNIC(self, netid):
         try:
-            self.server.stop()
+            self.server.add_fixed_ip(netid)
         except Exception as e:
-            #debug.log(e)
-            raise BaadalException(e)
-        pass
-        
-    def reboot(self, soft=True):
-        """
-        reboot the Virtual Machine
-        params:
-            soft: bool, True for soft reboot, False for hard reboot, default True
-        return: None
-        """
-        try:
-            if soft == True:
-                res = self.server.reboot(reboot_type='REBOOT_SOFT')
-            else:
-                res = self.server.reboot(reboot_type='REBOOT_HARD')
-            return res
-        except Exception as e:
-            #debug.log(e)
-            raise BaadalException(e)
-
-    def delete(self, ):
-        try:
-            res = self.server.delete()
-            return res
-        except Exception as e:
-            #debug.log(e)
-            raise BaadalException(e)
+             raise BaadalException(e)   
         pass
     
-    def pause(self, ):
-        try:
-            res = self.server.suspend()
-            return res
-        except Exception as e:
-            #debug.log(e)
-            raise BaadalException(e)
-        pass
-
-    def resume(self, ):
-        try:
-            res = self.server.resume()
-            return res
-        except Exception as e:
-            #debug.log(e)
-            raise BaadalException(e)
-        pass
-
-    def createSnapshot(self,snapshot_name=None):
-        try:
-            snapshot_name = snapshot_name or self.server.name + "snapshot" + datetime.datetime.now().isoformat()
-            snapshot_id = self.server.create_image(snapshot_name)
-            #snapshot_image = self.__conn['nova'].findImage()
-            return snapshot_id
-            #return Snapshot(snapshot, self.server)
-        except Exception as e:
-            #debug.log(e)
-            raise BaadalException(e)
-        pass
-
-    def refreshStatus(self):
-        #refresh connection to a modified VM
-        self.server = self.server.manager.find(id=self.server.id)
-
-    def migrate(self, target_host, live=False):
-        try:
-            if live == True:
-                res = self.server.migrate(target_host)
-            else:
-                res = self.live_migrate(target_host)
-            return res
-        except Exception as e:
-            #debug.log(e)
-            raise BaadalException(e)
-        pass
-
-    def revertSpanshot(self, snapshot_id):
-        #usedb
-        pass
-
-    def getXml(self, ):
-        return self.server.to_dict()
-        pass
-
-    """def __getattr__(self, attr):
-        if attr == None:
-            return self
-        if attr is None:
-            return self
-        if attr == 'status':
-            return self.getStatus()
-        if attr == 'attacheddisks':
-            return self.attachedDisks()
-        if attr == 'lastsnapshot':
-            return self.lastSnapshot()
-        else:
-            raise AttributeError
-    """
-    def getStatus(self, ):
-        STATUS = {
-                'ACTIVE' : 'Running',
-                'SHUTOFF' : 'Shutdown',
-                'PAUSED' : 'Paused',
-                }
-        self.refreshStatus()
-        return STATUS[self.server.status]
-        pass
-
     def clone(self, clone_name=None):
         """
         create clone of the selected Virtual Machine
@@ -210,8 +100,29 @@ class BaadalVM:
         #debug.log(e)
             raise BaadalException(e)
         pass
+
+    def createSnapshot(self,snapshot_name=None):
+        try:
+            snapshot_name = snapshot_name or self.server.name + "snapshot" + datetime.datetime.now().isoformat()
+            snapshot_id = self.server.create_image(snapshot_name)
+            #snapshot_image = self.__conn['nova'].findImage()
+            return snapshot_id
+            #return Snapshot(snapshot, self.server)
+        except Exception as e:
+            #debug.log(e)
+            raise BaadalException(e)
+        pass
     
-    def attachedDisks(self,):
+    def delete(self, ):
+        try:
+            res = self.server.delete()
+            return res
+        except Exception as e:
+            #debug.log(e)
+            raise BaadalException(e)
+        pass
+
+    def getAttachedDisks(self,):
         volume_ids = self.server.__getattr__('os-extended-volumes:volumes_attached')
         disk_list = []
         for i in volume_ids:
@@ -227,23 +138,51 @@ class BaadalVM:
                     pass
             pass
         return disk_list
-            
+
+    def getNetworks(self,):
+        try:
+            return self.server.networks
+        except Exception as e:
+            raise BaadalException(e)
+
+    def getStatus(self, ):
+        STATUS = {
+                'ACTIVE' : 'Running',
+                'SHUTOFF' : 'Shutdown',
+                'PAUSED' : 'Paused',
+                }
+        self.refreshStatus()
+        return STATUS[self.server.status]
+        pass
+
+    def getVNCConsole(self, console_type='novnc'):
+        return self.server.get_vnc_console(console_type)['console']['url']
+
+    def getXml(self, ):
+        return self.server.to_dict()
+        pass
+
     def lastSnapshot(self, ):
         #get the last snapshot of the current VM or return None if no snapshots found
         #usedb
         pass
 
-    def attachDisk(self, disk, device_path):
-        """
-        attach a disk to a Virtual Machine
-        params:
-            disk: instance of disk to be attached
-            device_path: path in the system where the disk is to be attached
-        return: 
-        """
-
+    def migrate(self, target_host, live=False):
         try:
-            self.__conn['cinder'].volumes.create_server_volume(self.server.id, disk.id, device_path)
+            if live == True:
+                res = self.server.migrate(target_host)
+            else:
+                res = self.server.live_migrate(target_host)
+            return res
+        except Exception as e:
+            #debug.log(e)
+            raise BaadalException(e)
+        pass
+
+    def pause(self, ):
+        try:
+            res = self.server.suspend()
+            return res
         except Exception as e:
             #debug.log(e)
             raise BaadalException(e)
@@ -265,11 +204,89 @@ class BaadalVM:
         properties['vcpus'] = flavor.__getattr__('vcpus')
         return properties
         pass
+
+    def reboot(self, soft=True):
+        """
+        reboot the Virtual Machine
+        params:
+            soft: bool, True for soft reboot, False for hard reboot, default True
+        return: None
+        """
+        try:
+            if soft == True:
+                res = self.server.reboot(reboot_type='SOFT')
+            else:
+                res = self.server.reboot(reboot_type='HARD')
+            return res
+        except Exception as e:
+            #debug.log(e)
+            raise BaadalException(e)
+
+    def refreshStatus(self):
+        #refresh connection to a modified VM
+        self.server = self.server.manager.find(id=self.server.id)
+
+    def resume(self, ):
+        try:
+            res = self.server.resume()
+            return res
+        except Exception as e:
+            #debug.log(e)
+            raise BaadalException(e)
+        pass
+
+    def revertSpanshot(self, snapshot_id):
+        #usedb
+        pass
+
+    def shutdown(self, force=False):
+        """
+        shutdown the Virtual Machine
+        params:
+            force: bool, True for forced shutdown, False for graceful shutdown, default False
+        return: None
+        """
+
+        try:
+            self.server.stop()
+        except Exception as e:
+            #debug.log(e)
+            raise BaadalException(e)
+        pass
+        
+    def start(self, ):
+        """
+        starts the Vritual Machine,
+        params: None
+        return: None
+        """
+
+        try:
+            self.server.start()
+        except Exception as e:
+            #debug.log(e)
+            raise BaadalException(e)
+        pass
+
     def update(self, **kwargs):
         #update metadata/config
         pass
-    
     pass
+
+    """def __getattr__(self, attr):
+        if attr == None:
+            return self
+        if attr is None:
+            return self
+        if attr == 'status':
+            return self.getStatus()
+        if attr == 'attacheddisks':
+            return self.attachedDisks()
+        if attr == 'lastsnapshot':
+            return self.lastSnapshot()
+        else:
+            raise AttributeError
+    """
 
 class Image:
     def __init__(self, image):
@@ -360,6 +377,7 @@ class Connection:
         from keystoneclient.auth.identity import v2
         from keystoneclient import session
         from novaclient import client
+        from neutronclient.neutron import client as nclient
         from cinderclient import client as cclient 
         auth = v2.Password(auth_url=authurl, username=username,
                 password=password, tenant_name=tenant_name)
@@ -367,8 +385,12 @@ class Connection:
         self.__conn = {}
         self.__conn['nova'] = client.Client('2', session=sess)
         self.__conn['cinder'] = cclient.Client('2', session=sess)
+        self.__conn['neutron'] = nclient.Client('2.0', session=sess)
+
+        #Below lines to retained while testing only
         self.nova = self.__conn['nova']
         self.cinder = self.__conn['cinder']
+        self.neutron = self.__conn['neutron']
         #self.__cinder = cclient.Client("2", session=sess)
         #self.__conn = client.Client("2", session=sess)
         pass

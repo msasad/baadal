@@ -27,6 +27,13 @@ def configs():
             
 def templates():
     #conn = Baadal.Connection(authurl, tenant, username, password)
+    """The following metadata needs to be attached to each image
+        os-name,
+        os-version,
+        os-arch,
+        disk-size,
+        os-edition, (desktop/server)
+    """
     if conn:
         images = conn.images()
         values = []

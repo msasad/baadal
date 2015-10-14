@@ -2,7 +2,7 @@ import json
 from gluon import *
 import time
 def new_vm():
-    try:
+    #try:
         db.vm_requests.insert(
             vm_name = request.vars.vm_name,
             flavor = request.vars.config,
@@ -16,9 +16,9 @@ def new_vm():
             request_time = int(time.time())
         )
         db.commit()
-        return jsonify()
-    except Exception as e:
-        return jsonify(status='fail', message=str(e.__class__))
+        return jsonify(flavor=request.vars.config)
+    #except Exception as e:
+    #    return jsonify(status='fail', message=str(e.__class__))
 
 def modify_request():
     try:

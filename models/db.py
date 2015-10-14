@@ -10,7 +10,7 @@ db = DAL('mysql://' + username + ':' + password + '@' + dbhost + '/' + dbname, m
 db.define_table('vm_requests',
                 Field('id','integer'),
                 Field('vm_name','string'),
-                Field('flavor','integer'),
+                Field('flavor','string'),
                 Field('sec_domain', 'string'),
                 Field('image','string'),
                 Field('owner','string'),
