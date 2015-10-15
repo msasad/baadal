@@ -16,3 +16,5 @@ def network_name_from_id(netid):
     for i in netlist:
         if netid == i.id:
             return i.label
+        pass
+    pass

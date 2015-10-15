@@ -2,6 +2,8 @@
 
 import datetime
 
+_UNKNOWN_ERROR_MSG = 'Unknown Error'
+
 class Machine:
     def __init__(self, ):
         self.hostname = ""
@@ -61,7 +63,7 @@ class BaadalVM:
         try:
             self.server.add_fixed_ip(netid)
         except Exception as e:
-             raise BaadalException(e)   
+             raise BaadalException(e.message or _UNKNOWN_ERROR_MSG)   
         pass
     
     def clone(self, clone_name=None):
@@ -450,12 +452,13 @@ class Connection:
         """
         #underlying command
         #nova boot --flavor 1 --image 6f0ae131-7190-4230-98e4-8a90285b776a --nic net-id=3893d432-08e9-48b1-975f-e6edae078a1a test07
-        try:
-            server = self.__conn['nova'].servers.create(name, image, template, nics=nics, **kwargs)
-            return BaadalVM(server=server, conn=self.__conn)
-        except Exception as e:
-            raise BaadalException(e.message)
-        pass
+        #try:
+        sec_group = self._network_name_from_id(nics[0]['net-id'])
+        server = self.__conn['nova'].servers.create(name, image, template, nics=nics, security_groups=[sec_group], **kwargs)
+        return BaadalVM(server=server, conn=self.__conn)
+        #except Exception as e:
+            #raise BaadalException(e.message)
+        #pass
 
     def createTemplate(self, name, ram, disk, vcpus):
         try:
@@ -499,6 +502,13 @@ class Connection:
             raise BaadalException(e.message)
         pass
     
+    def sgroups(self, ):
+        try:
+            sgroups = self.__conn['neutron'].list_security_groups()
+            return sgroups
+        except Exception as e:
+            raise BaadalException(e.message)
+
     def networks(self,):
         try:
             networks = self.__conn['nova'].networks.list()
@@ -507,6 +517,14 @@ class Connection:
             raise BaadalException(e.message)
         pass
     pass
+
+    def _network_name_from_id(self, netid):
+        netlist = self.networks()
+        for i in netlist:
+            if netid == i.id:
+                return i.label
+            pass
+        pass
 
 class BaadalException(Exception):
     def __init__(self, msg):

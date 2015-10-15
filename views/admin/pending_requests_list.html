@@ -106,7 +106,8 @@
     </table>
   </div>
   <div class="panel-footer">
-    
+    <span style="display:none" class="text-success" id="success-message">Request approved.</span>
+    <span style="display:none" class="text-danger" id="error-message">Request cannot be approved.</span>
   </div>
 </div>
 <script src="/baadal/static/js/jquery-2.1.4.min.js"></script>
@@ -170,7 +171,11 @@
               }
             },
             'success': function(response) {
-                console.log(response);
+                if(response.status == 'success') {
+                  $('#success-message').fadeIn();
+                } else {
+                  $('#error-message').fadeIn();
+                }
             }
         });
     });

@@ -44,11 +44,21 @@ def templates():
             values.append(m)
         return json.dumps(values)
 
-def sdomains():
+def networks():
     #conn = Baadal.Connection(authurl, tenant, username, password)
     if conn:
-        domains = conn.networks()
+        networks = conn.networks()
         values = []
-        for i in domains:
-            values.append({'name':i.label, 'id' : i.id})
+        for i in networks:
+            if i.label != 'ext-net':
+                values.append({'name':i.label, 'id' : i.id})
+        return json.dumps(values)
+
+def sgroups():
+    #conn = Baadal.Connection(authurl, tenant, username, password)
+    if conn:
+        sgroups = conn.sgroups()
+        values = []
+        for i in sgroups['security_groups']:
+            values.append({'name':i['name'], 'id' : i['id']})
         return json.dumps(values)

@@ -64,6 +64,7 @@ def __create():
         #return json.dumps(row)
         vm = conn.createBaadalVM(row.vm_name, row.image, row.flavor, [{'net-id':row.sec_domain}])
         if vm:
+            row.update_record(state=2)
             return jsonify()
     #except Exception as e:
         return jsonify(status='fail', message=e.message)

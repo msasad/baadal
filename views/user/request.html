@@ -128,7 +128,7 @@
 
   $.ajax({
     'type': 'GET',
-    'url': '/baadal/ajax/sdomains.json',
+    'url': '/baadal/ajax/networks.json',
     'success': function(response) {
       console.log(response);
       secdomainselect = document.getElementById('sec_domain');
@@ -152,14 +152,16 @@
       'type' : 'POST',
       'data' : data,
       'url' : '/baadal/post_request/new_vm.json',
+      'error' : function(response) {
+        if (error = response.getResponseHeader('web2py_error')) {
+          generateTicketLink(error);
+        }
+      },
       'success' : function(response){
         if(response.status == 'success') {
           $('#success-message').fadeIn();
         } else {
           $('#error-message').fadeIn();
-        }
-        if(response.web2py_error) {
-          generateTicketLink(response.web2py_error)
         }
         console.log(response);
       }
