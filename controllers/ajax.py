@@ -1,17 +1,3 @@
-"""import Baadal
-import json
-import ConfigParser
-from gluon import *
-# work around to stop stupid editors from complaining about undeclared 'request'
-if False:
-    request = dict()
-    response = dict()
-config = ConfigParser.ConfigParser()
-config.read('/etc/baadal/baadal.conf')
-authurl = config.get('auth','authurl')
-tenant = config.get('auth','tenant')
-password = config.get('auth','password')
-username = config.get('auth', 'username')"""
 
 from gluon import *
 def configs():
@@ -50,7 +36,7 @@ def networks():
         networks = conn.networks()
         values = []
         for i in networks:
-            if i.label != 'ext-net':
+            if i.label != EXTERNAL_NETWORK:
                 values.append({'name':i.label, 'id' : i.id})
         return json.dumps(values)
 
