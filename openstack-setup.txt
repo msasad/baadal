@@ -1,0 +1,59 @@
+Install refering to the official openstack installation guide for ubuntu 14.04 Kilo (located at http://docs.openstack.org/kilo/install-guide/install/apt/content/index.html)
+
+For networing, use neutron networking (not nova-networking)
+
+Follow the guide for rest of the process, till network creation.
+
+edit /etc/neutron/dhcp_agent.ini file in the controller node to contain the following value
+dhcp_domain = iitd.ac.in
+
+Create a router by following the guide. (Do not change the name of the external network, keep it 'ext-net')
+
+Create internal network using the below command
+$ neutron net-create --tenant-id $tenant NETWORK_NAME --provider:network_type gre --provider:segmentation_id SEGMENTATION_ID
+
+create subnet in each network using the below command
+$ neutron subnet-create --tenant-id $tenant --name SUBNET_NAME NETWORK_NAME CIDR
+
+set gateways for each subnet by issuing the below command
+neutron subnet-update SUBNET_ID --dns-nameservers list=true 10.208.20.2 10.208.20.19 10.10.1.2
+
+Attach the created subnet to the previuosly created router
+$ neutron router-interface-add ROUTER_NAME SUBNET_NAME
+
+Create one security group each for all internal networks with the same name as of the networks.
+Create rules to allow all traffic between VMs for each security group.
+$ neutron security-group-rule-create --direction egress --ethertype IPv4 --remote-group-id vlan2 vlan2
+
+Create other security groups and respective rules as required.
+For example, to open web access from VMs, create group golbal_http, write appropriate rules and
+    add this security group to all machines from which you want to enable web access.
+
+#Attach instances in each internal network to their respective security groups.
+
+---------------------------------------------------------------------------------------------
+
+Following configuration of VM has been used for setting up openstack on VM (using VirtualBox):
+Network Node
+    1 GB RAM, 8GB HDD, 1VCPU
+    4 NICs
+    first interface connected to NAT for Internet Access during installation (may be removed after installation)
+    second interface connected to host-only-network-1 (management network) with static IP address
+    third interface connected to host-only-network-2 (instance tunnel network) with static IP address (allow promiscous mode)
+    fourth interface bridged to physical NIC of the host (which is connected to external network),
+        with no IP address, (follow the installation guide to configure this), to provide access to external network for
+        instances (Internet, IITD LAN), allow promiscous mode
+
+Controller Node
+    2GB RAM, 8GB HDD, 2VPUs
+    2 NICs
+    first interface connected to NAT for Internet Access during installation (may be removed after installation)
+    second interface connected to host-only-network-1 (management network) with static IP address
+
+Compute Nodes
+    3GB RAM, 8GBHDD, 3VCPUs
+    3 NICs
+    first interface connected to NAT for Internet Access during installation (may be removed after installation)
+    second interface connected to host-only-network-1 (management network) with static IP address
+    third interface connected to host-only-network-2 (instance tunnel network) with static IP address (allow promiscous mode)
+
