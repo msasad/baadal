@@ -62,9 +62,16 @@ def __create():
     #try:
         row = db(db.vm_requests.id == request.vars.id).select()[0]
         #return json.dumps(row)
+        public_ip_required = row.public_ip_required
         vm = conn.createBaadalVM(row.vm_name, row.image, row.flavor, [{'net-id':row.sec_domain}])
+        """create port
+            attach floating IP to port
+            attach floating IP to VM
+        """
         if vm:
             row.update_record(state=2)
+            if public_ip_required:
+                vm.
             return jsonify()
     #except Exception as e:
         return jsonify(status='fail', message=e.message)
