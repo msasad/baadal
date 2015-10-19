@@ -53,6 +53,7 @@ def handle_request():
     if action == 'approve':
         return __create()
     elif action == 'edit':
+        return __modify_request()
         pass
     elif action == 'reject':
         return __reject()

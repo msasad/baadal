@@ -227,13 +227,14 @@
       'id' : document.getElementById('edit-id').value,
       'flavor': document.getElementById('edit-config').value,
       'storage': document.getElementById('edit-storage').value,
-      'public_ip': document.forms['vm_request'].elements['public_ip'].value
+      'public_ip': document.forms['vm_request'].elements['public_ip'].value,
+      'action' : 'edit'
     };
     console.log(data);
     $.ajax({
       'type' : 'POST',
       'data' : data,
-      'url' : '/baadal/post_request/modify_request.json',
+      'url' : '/baadal/action/handle_request.json',
       'success' : function(response) {
         if (response.status == 'success') {
           $('#modal-success-message').fadeIn();
