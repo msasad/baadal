@@ -1,4 +1,3 @@
-
 from gluon import *
 def configs():
     #conn = Baadal.Connection(authurl, tenant, username, password)

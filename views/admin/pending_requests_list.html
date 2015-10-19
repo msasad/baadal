@@ -4,7 +4,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title">Edit pending request</h4>
+        <h4 class="modal-title">Modify pending request</h4>
       </div>
       <div class="modal-body">
         <div class="panel-body">
@@ -72,8 +72,8 @@
           </form>
         </div>
         <div class="panel-footer">
-          <span style="display:none" class="text-danger" id="error-message">There was some error in the form. Please check the values and submit the form again.</span>
-          <span style="display:none" class="text-success" id="success-message">Request successfully posted.</span>
+          <span style="display:none" class="text-danger" id="modal-error-message">There was some error in the form. Please check the values and submit the form again.</span>
+          <span style="display:none" class="text-success" id="modal-success-message">Request successfully posted.</span>
         </div>
       </div>
       <div class="modal-footer">
@@ -110,147 +110,152 @@
     <span style="display:none" class="text-danger" id="error-message">Request cannot be approved.</span>
   </div>
 </div>
-<script src="/baadal/static/js/jquery-2.1.4.min.js"></script>
-<script src="/baadal/static/js/bootstrap.min.js"></script>
+{{include 'default-scripts.html'}}
 <script src="/baadal/static/js/datatables.min.js"></script>
 <script src="/baadal/static/js/dataTables.bootstrap.min.js"></script>
-<script src="/baadal/static/js/baadal.js"></script>
 <script>
 (function(){
-    var $table = $('#requests').DataTable( {
-        "ajax": "/baadal/admin/pending_requests.json",
-        "oLanguage": {
-          "sEmptyTable": "No pending requests!"
-        },
-        "columns": [
-            { "data": "vm_name" },
-            { "data": "owner" },
-            { "data": "flavor" },
-            { "data": "public_ip_required" },
-            { "data": "sec_domain" },
-            { "data": "request_time" },
-            { "data": "collaborators" },
-        ],
-        "aoColumnDefs": [
-            {
-                "aTargets": [7],
-                "mData": null,
-                "mRender": function (data, type, full) {
-                    return '<div class="btn-group" role="group" aria-label="..."> \
-                            <button title="Approve" type="button" data-action="approve" class="btn btn-success btn-action" aria-label="Approve">\
-                                <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>\
-                            </button> \
-                            <button title="Edit" type="button" data-action="edit" class="btn btn-info btn-edit" aria-label="Edit">\
-                                <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>\
-                            </button> \
-                            <button title="Reject" type="button" data-action="reject" class="btn btn-danger btn-action" aria-label="Reject">\
-                                <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>\
-                            </button>\
-                    </div>';
-                }
-            },
-            {"visible": false,  "targets": [0]}
-        ],
-        "fnCreatedRow": function( nRow, aData, iDataIndex ) {
-            nRow.setAttribute('data-reqid',aData.id);
+  var $table = $('#requests').DataTable( {
+    "ajax": "/baadal/admin/pending_requests.json",
+    "oLanguage": {
+      "sEmptyTable": "No pending requests!"
+    },
+    "columns": [
+      { "data": "vm_name" },
+      { "data": "owner" },
+      { "data": "flavor" },
+      { "data": "public_ip_required" },
+      { "data": "sec_domain" },
+      { "data": "request_time" },
+      { "data": "collaborators" },
+    ],
+    "aoColumnDefs": [
+      {
+        "aTargets": [7],
+        "mData": null,
+        "mRender": function (data, type, full) {
+          return '<div class="btn-group" role="group" aria-label="..."> \
+            <button title="Approve" type="button" data-action="approve" class="btn btn-success btn-action" aria-label="Approve">\
+            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>\
+            </button> \
+            <button title="Edit" type="button" data-action="edit" class="btn btn-info btn-edit" aria-label="Edit">\
+            <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>\
+            </button> \
+            <button title="Reject" type="button" data-action="reject" class="btn btn-danger btn-action" aria-label="Reject">\
+            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>\
+            </button>\
+            </div>';
         }
-    } );
-    $('#requests').on('click','.btn-action', function(e) {
-        var id = this.closest('tr').getAttribute('data-reqid');
-        var action = this.getAttribute('data-action');
-        $.ajax({
-            'url': '/baadal/action/handle_request',
-            'type': 'post',
-            'data': {
-                'id':id,
-                'action': action
-            },
-            'error' : function(response) {
-              if (error = response.getResponseHeader('web2py_error')) {
-                generateTicketLink(error);
-              }
-            },
-            'success': function(response) {
-                if(response.status == 'success') {
-                  $('#success-message').fadeIn();
-                } else {
-                  $('#error-message').fadeIn();
-                }
-            }
-        });
-    });
-    $('#requests').on('click','.btn-edit', function(e) {
-      e.preventDefault();
-      var tr = this.closest('tr');//.getAttribute('data-reqid');
-      var data = $table.row(tr).data();
-      $.ajax({
-        'type': 'GET',
-        'url': '/baadal/ajax/configs.json',
-        'success': function(response) {
-            console.log(response);
-            configSelect = document.getElementById('edit-config');
-            configSelect.options.length = 0;
-            for (i = response.length-1; i>=0; i--) {
-                console.log(response[i]);
-                var curr_config = response[i]
-                var text = curr_config['vcpus'] + 'CPU, ' + curr_config['ram'] + 'MB RAM';
-                configSelect.options[configSelect.options.length] = new Option(text, curr_config['id'], data.flavor == curr_config.id);
-            }
+      },
+      {"visible": false,  "targets": [0]}
+    ],
+    "fnCreatedRow": function( nRow, aData, iDataIndex ) {
+      nRow.setAttribute('data-reqid',aData.id);
+    }
+  });
+
+  $('#requests').on('click','.btn-action', function(e) {
+    var id = this.closest('tr').getAttribute('data-reqid');
+    var action = this.getAttribute('data-action');
+    $.ajax({
+      'url': '/baadal/action/handle_request.json',
+      'type': 'post',
+      'dataType' : 'json',
+      'data': {
+        'id':id,
+        'action': action
+      },
+      'error' : function(response) {
+        if (error = response.getResponseHeader('web2py_error')) {
+          generateTicketLink(error);
         }
-      });      
-      document.getElementById('edit-vm-name').innerHTML = data.vm_name;
-      document.getElementById('edit-template').innerHTML = data.image;
-      document.getElementById('edit-sec-domain').innerHTML = data.sec_domain;
-      document.getElementById('edit-purpose').innerHTML = data.purpose || '<i>Not specified</i>';
-      document.getElementById('edit-storage').value = data.extra_storage;
-      document.getElementById('edit-id').value = data.id;
-      var radios = document.getElementsByName('public_ip');
-      var temp = data.public_ip_required == 1 ? 'yes' : 'no';
-      for (var i=radios.length-1; i>=0; i--) {
-        if (radios[i].value == temp) {
-            radios[i].checked = true;
-            break;
+      },
+      'success': function(response) {
+        if(response.status == 'success') {
+          $('#success-message').fadeIn(1000, function () {
+            $table.ajax.reload();
+            $(this).fadeOut();
+          });
+        } else {
+          $('#error-message').fadeIn();
         }
       }
-      console.log(data);
-      $('#my-modal').modal('show');
     });
-    $('#btn-mod-approve').one('click', function (e){
-        //save the new request to db
-        //send it to backend for processing
-        var data = {
-          'id' : document.getElementById('edit-id').value,
-          'flavor': document.getElementById('edit-config').value,
-          'storage': document.getElementById('edit-storage').value,
-          'public_ip': document.forms['vm_request'].elements['public_ip'].value
-        };
-        console.log(data);
-        $.ajax({
-            'type' : 'POST',
-            'data' : data,
-            'url' : '/baadal/post_request/modify_request.json',
-            'success' : function(response){
-                if(response.status == 'success') {
-                  $('#success-message').fadeIn();
-                } else {
-                  $('#error-message').fadeIn();
-                }
-                console.log(response);
-            }
-        });
-        /*$.ajax({
-              'url': '/baadal/action/handle_request',
-              'type': 'post',
-              'data': {
-                  'id':document.getElementById('edit-id').value,
-                  'action': 'approve'
-              },
-              'success': function(response) {
-                  console.log(response);
-                  $('#my-modal').modal('hide');
-              }
-        });*/
-      });
+  });
+
+  $('#requests').on('click','.btn-edit', function(e) {
+    e.preventDefault();
+    var tr = this.closest('tr');//.getAttribute('data-reqid');
+    var data = $table.row(tr).data();
+    $.ajax({
+      'type': 'GET',
+      'url': '/baadal/ajax/configs.json',
+      'success': function(response) {
+        console.log(response);
+        configSelect = document.getElementById('edit-config');
+        configSelect.options.length = 0;
+        for (i = response.length-1; i>=0; i--) {
+          console.log(response[i]);
+          var curr_config = response[i]
+          var text = curr_config['vcpus'] + 'CPU, ' + curr_config['ram'] + 'MB RAM';
+          configSelect.options[configSelect.options.length] = new Option(text, curr_config['id'], data.flavor == curr_config.id);
+        }
+      }
+    });      
+    document.getElementById('edit-vm-name').innerHTML = data.vm_name;
+    document.getElementById('edit-template').innerHTML = data.image;
+    document.getElementById('edit-sec-domain').innerHTML = data.sec_domain;
+    document.getElementById('edit-purpose').innerHTML = data.purpose || '<i>Not specified</i>';
+    document.getElementById('edit-storage').value = data.extra_storage;
+    document.getElementById('edit-id').value = data.id;
+    var radios = document.getElementsByName('public_ip');
+    var temp = data.public_ip_required == 'Required' ? 'yes' : 'no';
+    for (var i=radios.length-1; i>=0; i--) {
+      if (radios[i].value == temp) {
+        radios[i].checked = true;
+        break;
+      }
+    }
+    console.log(data);
+    $('#my-modal').modal('show');
+  });
+
+  $('#btn-mod-approve').one('click', function (e){
+    //save the new request to db
+    //send it to backend for processing
+    var data = {
+      'id' : document.getElementById('edit-id').value,
+      'flavor': document.getElementById('edit-config').value,
+      'storage': document.getElementById('edit-storage').value,
+      'public_ip': document.forms['vm_request'].elements['public_ip'].value
+    };
+    console.log(data);
+    $.ajax({
+      'type' : 'POST',
+      'data' : data,
+      'url' : '/baadal/post_request/modify_request.json',
+      'success' : function(response) {
+        if (response.status == 'success') {
+          $('#modal-success-message').fadeIn();
+        } else {
+          $('#modal-error-message').fadeIn();
+        }
+        console.log(response);
+      }
+    });
+    /*$.ajax({
+          'url': '/baadal/action/handle_request',
+          'type': 'post',
+          'data': {
+              'id':document.getElementById('edit-id').value,
+              'action': 'approve'
+          },
+          'success': function(response) {
+              console.log(response);
+              $('#my-modal').modal('hide');
+          }
+    });*/
+  });
 })();
 </script>
 {{include 'wrap.html'}}

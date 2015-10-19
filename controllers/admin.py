@@ -8,6 +8,7 @@ def pending_requests():
     for i in l:
         i['sec_domain'] = network_name_from_id(i['sec_domain'])
         i['request_time'] = seconds_to_localtime(i['request_time'])
+        i['public_ip_required'] = 'Required' if i['public_ip_required'] == 1 else 'Not Required'
         #i['sec_domain']  = conn.findNetwork(id=i['sec_domain']).name
     return json.dumps({'data': l})
     pass

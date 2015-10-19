@@ -22,12 +22,9 @@ class BaadalVM:
             raise BaadalException('Cannot initialise server, please specify either server or id')
         else:
             if str(type(server)).endswith("novaclient.v2.servers.Server'>"): 
-            #if isinstance(server, novaclient.v2.servers.Server):
                 self.server = server
                 self.__conn = conn
 
-        #create an object corresponding to an existing VM with specified ID
-        #usedb
         self.name = self.server.name
         self.id = None
         self.identity = None
@@ -40,7 +37,6 @@ class BaadalVM:
         self.start_time = self.server.__getattr__('OS-SRV-USG:launched_at')
         self.security_domain = None
         self.snapshots = []
-        #self.server = novaclient.v2.servers.Server
         pass
 
     def attachDisk(self, disk, device_path):
@@ -99,7 +95,6 @@ class BaadalVM:
                         self.__conn['cinder'].volumes.create_server_volume(clone.id, i['id'], i['path'])
             return clone
         except  Exception as e:
-        #debug.log(e)
             raise BaadalException(e)
         pass
 

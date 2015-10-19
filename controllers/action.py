@@ -55,6 +55,7 @@ def handle_request():
     elif action == 'edit':
         pass
     elif action == 'reject':
+        return __reject()
         pass
             
 
@@ -71,7 +72,7 @@ def __create():
         if vm:
             row.update_record(state=2)
             if public_ip_required:
-                vm.
+                pass
             return jsonify()
     #except Exception as e:
         return jsonify(status='fail', message=e.message)
@@ -82,3 +83,14 @@ def __reject():
 
 def __edit():
     pass
+
+def __modify_request():
+    try:
+        db(db.vm_requests.id == request.vars.id).update(
+            extra_storage = request.vars.storage,
+            public_ip_required = 1 if request.vars.public_ip == 'yes' else 0,
+            flavor = request.vars.flavor)
+        db.commit()
+        return __create()
+    except Exception as e:
+        return jsonify(status=fail, message = str(e.__class__))
