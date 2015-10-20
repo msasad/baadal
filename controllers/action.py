@@ -72,7 +72,8 @@ def __create():
         """
         if vm:
             row.update_record(state=2)
-            if public_ip_required:
+            if public_ip_required == 1:
+                vm.attachFloatingIP()
                 pass
             return jsonify()
     #except Exception as e:

@@ -31,6 +31,20 @@ For example, to open web access from VMs, create group golbal_http, write approp
 
 #Attach instances in each internal network to their respective security groups.
 
+--Optional--
+To create floating IP use
+$ neutron floatingip-create ext-net
+
+To associate it with a privte IP, first find the port id corresponding to the particular Private IP
+$ neutron port-list
+
+Then associate the floating IP using
+$ neutron floatingip-associate FLOATING_IP_ID PORT_ID
+
+Enable ping and ssh through floating IP
+$ neutron security-group-rule-create --protocol icmp  --direction ingress --remote-ip-prefix 0.0.0.0/0 SECURITY_GROUP_NAME
+$ neutron security-group-rule-create --protocol tcp  --port-range-min 22 --port-range-max 22  --direction ingress --remote-ip-prefix 0.0.0.0/0 SECURITY_GROUP_NAME
+
 ---------------------------------------------------------------------------------------------
 
 Following configuration of VM has been used for setting up openstack on VM (using VirtualBox):

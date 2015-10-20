@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import datetime
-
+_EXTERNAL_NETWORK = 'ext-net'
 _UNKNOWN_ERROR_MSG = 'Unknown Error'
 
 class Machine:
@@ -55,6 +55,13 @@ class BaadalVM:
             raise BaadalException(e)
         pass
 
+    def attachFloatingIP(self, floatingip=None, fixed_address=None):
+        if floatingip is None:
+            netid = self.__conn['neutron'].list_networks(name=_EXTERNAL_NETWORK)['networks'][0]['id']
+            floatingip = self.__conn['neutron'].create_floatingip(body={'floatingip':{'floating_network_id':netid}})
+            pass
+        self.server.add_floating_ip(floatingip, fixed_address)
+        pass
     def attachNIC(self, netid):
         try:
             self.server.add_fixed_ip(netid)
