@@ -16,7 +16,7 @@ class Machine:
                 'public_ip' : None
         }
         
-class BaadalVM:
+class BaadalVM(object):
     def  __init__(self, id=None, server=None, conn=None):
         if id != None and server != None:
             raise BaadalException('Cannot initialise server, please specify either server or id')
@@ -48,19 +48,22 @@ class BaadalVM:
         return: 
         """
 
-        try:
-            self.__conn['cinder'].volumes.create_server_volume(self.server.id, disk.id, device_path)
-        except Exception as e:
+        #try:
+        self.__conn['nova'].volumes.create_server_volume(self.server.id, disk.id, device_path)
+        return True
+        #except Exception as e:
             #debug.log(e)
-            raise BaadalException(e)
-        pass
+        raise BaadalException(e.message or _UNKNOWN_ERROR_MSG)
+        #return False
+        #pass
 
     def attachFloatingIP(self, floatingip=None, fixed_address=None):
         if floatingip is None:
             netid = self.__conn['neutron'].list_networks(name=_EXTERNAL_NETWORK)['networks'][0]['id']
             floatingip = self.__conn['neutron'].create_floatingip(body={'floatingip':{'floating_network_id':netid}})
+            floatingipaddress = floatingip['floatingip']['floating_ip_address']
             pass
-        self.server.add_floating_ip(floatingip, fixed_address)
+        self.server.add_floating_ip(floatingipaddress, fixed_address)
         pass
     def attachNIC(self, netid):
         try:
@@ -154,9 +157,11 @@ class BaadalVM:
                 'ACTIVE' : 'Running',
                 'SHUTOFF' : 'Shutdown',
                 'PAUSED' : 'Paused',
+                'BUILD' : 'Building',
+                'ERROR' : 'Error'
                 }
         self.refreshStatus()
-        return STATUS[self.server.status]
+        return STATUS.get(self.server.status, 'Unknown')
         pass
 
     def getVNCConsole(self, console_type='novnc'):
@@ -462,6 +467,10 @@ class Connection:
             #raise BaadalException(e.message)
         #pass
 
+    def createVolume(self, size, imageRef=None, multiattach=False):
+        volume = self.__conn['cinder'].volumes.create(size, imageRef=imageRef, multiattach=multiattach)
+        return volume
+
     def createTemplate(self, name, ram, disk, vcpus):
         try:
             flavor = self.__conn['nova'].flavors.create(name, ram, disk)
@@ -469,6 +478,9 @@ class Connection:
         except Exception as e:
             raise BaadalException("Could not create flavor" + e)
     
+    def getDiskById(self, diskid):
+        return self.__conn['cinder'].volumes.get(diskid)
+
     def images(self, ):
         #return a list of all images
         try:

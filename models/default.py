@@ -1,4 +1,6 @@
 import json
+import threading
+
 def jsonify(status='success', **kwargs):
     d = dict()
     d['status'] = status
@@ -18,3 +20,13 @@ def network_name_from_id(netid):
             return i.label
         pass
     pass
+
+class FuncThread(threading.Thread):
+    def __init__(self, target, *args):
+        self._target = target
+        self._args = args
+        threading.Thread.__init__(self)
+ 
+    def run(self):
+        self._target(*self._args)
+

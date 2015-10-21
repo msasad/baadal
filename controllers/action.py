@@ -58,13 +58,30 @@ def handle_request():
     elif action == 'reject':
         return __reject()
         pass
-            
+
+def __finalize_vm(vm, extra_storage_size, public_ip_required=False):
+    while vm.getStatus() != 'Running' and vm.getStatus() != 'Error':
+        pass
+    
+    if vm.getStatus() == 'Running':
+        if public_ip_required:
+            vm.attachFloatingIP()
+
+        if extra_storage_size:
+            disk = conn.createVolume(extra_storage_size)
+            while disk.status != 'available':
+                disk = conn.getDiskById(disk.id)
+            vm.attachDisk(disk, '/dev/vdb')
+            vm.update(disks=2)
+    else:
+        raise BaadalException('VM Build Failed')
 
 def __create():
     #try:
         row = db(db.vm_requests.id == request.vars.id).select()[0]
         #return json.dumps(row)
         public_ip_required = row.public_ip_required
+        extra_storage_size = row.extra_storage
         vm = conn.createBaadalVM(row.vm_name, row.image, row.flavor, [{'net-id':row.sec_domain}])
         """create port
             attach floating IP to port
@@ -72,8 +89,11 @@ def __create():
         """
         if vm:
             row.update_record(state=2)
-            if public_ip_required == 1:
-                vm.attachFloatingIP()
+            db.commit()
+            if public_ip_required == 1 or extra_storage_size:
+                __finalize_vm(vm, extra_storage_size, public_ip_required)
+                #thread = FuncThread(__finalize_vm, vm, extra_storage_size, public_ip_required)
+                #thread.start()
                 pass
             return jsonify()
     #except Exception as e:
