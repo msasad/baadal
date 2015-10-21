@@ -279,6 +279,8 @@ class BaadalVM(object):
 
     def update(self, **kwargs):
         #update metadata/config
+        for item, value in kwargs.iteritems():
+            self.server.manager.set_meta_item(self.server, item, str(value))
         pass
     pass
 
