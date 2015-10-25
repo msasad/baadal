@@ -1,4 +1,135 @@
 {{extend 'blank-page.html'}}
-<p> <h1> test </h1> </p>
+<div class="panel panel-primary">
+  <div class="panel-heading">
+    <h3 class="panel-title">My Virtual Machines</h3>
+  </div>
+  <div class="panel-body">
+    <table id="my-vms" class="table table-bordered table-stripped table-hover table-condensed">
+     <thead>
+        <tr>
+          <th>Name</th>
+          <th>State</th>
+          <th>IP Address(es)</th>
+          <th>VCPUs</th>
+          <th>Memory (MB)</th>
+          <th>Settings</th>
+        </tr>
+      </thead>
+    </table>
+  </div>
+</div>
 {{include 'default-scripts.html'}}
+<script src="/baadal/static/js/datatables.min.js"></script>
+<script src="/baadal/static/js/dataTables.bootstrap.min.js"></script>
+<script>
+(function() {
+  var $myvms = $('#my-vms');
+  var $table = $myvms.DataTable( {
+    "ajax": "/baadal/user/my_vms.json",
+    "oLanguage": {
+      "sEmptyTable": "You have no VMs!"
+    },
+    "aoColumnDefs": [
+      {
+        "aTargets": [2],
+        "mData": null,
+        "mRender": function (data, type, full) {
+          if (type === 'display' || type === 'filter') {
+            var str = '';
+            for (var i = data.length - 1; i>=0; i--) {
+              var keys = Object.keys(data[i]);
+              for (var j = keys.length - 1; j >= 0; j--) {
+                str += keys[j] + ':' + data[i][keys[j]] + ' ';
+              }
+              str += '<br>';
+            }
+            return str;
+          }
+          return data;
+        }
+      },
+      {
+        "aTargets": [5],
+        "mData": null,
+        "mRender": function (data, type, full) {
+          var actions = {
+            'Running' : 'shutdown',
+            'Shutdown' : 'start',
+            'Error' : 'start'
+          };
+
+          var glyphicons = {
+            'Running' : 'stop',
+            'Shutdown' : 'play',
+            'Error' : 'play'
+          }
+          return '<div class="btn-group" role="group" aria-label="..."> \
+            <button title="'+ actions[data.status] + '" type="button" data-action="' + actions[data.status]+ '" class="btn btn-success btn-action" aria-label="Start">\
+            <span class="glyphicon glyphicon-'+ glyphicons[data.status]+'" aria-hidden="true"></span>\
+            </button> \
+            <button title="Settings" type="button" data-action="settings" class="btn btn-primary btn-settings" aria-label="Settings">\
+            <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>\
+            </button>\
+            </div>';
+        }
+      }
+    ],
+    "columns": [
+      { "data": "name" },
+      { "data": "status" },
+      { "data": "ip-addresses"},
+      { "data": "vcpus" },
+      { "data": "memory"  }
+    ],
+    "fnCreatedRow": function( nRow, aData, iDataIndex ) {
+      nRow.setAttribute('data-vmid', aData.id);
+    }
+  });
+  var reloadTable = setInterval(function(){
+    $table.ajax.reload();
+  }, 30*1000);
+
+  $myvms.on('click', '.btn-settings', function (e) {
+    $.ajax({
+      url : '/baadal/static/templates/vm-settings-template.html',
+      success : function(response) {
+        var template = Handlebars.compile(response);
+        var context = {vmid:101};
+        var html = template(context);
+        $(document.body).prepend(html);
+        $('#vm-settings-modal').modal('show');
+        console.log(response);
+      }
+    });
+  });
+  $myvms.on('click','.btn-action', function(e) {
+    var id = this.closest('tr').getAttribute('data-vmid');
+    var action = this.getAttribute('data-action');
+    $.ajax({
+      'url': '/baadal/action/vm_action.json',
+      'type': 'post',
+      'dataType' : 'json',
+      'data': {
+        'vmid':id,
+        'action': action
+      },
+      'error' : function(response) {
+        if (error = response.getResponseHeader('web2py_error')) {
+          generateTicketLink(error);
+        }
+      },
+      'success': function(response) {
+        if(response.status == 'success') {
+          $('#success-message').fadeIn(1000, function () {
+            $table.ajax.reload();
+            $(this).fadeOut();
+          });
+        } else {
+          $('#error-message').fadeIn();
+        }
+      }
+    });
+  });
+})();
+</script>
 {{include 'wrap.html'}}
