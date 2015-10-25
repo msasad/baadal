@@ -1,6 +1,11 @@
 from gluon import *
 import json
 import Baadal
+
+def index():
+    return dict()
+    pass
+
 def pending_requests():
     rows = db(db.vm_requests.state == 0).select()
     #rows = db().select(db.vm_requests.ALL)

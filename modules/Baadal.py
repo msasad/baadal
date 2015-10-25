@@ -4,6 +4,7 @@ import datetime
 _EXTERNAL_NETWORK = 'ext-net'
 _UNKNOWN_ERROR_MSG = 'Unknown Error'
 
+
 class Machine:
     def __init__(self, ):
         self.hostname = ""
@@ -15,10 +16,11 @@ class Machine:
                 'private_ip' : None,
                 'public_ip' : None
         }
-        
+
+
 class BaadalVM(object):
-    def  __init__(self, id=None, server=None, conn=None):
-        if id != None and server != None:
+    def __init__(self, id=None, server=None, conn=None):
+        if id is not None and server is not None:
             raise BaadalException('Cannot initialise server, please specify either server or id')
         else:
             if str(type(server)).endswith("novaclient.v2.servers.Server'>"): 
@@ -48,14 +50,14 @@ class BaadalVM(object):
         return: 
         """
 
-        #try:
+        # try:
         self.__conn['nova'].volumes.create_server_volume(self.server.id, disk.id, device_path)
         return True
-        #except Exception as e:
-            #debug.log(e)
+        # except Exception as e:
+        # debug.log(e)
         raise BaadalException(e.message or _UNKNOWN_ERROR_MSG)
-        #return False
-        #pass
+        # return False
+        # pass
 
     def attachFloatingIP(self, floatingip=None, fixed_address=None):
         if floatingip is None:
@@ -172,8 +174,8 @@ class BaadalVM(object):
         pass
 
     def lastSnapshot(self, ):
-        #get the last snapshot of the current VM or return None if no snapshots found
-        #usedb
+        # get the last snapshot of the current VM or return None if no snapshots found
+        # usedb
         pass
 
     def migrate(self, target_host, live=False):
@@ -184,7 +186,7 @@ class BaadalVM(object):
                 res = self.server.live_migrate(target_host)
             return res
         except Exception as e:
-            #debug.log(e)
+            # debug.log(e)
             raise BaadalException(e)
         pass
 
@@ -193,7 +195,7 @@ class BaadalVM(object):
             res = self.server.suspend()
             return res
         except Exception as e:
-            #debug.log(e)
+            # debug.log(e)
             raise BaadalException(e)
         pass
 
@@ -202,13 +204,21 @@ class BaadalVM(object):
         fetch all properties of a VM to show in the front end.
         Name, Owner, Organization, Private IP, Host, Memory, vCPUs, Storage, Status
         """
+        
+        server_properties = self.server.to_dict()
         properties = dict()
+        properties['id'] = self.server.id
         properties['name'] = self.server.name
         properties['owner'] = ''
-        properties['org'] = ''
-        properties['private_ip'] = []
-        properties['host'] = self.server.__getattr__('OS-EXT-SRV-ATTR:host')
+        properties['status'] = self.getStatus()
+        properties['ip-addresses'] = []
+        for (network, addresses) in server_properties['addresses'].iteritems():            
+            for address in addresses:
+                properties['ip-addresses'].append({'network':network, 'address' : address['addr'], 'MAC' : address['OS-EXT-IPS-MAC:mac_addr']})
+            pass
         flavor = self.__conn['nova'].flavors.find(id=self.server.flavor['id'])
+        # properties['flavor'] = flavor
+        properties['status'] = self.getStatus()
         properties['memory'] = flavor.__getattr__('ram')
         properties['vcpus'] = flavor.__getattr__('vcpus')
         return properties
@@ -232,7 +242,7 @@ class BaadalVM(object):
             raise BaadalException(e)
 
     def refreshStatus(self):
-        #refresh connection to a modified VM
+        # refresh connection to a modified VM
         self.server = self.server.manager.find(id=self.server.id)
 
     def resume(self, ):
@@ -373,7 +383,7 @@ class Template:
         self.owner = None
         self.is_active = None
 
-class Host(Machine):
+class HypervisorHost(Machine):
     def __init__(self, ):
         self.category = None
         self.status = None
@@ -501,7 +511,13 @@ class Connection:
         except Exception as e:
             raise BaadalException(e.message)
         pass
-    
+   
+    def hypervisors(self, name=None, id=None):
+        try:
+            hypervisors = self.__conn['nova'].hypervisors.list()
+        except Exception as e:
+            raise BaadalException(e.message or _UNKNOWN_ERROR_MSG)
+
     def templates(self):
         try:
             templates = self.__conn['nova'].flavors.list()
