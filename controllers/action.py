@@ -1,5 +1,4 @@
 def __do(action, vmid):
-    # conn = Baadal.Connection("http://10.237.23.178:35357/v2.0", "admin", "admin", "baadal")
     if conn:
         vm = conn.findBaadalVM(id=vmid)
         if vm:
@@ -15,6 +14,28 @@ def __do(action, vmid):
                 vm.delete()
             elif action == 'resume':
                 vm.resume()
+            elif action == 'snapshot':
+                try:
+                    snapshot = vm.createSnapshot()
+                except Exception as e:
+                    return jsonify(status='fail', message=e.message)
+            elif action == 'migrate':
+                vm.migrate()
+            elif action == 'clone':
+                vm.clone()
+            elif action == 'powerOff':
+                vm.shutdown(force=True)
+            elif action == 'migrateLive':
+                vm.migrate(live=True)
+            elif action == 'get-vnc-console':
+                consoleurl = vm.getVNCConsole()
+                return jsonify(consoleurl=consoleurl)
+            elif action == 'start-resume':
+                status = vm.getStatus()
+                if status == 'Paused':
+                    vm.resume()
+                elif status == 'Shutdown':
+                    vm.start()
 
         conn.close()
         return jsonify()
@@ -23,44 +44,83 @@ def __do(action, vmid):
         return jsonify(status='failure')
 
 
-def __start():
+def __start(vmid):
     return __do('start', request.vars.vmid)
 
 
-def __shutdown():
+def __shutdown(vmid):
     return __do('shutdown', request.vars.vmid)
 
 
-def __pause():
+def __pause(vmid):
     return __do('pause', request.vars.vmid)
 
 
-def __reboot():
+def __reboot(vmid):
     return __do('reboot', request.vars.vmid)
 
 
-def __delete():
+def __delete(vmid):
     return __do('delete', request.vars.vmid)
 
 
-def __resume():
+def __resume(vmid):
     return __do('resume', request.vars.vmid)
 
 
-def vm_action():
+def __snapshot(vmid):
+    return __do('snapshot', request.vars.vmid)
+
+
+def __migrateLive(vmid):
+    return __do('migrateLive', request.vars.vmid)
+
+
+def __migrateVM(vmid):
+    return __do('migrate', request.vars.vmid)
+
+
+def __cloneVM(vmid):
+    return __do('clone', request.vars.vmid)
+
+
+def __powerOff(vmid):
+    return __do('powerOff', request.vars.vmid)
+
+
+def __get_vnc_console(vmid):
+    return __do('get-vnc-console', request.vars.vmid)
+
+
+def index():
     action = request.vars.action
+    vmid = request.vars.vmid
     if action == 'start':
-        return __start()
+        return __start(vmid)
     elif action == 'shutdown':
-        return __shutdown()
+        return __shutdown(vmid)
     elif action == 'pause':
-        return __pause()
+        return __pause(vmid)
     elif action == 'restart':
-        return __reboot()
+        return __reboot(vmid)
     elif action == 'delete':
-        return __delete()
+        return __delete(vmid)
     elif action == 'resume':
-        return __resume()
+        return __resume(vmid)
+    elif action == 'start-resume':
+        return __start_resume(vmid)
+    elif action == 'snapshot':
+        return __snapshot(vmid)
+    elif action == 'get-vnc-console':
+        return __get_vnc_console(vmid)
+    elif action == 'migrate':
+        return __migrateVM(vmid)
+    elif action == 'migrate-live':
+        return __migrateLive(vmid)
+    elif action == 'clone':
+        return __cloneVM(vmid)
+    elif action == 'powerOff':
+        return __powerOff(vmid)
 
 
 def handle_request():

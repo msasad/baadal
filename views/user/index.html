@@ -22,6 +22,7 @@
 <script src="/baadal/static/js/datatables.min.js"></script>
 <script src="/baadal/static/js/dataTables.bootstrap.min.js"></script>
 <script>
+'use strict';
 (function() {
   var $myvms = $('#my-vms');
   var $table = $myvms.DataTable( {
@@ -35,15 +36,7 @@
         "mData": null,
         "mRender": function (data, type, full) {
           if (type === 'display' || type === 'filter') {
-            var str = '';
-            for (var i = data.length - 1; i>=0; i--) {
-              var keys = Object.keys(data[i]);
-              for (var j = keys.length - 1; j >= 0; j--) {
-                str += keys[j] + ':' + data[i][keys[j]] + ' ';
-              }
-              str += '<br>';
-            }
-            return str;
+            return baadalApp.ipArrayToString(data, true);
           }
           return data;
         }
@@ -62,7 +55,7 @@
             'Running' : 'stop',
             'Shutdown' : 'play',
             'Error' : 'play'
-          }
+          };
           return '<div class="btn-group" role="group" aria-label="..."> \
             <button title="'+ actions[data.status] + '" type="button" data-action="' + actions[data.status]+ '" class="btn btn-success btn-action" aria-label="Start">\
             <span class="glyphicon glyphicon-'+ glyphicons[data.status]+'" aria-hidden="true"></span>\
@@ -90,15 +83,41 @@
   }, 30*1000);
 
   $myvms.on('click', '.btn-settings', function (e) {
-    $.ajax({
+    var tr = this.closest('tr');
+    var context = $table.row(tr).data();
+    console.log(context);
+    context['ip-addresses'] = baadalApp.ipArrayToString(context['ip-addresses']);
+    $.ajax( {
       url : '/baadal/static/templates/vm-settings-template.html',
       success : function(response) {
         var template = Handlebars.compile(response);
-        var context = {vmid:101};
         var html = template(context);
         $(document.body).prepend(html);
-        $('#vm-settings-modal').modal('show');
-        console.log(response);
+        var $modal = $('#vm-settings-modal').modal('show');
+        $modal.on('shown.bs.modal', function() {
+          $modal.on('click', '.btn-action', function() {
+            $.ajax({
+              url: '/baadal/action/index.json',
+              type: 'post',
+              data: {
+                vmid: this.parentElement.getAttribute('data-vmid'),
+                action: this.getAttribute('data-action')
+              },
+              'error' : function(response) {
+                var error = response.getResponseHeader('web2py_error');
+                if (error) {
+                  baadalApp.generateTicketLink(error);
+                }
+              },
+              success: function(response) {
+                console.log(response);
+              }
+            });
+          });
+          $modal.on('hidden.bs.modal', function() {
+            $modal.remove();
+          });
+        });
       }
     });
   });
@@ -106,16 +125,17 @@
     var id = this.closest('tr').getAttribute('data-vmid');
     var action = this.getAttribute('data-action');
     $.ajax({
-      'url': '/baadal/action/vm_action.json',
+      'url': '/baadal/action/index.json',
       'type': 'post',
       'dataType' : 'json',
       'data': {
-        'vmid':id,
+        'vmid': id,
         'action': action
       },
       'error' : function(response) {
-        if (error = response.getResponseHeader('web2py_error')) {
-          generateTicketLink(error);
+        var error = response.getResponseHeader('web2py_error');
+        if (error) {
+          baadalApp.generateTicketLink(error);
         }
       },
       'success': function(response) {

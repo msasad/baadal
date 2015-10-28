@@ -1,11 +1,14 @@
 def index():
-  return dict()
+    return dict()
+
 
 def request():
-  return dict()
+    return dict()
+
 
 def login():
-  return dict()
+    return dict()
+
 
 def my_vms():
     import json
@@ -14,5 +17,15 @@ def my_vms():
     for vm in vms:
         response.append(vm.properties())
 
-    return json.dumps({'data' : response})
+    return json.dumps({'data': response})
 
+
+def my_requests():
+    # import json
+    rows = db(db.vm_requests.owner == 'test').select()
+    l = rows.as_list()
+    return jsonify(data=l)
+
+
+def my_requests_list():
+    return dict()

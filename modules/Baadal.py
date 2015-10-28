@@ -9,12 +9,12 @@ class Machine:
     def __init__(self, ):
         self.hostname = ""
         self.config = {
-                'memory' : None,
-                'storage' : None,
-                'extra_storage' : None,
-                'cpu' : None,
-                'private_ip' : None,
-                'public_ip' : None
+                'memory': None,
+                'storage': None,
+                'extra_storage': None,
+                'cpu': None,
+                'private_ip': None,
+                'public_ip': None
         }
 
 
@@ -62,11 +62,12 @@ class BaadalVM(object):
     def attachFloatingIP(self, floatingip=None, fixed_address=None):
         if floatingip is None:
             netid = self.__conn['neutron'].list_networks(name=_EXTERNAL_NETWORK)['networks'][0]['id']
-            floatingip = self.__conn['neutron'].create_floatingip(body={'floatingip':{'floating_network_id':netid}})
+            floatingip = self.__conn['neutron'].create_floatingip(body={'floatingip': {'floating_network_id': netid}})
             floatingipaddress = floatingip['floatingip']['floating_ip_address']
             pass
         self.server.add_floating_ip(floatingipaddress, fixed_address)
         pass
+
     def attachNIC(self, netid):
         try:
             self.server.add_fixed_ip(netid)
@@ -84,41 +85,46 @@ class BaadalVM(object):
         return:
         """
 
-        #create a snapshot of the  machine
-        #create a new vm using the newly created snapshot
-        #delete the snapshot
+        # create a snapshot of the  machine
+        # create a new vm using the newly created snapshot
+        # delete the snapshot
         try:
-            snapshot_id = self.server.create_image("temp")
             clone_name = clone_name or self.server.name + '_clone'
             flavor_id = self.server.flavor['id']
+            networks = self.getNetworks().keys()
+            network_ids = [self.__conn['neutron'].list_networks(name=network)['networks'][0]['id'] for network in networks]
+            nics = [{'net-id': netid for netid in network_ids}]
+            snapshot_id = self.server.create_image("temp")
             image = self.__conn['nova'].images.find(id=snapshot_id)
             while image.status != 'ACTIVE':
                 image = self.__conn['nova'].images.find(id=snapshot_id)
                 pass
             else:
                 clone = self.server.manager.create(clone_name, image,
-                    self.__conn['nova'].flavors.find(id=flavor_id))
+                                                   self.__conn['nova'].flavors.find(id=flavor_id), nics=nics,
+                                                   security_groups=networks)
                 while clone.status != 'ACTIVE':
                     clone = clone.manager.find(id=clone.id)
                 else:
                     image.delete()
-                    attached_disks = self.attachedDisks()
+                    attached_disks = self.getAttachedDisks()
                     for i in attached_disks:
-                        self.__conn['cinder'].volumes.create_server_volume(clone.id, i['id'], i['path'])
+                        self.__conn['nova'].volumes.create_server_volume(clone.id, i['id'], i['path'])
             return clone
-        except  Exception as e:
-            raise BaadalException(e)
+        except Exception as e:
+            # self.__conn['nova'].images.delete(snapshot_id)
+            raise BaadalException(e.message)
         pass
 
-    def createSnapshot(self,snapshot_name=None):
+    def createSnapshot(self, snapshot_name=None):
         try:
             snapshot_name = snapshot_name or self.server.name + "snapshot" + datetime.datetime.now().isoformat()
             snapshot_id = self.server.create_image(snapshot_name)
-            #snapshot_image = self.__conn['nova'].findImage()
+            # snapshot_image = self.__conn['nova'].findImage()
             return snapshot_id
-            #return Snapshot(snapshot, self.server)
+            # return Snapshot(snapshot, self.server)
         except Exception as e:
-            #debug.log(e)
+            # debug.log(e)
             raise BaadalException(e)
         pass
     
@@ -127,11 +133,11 @@ class BaadalVM(object):
             res = self.server.delete()
             return res
         except Exception as e:
-            #debug.log(e)
+            # debug.log(e)
             raise BaadalException(e)
         pass
 
-    def getAttachedDisks(self,):
+    def getAttachedDisks(self, ):
         volume_ids = self.server.__getattr__('os-extended-volumes:volumes_attached')
         disk_list = []
         for i in volume_ids:
@@ -148,7 +154,7 @@ class BaadalVM(object):
             pass
         return disk_list
 
-    def getNetworks(self,):
+    def getNetworks(self, ):
         try:
             return self.server.networks
         except Exception as e:
@@ -156,12 +162,12 @@ class BaadalVM(object):
 
     def getStatus(self, ):
         STATUS = {
-                'ACTIVE' : 'Running',
-                'SHUTOFF' : 'Shutdown',
-                'PAUSED' : 'Paused',
-                'BUILD' : 'Building',
-                'ERROR' : 'Error'
-                }
+                'ACTIVE': 'Running',
+                'SHUTOFF': 'Shutdown',
+                'PAUSED': 'Paused',
+                'BUILD': 'Building',
+                'ERROR': 'Error'
+        }
         self.refreshStatus()
         return STATUS.get(self.server.status, 'Unknown')
         pass
@@ -180,7 +186,7 @@ class BaadalVM(object):
 
     def migrate(self, target_host, live=False):
         try:
-            if live == True:
+            if live is True:
                 res = self.server.migrate(target_host)
             else:
                 res = self.server.live_migrate(target_host)
@@ -214,7 +220,7 @@ class BaadalVM(object):
         properties['ip-addresses'] = []
         for (network, addresses) in server_properties['addresses'].iteritems():            
             for address in addresses:
-                properties['ip-addresses'].append({'network':network, 'address' : address['addr'], 'MAC' : address['OS-EXT-IPS-MAC:mac_addr']})
+                properties['ip-addresses'].append({'network': network, 'address': address['addr'], 'MAC': address['OS-EXT-IPS-MAC:mac_addr']})
             pass
         flavor = self.__conn['nova'].flavors.find(id=self.server.flavor['id'])
         # properties['flavor'] = flavor
@@ -232,13 +238,13 @@ class BaadalVM(object):
         return: None
         """
         try:
-            if soft == True:
+            if soft is True:
                 res = self.server.reboot(reboot_type='SOFT')
             else:
                 res = self.server.reboot(reboot_type='HARD')
             return res
         except Exception as e:
-            #debug.log(e)
+            # debug.log(e)
             raise BaadalException(e)
 
     def refreshStatus(self):
@@ -250,12 +256,12 @@ class BaadalVM(object):
             res = self.server.resume()
             return res
         except Exception as e:
-            #debug.log(e)
+            # debug.log(e)
             raise BaadalException(e)
         pass
 
     def revertSpanshot(self, snapshot_id):
-        #usedb
+        #  usedb
         pass
 
     def shutdown(self, force=False):
@@ -269,7 +275,7 @@ class BaadalVM(object):
         try:
             self.server.stop()
         except Exception as e:
-            #debug.log(e)
+            # debug.log(e)
             raise BaadalException(e)
         pass
         
@@ -283,12 +289,12 @@ class BaadalVM(object):
         try:
             self.server.start()
         except Exception as e:
-            #debug.log(e)
+            # debug.log(e)
             raise BaadalException(e)
         pass
 
     def update(self, **kwargs):
-        #update metadata/config
+        # update metadata/config
         for item, value in kwargs.iteritems():
             self.server.manager.set_meta_item(self.server, item, str(value))
         pass
@@ -308,6 +314,7 @@ class BaadalVM(object):
         else:
             raise AttributeError
     """
+
 
 class Image:
     def __init__(self, image):
@@ -333,6 +340,7 @@ class Image:
         self.__image = self.__image.manager.get(self.__image.id)
     pass
 
+
 class Disk:
     def __init__(self, ):
         pass
@@ -341,7 +349,7 @@ class Disk:
         try:
             self.__conn['cinder'].volumes.create_server_volume(vm.id, self.id, device_path)
         except Exception as e:
-            #debug.log(e)
+            # debug.log(e)
             raise BaadalException("Failed to attach disk id " + self.id + "to" + vm.id + e)
         pass
     
@@ -349,6 +357,7 @@ class Disk:
         pass
     
     pass
+
 
 class Snapshot:
     def __init__(self, snapshot_name, vm ):
@@ -365,15 +374,16 @@ class Snapshot:
 
     pass
 
+
 class Template:
     def __init__(self, ):
         self.id = None
         self.name = None
         self.os = {
-            'os' : None,
-            'name' : None,
-            'type' : None,
-            'edition' : None
+            'os': None,
+            'name': None,
+            'type': None,
+            'edition': None
         } 
         self.arch = None
         self.hdd = None
@@ -382,6 +392,7 @@ class Template:
         self.datastore = None
         self.owner = None
         self.is_active = None
+
 
 class HypervisorHost(Machine):
     def __init__(self, ):
@@ -393,6 +404,7 @@ class HypervisorHost(Machine):
         pass
     pass
 
+
 class Connection:
     def __init__(self, authurl, tenant_name, username, password):
         from keystoneclient.auth.identity import v2
@@ -401,19 +413,19 @@ class Connection:
         from neutronclient.neutron import client as nclient
         from cinderclient import client as cclient 
         auth = v2.Password(auth_url=authurl, username=username,
-                password=password, tenant_name=tenant_name)
+                           password=password, tenant_name=tenant_name)
         sess = session.Session(auth=auth)
-        self.__conn = {}
+        self.__conn = dict()
         self.__conn['nova'] = client.Client('2', session=sess)
         self.__conn['cinder'] = cclient.Client('2', session=sess)
         self.__conn['neutron'] = nclient.Client('2.0', session=sess)
 
-        #Below lines to retained while testing only
+        # Below lines to retained while testing only
         self.nova = self.__conn['nova']
         self.cinder = self.__conn['cinder']
         self.neutron = self.__conn['neutron']
-        #self.__cinder = cclient.Client("2", session=sess)
-        #self.__conn = client.Client("2", session=sess)
+        # self.__cinder = cclient.Client("2", session=sess)
+        # self.__conn = client.Client("2", session=sess)
         pass
 
     def close(self, ):
@@ -421,17 +433,17 @@ class Connection:
 
     def usage(self, attribute_list=None):
         USAGE_PARAMS = {
-                'free_storage' : 'free_disk_gb',
-                'used_storage' : 'local_gb_used',
-                'total_storage' : 'local_gb',
-                'free_memory' : 'free_ram_mb',
-                'used_memory' : 'memory_mb_used',
-                'total_memory' : 'memory_mb',
-                'total_vms' : 'running_vms',
-                'load_avg' : 'current_workload',
-                'vcpus' : 'vcpus',
-                'vcpus_used' : 'vcpus_used'
-                }
+                'free_storage': 'free_disk_gb',
+                'used_storage': 'local_gb_used',
+                'total_storage': 'local_gb',
+                'free_memory': 'free_ram_mb',
+                'used_memory': 'memory_mb_used',
+                'total_memory': 'memory_mb',
+                'total_vms': 'running_vms',
+                'load_avg': 'current_workload',
+                'vcpus': 'vcpus',
+                'vcpus_used': 'vcpus_used'
+        }
         values = {}
         stats = self.__conn['nova'].hypervisor_stats.statistics().to_dict()
         attribute_list = attribute_list or USAGE_PARAMS.keys()
@@ -441,7 +453,7 @@ class Connection:
         pass
 
     def baadalVMs(self, ):
-        #return a list of VMs running on the host
+        # return a list of VMs running on the host
         try:
             serverList = self.__conn['nova'].servers.list()
             serverList = [ BaadalVM(server=i, conn=self.__conn) for i in serverList ]
@@ -449,8 +461,8 @@ class Connection:
         except Exception as e:
             raise BaadalException(e.message)
             
-        #wrap each object of the list of novaclient.v2.servers.Server objects into
-        #a list of BaadalVM objects and return it
+        # wrap each object of the list of novaclient.v2.servers.Server objects into
+        # a list of BaadalVM objects and return it
         pass
 
     def findBaadalVM(self, **kwargs):
@@ -469,15 +481,15 @@ class Connection:
             port-id: uuid of the port if already defined
         }
         """
-        #underlying command
-        #nova boot --flavor 1 --image 6f0ae131-7190-4230-98e4-8a90285b776a --nic net-id=3893d432-08e9-48b1-975f-e6edae078a1a test07
-        #try:
+        # underlying command
+        # nova boot --flavor 1 --image 6f0ae131-7190-4230-98e4-8a90285b776a --nic net-id=3893d432-08e9-48b1-975f-e6edae078a1a test07
+        # try:
         sec_group = self._network_name_from_id(nics[0]['net-id'])
         server = self.__conn['nova'].servers.create(name, image, template, nics=nics, security_groups=[sec_group], **kwargs)
         return BaadalVM(server=server, conn=self.__conn)
-        #except Exception as e:
-            #raise BaadalException(e.message)
-        #pass
+        # except Exception as e:
+            # raise BaadalException(e.message)
+        # pass
 
     def createVolume(self, size, imageRef=None, multiattach=False):
         volume = self.__conn['cinder'].volumes.create(size, imageRef=imageRef, multiattach=multiattach)
@@ -494,10 +506,10 @@ class Connection:
         return self.__conn['cinder'].volumes.get(diskid)
 
     def images(self, ):
-        #return a list of all images
+        # return a list of all images
         try:
             imagesList = self.__conn['nova'].images.list()
-            #imagesList = [ Image(i) for i in imagesList ]
+            # imagesList = [ Image(i) for i in imagesList ]
             return imagesList
         except Exception as e:
             raise BaadalException(e.message)
@@ -506,7 +518,7 @@ class Connection:
     def findImage(self, **kwargs):
         try:
             image = self.__conn['nova'].images.find(**kwargs)
-            #return Image(image)
+            # return Image(image)
             return image
         except Exception as e:
             raise BaadalException(e.message)
@@ -557,6 +569,13 @@ class Connection:
                 return i.label
             pass
         pass
+
+    def netid_from_name(self, netname):
+        for net in self.networks():
+            temp = net.to_dict()
+        if temp['label'] == netname:
+            return temp['id']
+
 
 class BaadalException(Exception):
     def __init__(self, msg):
