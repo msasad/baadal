@@ -41,12 +41,15 @@
               <button type="button" data-action="get-vnc-console" class="btn btn-lg btn-default btn-action" title="Get VNC Console URL">
                 <span class="fa fa-terminal" aria-hidden="true"></span>
               </button>
+              {{#ifCond status '==' 'Running'}}
               <button type="button" data-action="shutdown" class="btn btn-lg btn-default btn-action" title="Shutdown">
                 <span class="fa fa-stop" aria-hidden="true"></span>
               </button>
+              {{else}}
               <button type="button" data-action="start-resume" class="btn btn-lg btn-default btn-action" title="Start/Resume">
                 <span class="fa fa-play" aria-hidden="true"></span>
               </button>
+              {{/ifCond}}
               <button type="button" data-action="migrate" class="btn btn-lg btn-default btn-action" title="Migrate">
                 <span class="fa fa-plane" aria-hidden="true"></span>
               </button>
@@ -72,6 +75,7 @@
           </div>
           <div class="panel-footer">
             <span style="display:none" class="text-danger" id="modal-error-message">There was some error in the form. Please check the values and submit the form again.</span>
+            <span style="display:none" class="text-info" id="modal-info-message"></span>
             <span style="display:none" class="text-success" id="modal-success-message">Request successfully posted.</span>
           </div>
         </div>

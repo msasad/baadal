@@ -75,7 +75,7 @@ class BaadalVM(object):
              raise BaadalException(e.message or _UNKNOWN_ERROR_MSG)   
         pass
     
-    def clone(self, clone_name=None):
+    def clone(self, clone_name=None, clone_type='Full'):
         """
         create clone of the selected Virtual Machine
         params:
@@ -102,14 +102,21 @@ class BaadalVM(object):
             else:
                 clone = self.server.manager.create(clone_name, image,
                                                    self.__conn['nova'].flavors.find(id=flavor_id), nics=nics,
-                                                   security_groups=networks)
+                                                   security_groups=networks, meta=self.server.metadata)
                 while clone.status != 'ACTIVE':
                     clone = clone.manager.find(id=clone.id)
                 else:
                     image.delete()
                     attached_disks = self.getAttachedDisks()
                     for i in attached_disks:
-                        self.__conn['nova'].volumes.create_server_volume(clone.id, i['id'], i['path'])
+                        volid = i['id']
+                        if clone_type == 'Full':
+                            volume_clone = self.__conn['cinder'].volumes.create(i['size'], source_volid=i['id'])
+                            volid = volume_clone.id
+                        while volume_clone.status != 'available':
+                            volume_clone = self.__conn['cinder'].volumes.get(volume_clone.id)
+                        else:
+                            self.__conn['nova'].volumes.create_server_volume(clone.id, volid, i['path'])
             return clone
         except Exception as e:
             # self.__conn['nova'].images.delete(snapshot_id)
@@ -147,8 +154,9 @@ class BaadalVM(object):
                 if entry['server_id'] == self.server.id:
                     devicepath = entry['device']
                     disk_list.append({
-                        'id' : i['id'],
-                        'path' : devicepath
+                        'size': volume.size,
+                        'id': i['id'],
+                        'path': devicepath
                         })
                     pass
             pass

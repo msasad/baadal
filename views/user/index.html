@@ -85,7 +85,6 @@
   $myvms.on('click', '.btn-settings', function (e) {
     var tr = this.closest('tr');
     var context = $table.row(tr).data();
-    console.log(context);
     context['ip-addresses'] = baadalApp.ipArrayToString(context['ip-addresses']);
     $.ajax( {
       url : '/baadal/static/templates/vm-settings-template.html',
@@ -110,6 +109,11 @@
                 }
               },
               success: function(response) {
+                switch (response.action) {
+                  case 'get-vnc-console':
+                      $modal.find('#modal-info-message').html(response.consoleurl).fadeIn();
+                    break;
+                }
                 console.log(response);
               }
             });

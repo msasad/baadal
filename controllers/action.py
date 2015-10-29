@@ -18,7 +18,7 @@ def __do(action, vmid):
                 try:
                     snapshot = vm.createSnapshot()
                 except Exception as e:
-                    return jsonify(status='fail', message=e.message)
+                    return jsonify(status='fail', message=e.message, action=action)
             elif action == 'migrate':
                 vm.migrate()
             elif action == 'clone':
@@ -29,16 +29,15 @@ def __do(action, vmid):
                 vm.migrate(live=True)
             elif action == 'get-vnc-console':
                 consoleurl = vm.getVNCConsole()
-                return jsonify(consoleurl=consoleurl)
+                return jsonify(consoleurl=consoleurl, action=action)
             elif action == 'start-resume':
                 status = vm.getStatus()
                 if status == 'Paused':
                     vm.resume()
                 elif status == 'Shutdown':
                     vm.start()
-
         conn.close()
-        return jsonify()
+        return jsonify(status='success', action=action)
     else:
         conn.close()
         return jsonify(status='failure')
@@ -46,6 +45,10 @@ def __do(action, vmid):
 
 def __start(vmid):
     return __do('start', request.vars.vmid)
+
+
+def __start_resume(vmid):
+    return __do('start-resume', vmid)
 
 
 def __shutdown(vmid):

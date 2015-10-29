@@ -20,6 +20,13 @@ def my_vms():
     return json.dumps({'data': response})
 
 
+def vm_status():
+    vmid = request.vars.vmid
+    vm = conn.findBaadalVM(id=vmid)
+    if vm:
+        return jsonify(vm_status=vm.getStatus())
+
+
 def my_requests():
     # import json
     rows = db(db.vm_requests.owner == 'test').select()
