@@ -606,6 +606,15 @@ class Connection:
         if temp['label'] == netname:
             return temp['id']
 
+    def createSubnet(network_name, cidr, ip_version=None, idns_name=None):
+        body_sample = {'network': {'name': network_name,'admin_state_up': True}}
+        netw = self.__conn['neutron'].create_network(body=body_sample)
+        net_dict = netw['network']
+        network_id = net_dict['id']
+        print('Network %s created' % network_id)
+        body_create_subnet = {'subnets': [{'cidr': cidr,'ip_version': 4, 'network_id': network_id}]}
+        subnet = self.__conn['neutron'].create_subnet(body=body_create_subnet)
+        print('Created subnet %s' % subnet)
 
 class BaadalException(Exception):
     def __init__(self, msg):
