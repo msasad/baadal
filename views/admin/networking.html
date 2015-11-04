@@ -1,0 +1,93 @@
+{{extend 'blank-page.html'}}
+<div class="panel panel-primary">
+  <div class="panel-heading">
+    <h3 class="panel-title">Configure Networks</h3>
+  </div>
+  <div class="panel-body">
+    <table id="networks-table" class="table table-hover table-stripped table-condensed table-bordered">
+      <thead>
+      <tr>
+        <th>Network Name</th>
+        <th>State</th>
+        <th>Shared</th>
+        <th>External</th>
+        <th>Subnets</th>
+      </tr>
+      </thead>
+    </table>
+  </div>
+  <div class="panel-footer">
+    <button class="btn btn-default">Add </button>
+  </div>
+</div>
+{{include 'default-scripts.html'}}
+<script src="/baadal/static/js/datatables.min.js"></script>
+<script src="/baadal/static/js/dataTables.bootstrap.min.js"></script>
+<script>
+  (function($) {
+    var $t = $('#networks-table');
+    var $table = $t.DataTable({
+      ajax: '/baadal/admin/networks.json',
+      aoColumnDefs: [
+        {
+          aTargets:[1],
+          mData: null,
+          mRender: function(data, type, full) {
+            if (type === 'filter' || type === 'display') {
+              return data.admin_state_up ? 'Up' : 'Down';
+            } else {
+              return data;
+            }
+          }
+
+        },
+        {
+          aTargets:[4],
+          mData: null,
+          mRender: function(data, type, full) {
+            if (type === 'filter' || type === 'display') {
+              var subnets = data.subnets;
+              var i, arr = [];
+              for (i = subnets.length - 1; i >=0; i--) {
+                var str = '<a class="subnet-link" href="#" data-subnet="' + subnets[i].id + '">' + subnets[i].name + '</a>';
+                arr.push(str)
+              }
+              return arr.join(', ') + '<button title="Add Subnet" class="btn btn-sm btn-default pull-right"><span class="glyphicon glyphicon-plus">' +
+                  '</span></button>';
+            } else {
+              return data;
+            }
+          }
+        }
+      ],
+      columns: [
+        { data: 'name'},
+        { data: undefined},
+        { data: 'shared'},
+        { data: 'router:external'},
+        { data: undefined}
+      ]
+    });
+$t.on('click', '.subnet-link', function(e) {
+  var data = $table.row(this.closest('tr')).data();
+  var subnetid = this.getAttribute('data-subnet');
+  $.ajax({
+    url: '/baadal/static/templates/subnet-settings-template.html',
+    success: function(response) {
+      var template = Handlebars.compile(response);
+      data = baadalApp.filterArrayObject(data, 'subnets', 'id', subnetid);
+      //data.subnet = data.subnets[0]
+      var html = template(data);
+      console.log(data);
+      $(document.body).prepend(html);
+      var $modal = $('#subnets-modal').modal('show');
+      $modal.on('hidden.bs.modal', function() {
+        $modal.remove();
+      });
+    }
+  });
+  //console.log(data);
+});
+  })(jQuery);
+</script>
+{{include 'wrap.html'}}

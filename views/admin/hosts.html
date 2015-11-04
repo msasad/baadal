@@ -1,0 +1,108 @@
+{{extend 'blank-page.html'}}
+<div class="panel panel-primary">
+  <div class="panel-heading">
+    <h3 class="panel-title">Available Compute Hosts</h3>
+  </div>
+  <div class="panel-body">
+    <table id="compute-hosts" class="table table-bordered table-condended table-stripped">
+      <thead>
+      <tr>
+        <th>Hostname</th>
+        <th>IP Address</th>
+        <th>Status</th>
+        <th>Total VMs</th>
+        <th>RAM</th>
+        <th>CPUs</th>
+        <th>Error</th>
+        <th>Settings</th>
+      </tr>
+      </thead>
+    </table>
+  </div>
+  <div class="panel-footer">
+
+  </div>
+</div>
+{{include 'default-scripts.html'}}
+<script src="/baadal/static/js/datatables.min.js"></script>
+<script src="/baadal/static/js/dataTables.bootstrap.min.js"></script>
+<script>
+  (function($) {
+    var $table = $('#compute-hosts').DataTable({
+      ajax: '/baadal/admin/hostinfo.json',
+      'aoColumnDefs': [
+        {
+          "aTargets": [2],
+          "mData": null,
+          "mRender": function (data, type, full) {
+            if (type === 'display' || type === 'filter') {
+              return full.status + '/' + full.state;
+            }
+            return data;
+          }
+        },
+        {
+        "aTargets": [6],
+        "mData": null,
+        "mRender": function (data, type, full) {
+          if (type === 'display' || type === 'filter') {
+            return full.service.disabled_reason || '<i>None</i>';
+          }
+          return data;
+          }
+        },
+        {
+          'aTargets' : [7],
+          'mRender': function(data, type, full) {
+            if (type === 'display') {
+              var btn;
+              if (full.state === 'up') {
+                btn = '<button class="btn btn-danger btn-action" title="shutdown">' +
+                    '<span class="glyphicon glyphicon-stop"></button>';
+              } else {
+                btn = '<button class="btn btn-default btn-action" title="start">' +
+                    '<span class="glyphicon glyphicon-play"></button>';
+              }
+              return '<div class="btn-group"><button title="reboot" class="btn btn-default btn-action">' +
+                  '<span class="glyphicon glyphicon-repeat"></span></button>' +
+                  btn + '</div>';
+            }
+            return null;
+          }
+        }
+      ],
+      "columns": [
+        {"data": "hypervisor_hostname"},
+        {"data": "host_ip"},
+        {"data": undefined },
+        {"data": "running_vms"},
+        {"data": "memory_mb"},
+        {"data": "vcpus"},
+        {"data": undefined},
+        {'data': undefined}
+      ]
+    });
+
+    $('#compute-hosts').on('click', '.btn-action', function(e) {
+      var tr = this.closest('tr');
+      var data = $table.row(tr).data();
+      $.ajax({
+        url: '/baadal/admin/hostaction.json',
+        data: {
+          hostname: data.hypervisor_hostname,
+          action: this.title
+        },
+        success: function(response) {
+          console.log(response);
+        },
+        error: function(response) {
+          var error = response.getResponseHeader('web2py_error');
+          if (error) {
+            baadalApp.generateTicketLink(error);
+          }
+        }
+      });
+    });
+  })(jQuery);
+</script>
+{{include 'wrap.html'}}

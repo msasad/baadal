@@ -1,0 +1,90 @@
+<div class="modal fade" id="subnets-modal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Subnet</h4>
+      </div>
+      <div class="modal-body">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">{{name}}</h3>
+          </div>
+          <div class="panel-body">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="panel panel-default">
+                  <div class="panel-heading">CIDR</div>
+                  <div class="panel-body">
+                    {{subnets.[0].cidr}}
+                  </div>
+                </div>
+                <div class="panel panel-default">
+                  <div class="panel-heading">DHCP Enabled</div>
+                  <div class="panel-body">
+                    {{subnets.[0].enable_dhcp}}
+                  </div>
+                </div>
+                <div class="panel panel-default">
+                  <div class="panel-heading">Network ID</div>
+                  <div class="panel-body">
+                    {{subnets.[0].network_id}}
+                  </div>
+                </div>
+                <div class="panel panel-default">
+                  <div class="panel-heading">Subnet ID</div>
+                  <div class="panel-body">
+                    {{subnets.[0].id}}
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="panel panel-default">
+                  <div class="panel-heading">IP Version</div>
+                  <div class="panel-body">
+                    {{subnets.[0].ip_version}}
+                  </div>
+                </div>
+
+                <div class="panel panel-default">
+                  <div class="panel-heading">Gateway IP</div>
+                  <div class="panel-body">
+                    {{subnets.[0].gateway_ip}}
+                  </div>
+                </div>
+                <div class="panel panel-default">
+                  <div class="panel-heading">DNS NameServers</div>
+                  <div class="panel-body">
+                    {{#if subnets.[0].dns_nameservers }}
+                      {{#each subnets.[0].dns_nameservers}}
+                        {{this}},
+                      {{/each}}
+                    {{else}}
+                      None
+                    {{/if}}
+                  </div>
+                </div>
+                <div class="panel panel-default">
+                  <div class="panel-heading">Address Pools</div>
+                  <div class="panel-body">
+                    {{#each subnets.[0].allocation_pools}}
+                    {{this.start}} - {{this.end}},
+                    {{/each}}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="panel-footer">
+            <span style="display:none" class="text-danger" id="modal-error-message">There was some error in the form. Please check the values and submit the form again.</span>
+            <span style="display:none" class="text-info" id="modal-info-message"></span>
+            <span style="display:none" class="text-success" id="modal-success-message">Request successfully posted.</span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div>

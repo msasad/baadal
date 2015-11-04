@@ -3,6 +3,7 @@ cache
 databases
 errors
 sessions
+log
 
 # inherit https://github.com/github/gitignore/blob/master/Python.gitignore
 
@@ -36,3 +37,4 @@ pip-log.txt
 
 *.swp
 .idea
+modules/osclient.py
