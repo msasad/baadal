@@ -1,4 +1,6 @@
 import json
+from log_handler import logger
+# import log_handler.mylogger as mylogger
 
 
 def index():
@@ -36,4 +38,70 @@ def handle_request():
         except Exception as e:
             return json.dumps({'status': 'fail', 'message': e.message})
         # vm = conn.createBaadalVM()
-    return json.dumps({'message': 'Request id %s is %s'%(request.vars.id, status[request.vars.action])})
+    return json.dumps({'message': 'Request id %s is %s' % (request.vars.id, status[request.vars.action])})
+
+
+def configure():
+    return dict()
+
+
+def networking():
+    return dict()
+
+
+def networks():
+    try:
+        networklist = conn.networks()['networks']
+        for network in networklist:
+            network['subnets'] = conn.subnets(network['id'])['subnets']
+        return jsonify(data=networklist)
+    except Exception as e:
+        logger.error(e.message)
+        return jsonify(status='fail', message=e.message)
+
+
+def subnets():
+    try:
+        subnet_list = conn.subnets(request.vars.netid)
+        return jsonify(data=subnet_list)
+    except Exception as e:
+        logger.debug(e.message)
+        return jsonify('fail', message=e.message)
+
+
+def hosts():
+    return dict()
+
+
+def secgroups():
+    try:
+        secgroups = conn.sgroups()
+        return json.dumps(secgroups.to_dict())
+    except Exception as e:
+        logger.error(e.message)
+        return jsonify(status='fail')
+
+
+def floatingips():
+    return dict()
+
+
+def hostinfo():
+    try:
+        id = request.vars.id
+        hypervisors = conn.hypervisors(id=id)
+        return jsonify(data=[h.to_dict() for h in hypervisors])
+    except Exception as e:
+        logger.error(e.message)
+        return jsonify(status='fail')
+
+
+def hostaction():
+    try:
+        hostname = request.vars.hostname
+        action = request.vars.action
+        conn.nova.hosts.host_action(hostname, action)
+    except Exception as e:
+        logger.error(e.message)
+        return jsonify(status='fail')
+

@@ -23,7 +23,7 @@ class BaadalVM(object):
         if id is not None and server is not None:
             raise BaadalException('Cannot initialise server, please specify either server or id')
         else:
-            if str(type(server)).endswith("novaclient.v2.servers.Server'>"): 
+            if str(type(server)).endswith("novaclient.v2.servers.Server'>"):
                 self.server = server
                 self.__conn = conn
 
@@ -403,13 +403,17 @@ class Template:
 
 
 class HypervisorHost(Machine):
-    def __init__(self, ):
+    def __init__(self, host):
+        self.host = host
         self.category = None
         self.status = None
         self.slot = None
         self.rack = None
         self.hosttype = None
         pass
+
+    def shutdown(self):
+        self.host.shutdown()
     pass
 
 
@@ -417,6 +421,7 @@ class Connection:
     def __init__(self, authurl, tenant_name, username, password):
         from keystoneclient.auth.identity import v2
         from keystoneclient import session
+        # from keystoneclient import client as ksclient
         from novaclient import client
         from neutronclient.neutron import client as nclient
         from cinderclient import client as cclient 
@@ -427,8 +432,9 @@ class Connection:
         self.__conn['nova'] = client.Client('2', session=sess)
         self.__conn['cinder'] = cclient.Client('2', session=sess)
         self.__conn['neutron'] = nclient.Client('2.0', session=sess)
+        # self.ksclient = ksclient.Client('2.0', session=sess)
 
-        # Below lines to retained while testing only
+        # FIXME Retain these lines during testing only
         self.nova = self.__conn['nova']
         self.cinder = self.__conn['cinder']
         self.neutron = self.__conn['neutron']
@@ -489,14 +495,12 @@ class Connection:
             port-id: uuid of the port if already defined
         }
         """
-        # underlying command
-        # nova boot --flavor 1 --image 6f0ae131-7190-4230-98e4-8a90285b776a --nic net-id=3893d432-08e9-48b1-975f-e6edae078a1a test07
         # try:
         sec_group = self._network_name_from_id(nics[0]['net-id'])
         server = self.__conn['nova'].servers.create(name, image, template, nics=nics, security_groups=[sec_group], **kwargs)
         return BaadalVM(server=server, conn=self.__conn)
         # except Exception as e:
-            # raise BaadalException(e.message)
+        # raise BaadalException(e.message)
         # pass
 
     def createVolume(self, size, imageRef=None, multiattach=False):
@@ -533,8 +537,16 @@ class Connection:
         pass
    
     def hypervisors(self, name=None, id=None):
+        if name and id:
+            raise BaadalException('Cannot find hypervisor! Please specify either name or Id')
         try:
-            hypervisors = self.__conn['nova'].hypervisors.list()
+            if not name and not id:
+                hypervisors = self.__conn['nova'].hypervisors.list()
+            elif name:
+                hypervisors = self.__conn['nova'].hypervisors.find(hypervisor_hostname=name)
+            else:
+                hypervisors = self.__conn['nova'].hypervisors.find(id=id)
+            return hypervisors
         except Exception as e:
             raise BaadalException(e.message or _UNKNOWN_ERROR_MSG)
 
@@ -561,14 +573,24 @@ class Connection:
         except Exception as e:
             raise BaadalException(e.message)
 
-    def networks(self,):
+    def networks(self, ):
         try:
-            networks = self.__conn['nova'].networks.list()
+            networks = self.__conn['neutron'].list_networks()
             return networks
         except Exception as e:
             raise BaadalException(e.message)
         pass
     pass
+
+    def subnets(self, network_id=None):
+        try:
+            if network_id:
+                subnet_list = self.__conn['neutron'].list_subnets(network_id=network_id)
+            else:
+                subnet_list = self.__conn['neutron'].list_subnets()
+            return subnet_list
+        except Exception as e:
+            raise BaadalException(e.message)
 
     def _network_name_from_id(self, netid):
         netlist = self.networks()

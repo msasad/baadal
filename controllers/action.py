@@ -1,3 +1,5 @@
+from log_handler import logger  
+
 def __do(action, vmid):
     if conn:
         vm = conn.findBaadalVM(id=vmid)

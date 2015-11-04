@@ -53,3 +53,17 @@ if (Handlebars) {
     }
   });
 }
+
+baadalApp.filterArrayObject = function(object, array_name, field_name, value) {
+  if (object.hasOwnProperty(array_name)) {
+    var array = object[array_name];
+    var newarray = [];
+    for ( var a in array) {
+      if (array[a][field_name] == value) {
+        newarray.push(array[a]);
+      }
+    }
+  }
+  object[array_name] = newarray;
+  return object;
+}

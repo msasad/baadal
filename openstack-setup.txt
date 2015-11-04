@@ -16,7 +16,7 @@ create subnet in each network using the below command
 $ neutron subnet-create --tenant-id $tenant --name SUBNET_NAME NETWORK_NAME CIDR
 
 set gateways for each subnet by issuing the below command
-neutron subnet-update SUBNET_ID --dns-nameservers list=true 10.208.20.2 10.208.20.19 10.10.1.2
+$ neutron subnet-update SUBNET_ID --dns-nameservers list=true 10.208.20.2 10.208.20.19 10.10.1.2
 
 Attach the created subnet to the previuosly created router
 $ neutron router-interface-add ROUTER_NAME SUBNET_NAME
