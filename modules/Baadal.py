@@ -606,15 +606,35 @@ class Connection:
         if temp['label'] == netname:
             return temp['id']
 
-    def createSubnet(network_name, cidr, ip_version=None, idns_name=None):
-        body_sample = {'network': {'name': network_name,'admin_state_up': True}}
-        netw = self.__conn['neutron'].create_network(body=body_sample)
-        net_dict = netw['network']
-        network_id = net_dict['id']
-        print('Network %s created' % network_id)
-        body_create_subnet = {'subnets': [{'cidr': cidr,'ip_version': 4, 'network_id': network_id}]}
-        subnet = self.__conn['neutron'].create_subnet(body=body_create_subnet)
-        print('Created subnet %s' % subnet)
+    def createNetwork(self,network_name, cidr, ip_version=None, dns_name=None):
+        try:
+           body_sample = {'network': {'name': network_name,'admin_state_up': True}}
+           netw = self.__conn['neutron'].create_network(body=body_sample)
+           net_dict = netw['network']
+           network_id = net_dict['id']
+           return network_id
+        except Exception as e:
+           raise BaadalException(e.message)
+
+    def createSubnet(self,network_id,cidr,ip_version=None,dns_name=None):
+       try:
+          body_create_subnet = {'subnets': [{'cidr': cidr,'ip_version': 4, 'network_id': network_id}]}
+          subnet = self.__conn['neutron'].create_subnet(body=body_create_subnet)
+       except Exception as e:
+          raise BaadalException(e.message)
+
+    def deleteNetwork(self,network_id):
+        try:
+           self.__conn['neutron'].delete_network(network_id)
+        except Exception as e:
+           raise BaadalException(e.message)
+     
+    def createSecurityDomain(self,sg_name):
+        try:
+           security_group = {'name':sg_name} 
+           sg = self.__conn['neutron'].create_security_group({'security_group':security_group})
+        except Exception as e:
+           raise BaadalException(e.message)
 
 class BaadalException(Exception):
     def __init__(self, msg):
