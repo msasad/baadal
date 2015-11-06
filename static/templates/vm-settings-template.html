@@ -69,6 +69,35 @@
                 <span class="fa fa-remove" aria-hidden="true"></span>
               </button>
             </div>
+
+            <table class="table table-bordered table-stripped table-hover" style="margin-top:20px">
+              <thead>
+              <tr>
+                <th>Snapshot Name</th>
+                <th colspan="2">Created at</th>
+              </tr>
+              </thead>
+              <tbody>
+                {{#if snapshots}}
+                  {{#each snapshots}}
+                <tr data-snapshot-id="{{this.id}}">
+                  <td>{{this.name}}</td>
+                  <td>{{this.created}}</td>
+                  <td class="text-center">
+                    <a title="Restore this spanshot" href="#">
+                      <span class="badge">
+                        <span class="fa fa-reply"></span>
+                      </span>
+                    </a>
+                  </td>
+                </tr>
+                  {{/each}}
+              {{else}}
+              <tr><td colspan="100%" class="text-center text-info">No Snapshots</td> </tr>
+              {{/if}}
+              </tbody>
+            </table>
+
           </div>
           <div class="panel-footer">
             <span style="display:none" class="text-danger" id="modal-error-message">There was some error in the form. Please check the values and submit the form again.</span>

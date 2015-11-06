@@ -11,13 +11,13 @@ def login():
 
 
 def my_vms():
-    import json
+    # import json
     vms = conn.baadalVMs()
     response = list()
     for vm in vms:
         response.append(vm.properties())
-
-    return json.dumps({'data': response})
+    # return json.dumps({'data': response})
+    return jsonify(data=response)
 
 
 def vm_status():

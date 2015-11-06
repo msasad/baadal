@@ -118,6 +118,18 @@
               }
             });
           });
+          $modal.on('click', '.snapshot-restore', function(e){
+            var vmid = document.getElementById('vmid').value;
+            $.ajax({
+              url: '/baadal/action/index.json',
+              type: 'post',
+              data: {
+                vmid: vmid,
+                action: 'restore-snapshot',
+                snapshot_id: this.closest('tr').getAttribute('data-snapshot-id')
+              }
+            })
+          });
           $modal.on('hidden.bs.modal', function() {
             $modal.remove();
           });

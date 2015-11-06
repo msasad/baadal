@@ -208,10 +208,24 @@ class BaadalVM(object):
         return self.server.to_dict()
         pass
 
+    @staticmethod
+    def __cmp(x, y):
+        import time
+        fmt = "%Y-%m-%dT%H:%M:%SZ"
+        secondsx = time.mktime(time.strptime(x.created, fmt))
+        secondsy = time.mktime(time.strptime(y.created, fmt))
+        if secondsx == secondsy:
+            return 0
+        elif secondsx > secondsy:
+            return 1
+        else:
+            return -1
+
     def lastSnapshot(self, ):
-        # get the last snapshot of the current VM or return None if no snapshots found
-        # usedb
-        pass
+        fmt = "%Y-%m-%dT%H:%M:%SZ"
+        snapshots = self.get_snapshots()
+        snapshots.sort(cmp=self.__cmp, reverse=True)
+        return snapshots[0]
 
     def migrate(self, target_host, live=False):
         try:
@@ -256,6 +270,11 @@ class BaadalVM(object):
         properties['status'] = self.getStatus()
         properties['memory'] = flavor.__getattr__('ram')
         properties['vcpus'] = flavor.__getattr__('vcpus')
+        snapshots = self.get_snapshots()
+        l = []
+        for snapshot in snapshots:
+            l.append({'id': snapshot.id, 'created': snapshot.created, 'name': snapshot.name})
+        properties['snapshots'] = l
         return properties
         pass
 
@@ -289,9 +308,11 @@ class BaadalVM(object):
             raise BaadalException(e)
         pass
 
-    def revertSpanshot(self, snapshot_id):
-        #  usedb
-        pass
+    def restore_snapshot(self, snapshot_id, password=None, preserve_ephemeral=False, **kwargs):
+        try:
+            self.server.rebuild(snapshot_id, password=password, preserve_ephemeral=preserve_ephemeral, **kwargs)
+        except Exception as e:
+            raise BaadalException(e.message or str(e.__class__))
 
     def shutdown(self, force=False):
         """

@@ -17,6 +17,8 @@ def __do(action, vmid):
                 vm.delete()
             elif action == 'resume':
                 vm.resume()
+            elif action == 'restore-snapshot':
+                 vm.restore_snapshot(request.vars.snapshot_id)
             elif action == 'snapshot':
                 try:
                     snapshotid = vm.createSnapshot()
@@ -83,6 +85,10 @@ def __powerOff(vmid):
     return __do('powerOff', vmid)
 
 
+def __restore_snapshot(vmid):
+    return __do('restore-snapshot', vmid)
+
+
 def __get_vnc_console(vmid):
     return __do('get-vnc-console', vmid)
 
@@ -112,6 +118,8 @@ def index():
         return __cloneVM(vmid)
     elif action == 'powerOff':
         return __powerOff(vmid)
+    elif action == 'restore-snapshot':
+        return __restore_snapshot(vmid)
 
 
 def handle_request():
