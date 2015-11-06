@@ -1,5 +1,6 @@
 from log_handler import logger  
 
+
 def __do(action, vmid):
     if conn:
         vm = conn.findBaadalVM(id=vmid)
@@ -18,17 +19,14 @@ def __do(action, vmid):
                 vm.resume()
             elif action == 'snapshot':
                 try:
-                    snapshot = vm.createSnapshot()
+                    snapshotid = vm.createSnapshot()
+                    return jsonify(snapshotid=snapshotid)
                 except Exception as e:
                     return jsonify(status='fail', message=e.message, action=action)
-            elif action == 'migrate':
-                vm.migrate()
             elif action == 'clone':
                 vm.clone()
             elif action == 'powerOff':
                 vm.shutdown(force=True)
-            elif action == 'migrateLive':
-                vm.migrate(live=True)
             elif action == 'get-vnc-console':
                 consoleurl = vm.getVNCConsole()
                 return jsonify(consoleurl=consoleurl, action=action)
@@ -46,7 +44,7 @@ def __do(action, vmid):
 
 
 def __start(vmid):
-    return __do('start', request.vars.vmid)
+    return __do('start', vmid)
 
 
 def __start_resume(vmid):
@@ -54,47 +52,39 @@ def __start_resume(vmid):
 
 
 def __shutdown(vmid):
-    return __do('shutdown', request.vars.vmid)
+    return __do('shutdown', vmid)
 
 
 def __pause(vmid):
-    return __do('pause', request.vars.vmid)
+    return __do('pause', vmid)
 
 
 def __reboot(vmid):
-    return __do('reboot', request.vars.vmid)
+    return __do('reboot', vmid)
 
 
 def __delete(vmid):
-    return __do('delete', request.vars.vmid)
+    return __do('delete', vmid)
 
 
 def __resume(vmid):
-    return __do('resume', request.vars.vmid)
+    return __do('resume', vmid)
 
 
 def __snapshot(vmid):
-    return __do('snapshot', request.vars.vmid)
-
-
-def __migrateLive(vmid):
-    return __do('migrateLive', request.vars.vmid)
-
-
-def __migrateVM(vmid):
-    return __do('migrate', request.vars.vmid)
+    return __do('snapshot', vmid)
 
 
 def __cloneVM(vmid):
-    return __do('clone', request.vars.vmid)
+    return __do('clone', vmid)
 
 
 def __powerOff(vmid):
-    return __do('powerOff', request.vars.vmid)
+    return __do('powerOff', vmid)
 
 
 def __get_vnc_console(vmid):
-    return __do('get-vnc-console', request.vars.vmid)
+    return __do('get-vnc-console', vmid)
 
 
 def index():
@@ -118,10 +108,6 @@ def index():
         return __snapshot(vmid)
     elif action == 'get-vnc-console':
         return __get_vnc_console(vmid)
-    elif action == 'migrate':
-        return __migrateVM(vmid)
-    elif action == 'migrate-live':
-        return __migrateLive(vmid)
     elif action == 'clone':
         return __cloneVM(vmid)
     elif action == 'powerOff':
@@ -141,21 +127,35 @@ def handle_request():
 
 
 def __finalize_vm(vm, extra_storage_size, public_ip_required=False):
-    while vm.getStatus() != 'Running' and vm.getStatus() != 'Error':
-        pass
+    """
+    Attaches extra storage and/or assigns public IP to a newly created VM.
+    This function is specially meant to be run on a separate thread
+    :param vm: BaadalVM object representing the newly created VM
+    :param extra_storage_size: Integer size of extra disk to be attached
+    :param public_ip_required: Boolean value to indicate if the newly created VM requires floating ip
+    :return: None
+    """
 
-    if vm.getStatus() == 'Running':
-        if public_ip_required:
-            vm.attachFloatingIP()
+    try:
+        while vm.getStatus() != 'Running' and vm.getStatus() != 'Error':
+            pass
 
-        if extra_storage_size:
-            disk = conn.createVolume(extra_storage_size)
-            while disk.status != 'available':
-                disk = conn.getDiskById(disk.id)
-            vm.attachDisk(disk, '/dev/vdb')
-            vm.update(disks=2)
-    else:
-        raise Exception('VM Build Failed')
+        if vm.getStatus() == 'Running':
+            if public_ip_required:
+                vm.attachFloatingIP()
+
+            if extra_storage_size:
+                disk = conn.createVolume(extra_storage_size)
+                while disk.status != 'available':
+                    disk = conn.getDiskById(disk.id)
+                num_disks = vm.metadata()['disks']
+                disk_path = '/dev/vd' + chr(97 + num_disks)
+                vm.attachDisk(disk, disk_path)
+                vm.update(disks=num_disks + 1)
+        else:
+            raise Baadal.BaadalException('VM Build Failed')
+    except Exception as e:
+        logger.error(e.message)
 
 
 def __create():
@@ -173,9 +173,9 @@ def __create():
         row.update_record(state=2)
         db.commit()
         if public_ip_required == 1 or extra_storage_size:
-            __finalize_vm(vm, extra_storage_size, public_ip_required)
-            # thread = FuncThread(__finalize_vm, vm, extra_storage_size, public_ip_required)
-            # thread.start()
+            # __finalize_vm(vm, extra_storage_size, public_ip_required)
+            thread = FuncThread(__finalize_vm, vm, extra_storage_size, public_ip_required)
+            thread.start()
             pass
         return jsonify()
         # except Exception as e:
