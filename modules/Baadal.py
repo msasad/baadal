@@ -308,9 +308,11 @@ class BaadalVM(object):
             raise BaadalException(e)
         pass
 
-    def revertSpanshot(self, snapshot_id):
-        #  usedb
-        pass
+    def restore_snapshot(self, snapshot_id, password=None, preserve_ephemeral=False, **kwargs):
+        try:
+            self.server.rebuild(snapshot_id, password=password, preserve_ephemeral=preserve_ephemeral, **kwargs)
+        except Exception as e:
+            raise BaadalException(e.message or str(e.__class__))
 
     def shutdown(self, force=False):
         """
