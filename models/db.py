@@ -19,8 +19,3 @@ db.define_table('vm_requests',
                 Field('purpose', 'string'),
                 Field('state', 'integer'),
                 )
-db.define_table('migrate_requests',
-                Field('id', 'integer'),
-                Field('vmid', 'string'),
-                Field('request_time', 'integer'),
-                )
