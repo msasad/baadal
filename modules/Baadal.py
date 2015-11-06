@@ -3,6 +3,26 @@
 import datetime
 _EXTERNAL_NETWORK = 'ext-net'
 _UNKNOWN_ERROR_MSG = 'Unknown Error'
+USAGE_PARAMS = {
+                'free_storage': 'free_disk_gb',
+                'used_storage': 'local_gb_used',
+                'total_storage': 'local_gb',
+                'free_memory': 'free_ram_mb',
+                'used_memory': 'memory_mb_used',
+                'total_memory': 'memory_mb',
+                'total_vms': 'running_vms',
+                'load_avg': 'current_workload',
+                'vcpus': 'vcpus',
+                'vcpus_used': 'vcpus_used'
+        }
+
+STATUS = {
+                'ACTIVE': 'Running',
+                'SHUTOFF': 'Shutdown',
+                'PAUSED': 'Paused',
+                'BUILD': 'Building',
+                'ERROR': 'Error'
+        }
 
 
 class Machine:
@@ -43,21 +63,18 @@ class BaadalVM(object):
 
     def attachDisk(self, disk, device_path):
         """
-        attach a disk to a Virtual Machine
+        attach a disk to Virtual Machine
         params:
             disk: instance of disk to be attached
             device_path: path in the system where the disk is to be attached
         return: 
         """
 
-        # try:
-        self.__conn['nova'].volumes.create_server_volume(self.server.id, disk.id, device_path)
-        return True
-        # except Exception as e:
-        # debug.log(e)
-        raise BaadalException(e.message or _UNKNOWN_ERROR_MSG)
-        # return False
-        # pass
+        try:
+            self.__conn['nova'].volumes.create_server_volume(self.server.id, disk.id, device_path)
+            return True
+        except Exception as e:
+            raise BaadalException(e.message or _UNKNOWN_ERROR_MSG)
 
     def attachFloatingIP(self, floatingip=None, fixed_address=None):
         if floatingip is None:
@@ -113,8 +130,8 @@ class BaadalVM(object):
                         if clone_type == 'Full':
                             volume_clone = self.__conn['cinder'].volumes.create(i['size'], source_volid=i['id'])
                             volid = volume_clone.id
-                        while volume_clone.status != 'available':
-                            volume_clone = self.__conn['cinder'].volumes.get(volume_clone.id)
+                            while volume_clone.status != 'available':
+                                volume_clone = self.__conn['cinder'].volumes.get(volume_clone.id)
                         else:
                             self.__conn['nova'].volumes.create_server_volume(clone.id, volid, i['path'])
             return clone
@@ -168,14 +185,18 @@ class BaadalVM(object):
         except Exception as e:
             raise BaadalException(e)
 
+    def get_snapshots(self):
+        try:
+            snapshots = []
+            all_images = self.__conn['nova'].images.list()
+            for img in all_images:
+                if hasattr(img, 'server') and img.server['id'] == self.server.id:
+                    snapshots.append(img)
+            return snapshots
+        except Exception as e:
+            raise BaadalException(e.message or str(e.__class__))
+
     def getStatus(self, ):
-        STATUS = {
-                'ACTIVE': 'Running',
-                'SHUTOFF': 'Shutdown',
-                'PAUSED': 'Paused',
-                'BUILD': 'Building',
-                'ERROR': 'Error'
-        }
         self.refreshStatus()
         return STATUS.get(self.server.status, 'Unknown')
         pass
@@ -418,6 +439,9 @@ class HypervisorHost(Machine):
 
 
 class Connection:
+    """
+    A wrapper class for objects of novaclient, neutronclient, cinderclient and keystoneclient
+    """
     def __init__(self, authurl, tenant_name, username, password):
         from keystoneclient.auth.identity import v2
         from keystoneclient import session
@@ -446,18 +470,11 @@ class Connection:
         pass
 
     def usage(self, attribute_list=None):
-        USAGE_PARAMS = {
-                'free_storage': 'free_disk_gb',
-                'used_storage': 'local_gb_used',
-                'total_storage': 'local_gb',
-                'free_memory': 'free_ram_mb',
-                'used_memory': 'memory_mb_used',
-                'total_memory': 'memory_mb',
-                'total_vms': 'running_vms',
-                'load_avg': 'current_workload',
-                'vcpus': 'vcpus',
-                'vcpus_used': 'vcpus_used'
-        }
+        """
+        :param attribute_list: optional; list of usage paramenters to fetch
+        :return: a dict object representing resource usage of a compute node
+        """
+
         values = {}
         stats = self.__conn['nova'].hypervisor_stats.statistics().to_dict()
         attribute_list = attribute_list or USAGE_PARAMS.keys()
