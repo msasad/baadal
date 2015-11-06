@@ -208,10 +208,24 @@ class BaadalVM(object):
         return self.server.to_dict()
         pass
 
+    @staticmethod
+    def __cmp(x, y):
+        import time
+        fmt = "%Y-%m-%dT%H:%M:%SZ"
+        secondsx = time.mktime(time.strptime(x.created, fmt))
+        secondsy = time.mktime(time.strptime(y.created, fmt))
+        if secondsx == secondsy:
+            return 0
+        elif secondsx > secondsy:
+            return 1
+        else:
+            return -1
+
     def lastSnapshot(self, ):
-        # get the last snapshot of the current VM or return None if no snapshots found
-        # usedb
-        pass
+        fmt = "%Y-%m-%dT%H:%M:%SZ"
+        snapshots = self.get_snapshots()
+        snapshots.sort(cmp=self.__cmp, reverse=True)
+        return snapshots[0]
 
     def migrate(self, target_host, live=False):
         try:
