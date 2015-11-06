@@ -18,7 +18,7 @@ def __do(action, vmid):
             elif action == 'resume':
                 vm.resume()
             elif action == 'restore-snapshot':
-                vm.restore_snapshot(request.vars.snapshot_id)
+                 vm.restore_snapshot(request.vars.snapshot_id)
             elif action == 'snapshot':
                 try:
                     snapshotid = vm.createSnapshot()
