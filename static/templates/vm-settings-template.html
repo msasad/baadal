@@ -38,6 +38,9 @@
               <button type="button" data-action="snapshot" class="btn btn-lg btn-default btn-action" title="Take Snapshot">
                 <span class="fa fa-camera" aria-hidden="true"></span>
               </button>
+              <button type="button" data-action="restore-snapshot" class="btn btn-lg btn-default btn-action" title="Restore Snapshot">
+                <span class="fa fa-reply-all" aria-hidden="true"></span>
+              </button>
               <button type="button" data-action="get-vnc-console" class="btn btn-lg btn-default btn-action" title="Get VNC Console URL">
                 <span class="fa fa-terminal" aria-hidden="true"></span>
               </button>
@@ -69,6 +72,28 @@
                 <span class="fa fa-remove" aria-hidden="true"></span>
               </button>
             </div>
+
+            <table class="table table-bordered table-stripped table-hover">
+              <thead>
+              <tr>
+                <th>Snapshot Name</th>
+                <th>Created at</th>
+              </tr>
+              </thead>
+              <tbody>
+                {{#if snapshots}}
+                  {{#each snapshots}}
+                <tr data-snapshot-id="{{this.id}}">
+                  <td>{{this.name}}</td>
+                  <td>{{this.created}}<span class="badge" title="Restore this spanshot"><span class="fa fa-reply"></span></span></td>
+                </tr>
+                  {{/each}}
+              {{else}}
+              <tr><td colspan="100%">No Snapshots</td> </tr>
+              {{/if}}
+              </tbody>
+            </table>
+
           </div>
           <div class="panel-footer">
             <span style="display:none" class="text-danger" id="modal-error-message">There was some error in the form. Please check the values and submit the form again.</span>

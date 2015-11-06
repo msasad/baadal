@@ -270,6 +270,11 @@ class BaadalVM(object):
         properties['status'] = self.getStatus()
         properties['memory'] = flavor.__getattr__('ram')
         properties['vcpus'] = flavor.__getattr__('vcpus')
+        snapshots = self.get_snapshots()
+        l = []
+        for snapshot in snapshots:
+            l.append({'id': snapshot.id, 'created': snapshot.created, 'name': snapshot.name})
+        properties['snapshots'] = l
         return properties
         pass
 
