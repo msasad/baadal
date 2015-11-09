@@ -1,4 +1,4 @@
-from log_handler import logger  
+﻿from log_handler import logger
 
 
 def __do(action, vmid):
@@ -18,7 +18,7 @@ def __do(action, vmid):
             elif action == 'resume':
                 vm.resume()
             elif action == 'restore-snapshot':
-                 vm.restore_snapshot(request.vars.snapshot_id)
+                vm.restore_snapshot(request.vars.snapshot_id)
             elif action == 'snapshot':
                 try:
                     snapshotid = vm.createSnapshot()
@@ -77,11 +77,11 @@ def __snapshot(vmid):
     return __do('snapshot', vmid)
 
 
-def __cloneVM(vmid):
+def __clone_vm(vmid):
     return __do('clone', vmid)
 
 
-def __powerOff(vmid):
+def __power_off(vmid):
     return __do('powerOff', vmid)
 
 
@@ -115,9 +115,9 @@ def index():
     elif action == 'get-vnc-console':
         return __get_vnc_console(vmid)
     elif action == 'clone':
-        return __cloneVM(vmid)
+        return __clone_vm(vmid)
     elif action == 'powerOff':
-        return __powerOff(vmid)
+        return __power_off(vmid)
     elif action == 'restore-snapshot':
         return __restore_snapshot(vmid)
 
@@ -167,27 +167,26 @@ def __finalize_vm(vm, extra_storage_size, public_ip_required=False):
 
 
 def __create():
-    # try:
-    row = db(db.vm_requests.id == request.vars.id).select()[0]
-    # return json.dumps(row)
-    public_ip_required = row.public_ip_required
-    extra_storage_size = row.extra_storage
-    vm = conn.createBaadalVM(row.vm_name, row.image, row.flavor, [{'net-id': row.sec_domain}])
-    """create port
-            attach floating IP to port
-            attach floating IP to VM
-    """
-    if vm:
-        row.update_record(state=2)
-        db.commit()
-        if public_ip_required == 1 or extra_storage_size:
-            # __finalize_vm(vm, extra_storage_size, public_ip_required)
-            thread = FuncThread(__finalize_vm, vm, extra_storage_size, public_ip_required)
-            thread.start()
-            pass
-        return jsonify()
-        # except Exception as e:
-    return jsonify(status='fail')  # message=e.message)
+    try:
+        row = db(db.vm_requests.id == request.vars.id).select()[0]
+        public_ip_required = row.public_ip_required
+        extra_storage_size = row.extra_storage
+        vm = conn.createBaadalVM(row.vm_name, row.image, row.flavor, [{'net-id': row.sec_domain}])
+        """create port
+                attach floating IP to port
+                attach floating IP to VM
+        """
+        if vm:
+            row.update_record(state=2)
+            db.commit()
+            if public_ip_required == 1 or extra_storage_size:
+                # __finalize_vm(vm, extra_storage_size, public_ip_required)
+                thread = FuncThread(__finalize_vm, vm, extra_storage_size, public_ip_required)
+                thread.start()
+                pass
+            return jsonify()
+    except Exception as e:
+        return jsonify(status='fail')
 
 
 def __reject():
