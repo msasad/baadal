@@ -1,35 +1,18 @@
 import json
 from log_handler import logger
-# import log_handler.mylogger as mylogger
+
+conn = Baadal.Connection(1, 2, 3, 4)
 
 
 def pending_requests():
     rows = db(db.vm_requests.state == 0).select()
-    # rows = db().select(db.vm_requests.ALL)
     l = rows.as_list()
     for i in l:
         i['sec_domain'] = network_name_from_id(i['sec_domain'])
         i['request_time'] = seconds_to_localtime(i['request_time'])
         i['public_ip_required'] = 'Required' if i['public_ip_required'] == 1 else 'Not Required'
-        # i['sec_domain']  = conn.findNetwork(id=i['sec_domain']).name
     return json.dumps({'data': l})
     pass
-
-
-def handle_request():
-    status = {'edit': 'edited', 'approve': 'approved', 'reject': 'rejected'}
-    # rid = request.vars.id
-    action = request.vars.action
-    if action == 'approve':
-        try:
-            row = db(db.vm_requests.id == request.vars.id).select()[0]
-            vm = conn.createBaadalVM(row.name, row.image, row.flavor)
-            if vm:
-                return jsonify()
-        except Exception as e:
-            return json.dumps({'status': 'fail', 'message': e.message})
-        # vm = conn.createBaadalVM()
-    return json.dumps({'message': 'Request id %s is %s' % (request.vars.id, status[request.vars.action])})
 
 
 def networks():
@@ -54,8 +37,8 @@ def subnets():
 
 def secgroups():
     try:
-        secgroups = conn.sgroups()
-        return jsonify(data=secgroups)
+        secgroupslist = conn.sgroups()
+        return jsonify(data=secgroupslist)
     except Exception as e:
         logger.error(e.message)
         return jsonify(status='fail')
@@ -63,8 +46,8 @@ def secgroups():
 
 def hostinfo():
     try:
-        id = request.vars.id
-        hypervisors = conn.hypervisors(id=id)
+        hostid = request.vars.id
+        hypervisors = conn.hypervisors(id=hostid)
         return jsonify(data=[h.to_dict() for h in hypervisors])
     except Exception as e:
         logger.error(e.message)
@@ -109,4 +92,3 @@ def security_groups():
 def index():
     return dict()
     pass
-

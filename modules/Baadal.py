@@ -324,6 +324,9 @@ class BaadalVM(object):
         pass
     pass
 
+    def metadata(self):
+        return self.server.metadata
+
 
 class Image:
     def __init__(self, image):
@@ -486,7 +489,7 @@ class Connection:
             raise BaadalException(e.message)
         pass
 
-    def createBaadalVM(self, name, image, template, nics, **kwargs):
+    def create_baadal_vm(self, name, image, template, nics, **kwargs):
         """ nics must be None or a list of dictionaries of the format
         {
             net-id : uuid of the network,

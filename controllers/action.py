@@ -3,7 +3,7 @@
 
 def __do(action, vmid):
     if conn:
-        vm = conn.findBaadalVM(id=vmid)
+        vm = conn.find_baadal_vm(id=vmid)
         if vm:
             if action == 'start':
                 vm.start()
@@ -21,7 +21,7 @@ def __do(action, vmid):
                 vm.restore_snapshot(request.vars.snapshot_id)
             elif action == 'snapshot':
                 try:
-                    snapshotid = vm.createSnapshot()
+                    snapshotid = vm.create_snapshot()
                     return jsonify(snapshotid=snapshotid)
                 except Exception as e:
                     return jsonify(status='fail', message=e.message, action=action)
@@ -30,10 +30,10 @@ def __do(action, vmid):
             elif action == 'powerOff':
                 vm.shutdown(force=True)
             elif action == 'get-vnc-console':
-                consoleurl = vm.getVNCConsole()
+                consoleurl = vm.get_vnc_console()
                 return jsonify(consoleurl=consoleurl, action=action)
             elif action == 'start-resume':
-                status = vm.getStatus()
+                status = vm.get_status()
                 if status == 'Paused':
                     vm.resume()
                 elif status == 'Shutdown':
@@ -143,22 +143,21 @@ def __finalize_vm(vm, extra_storage_size, public_ip_required=False):
     :param public_ip_required: Boolean value to indicate if the newly created VM requires floating ip
     :return: None
     """
-
     try:
-        while vm.getStatus() != 'Running' and vm.getStatus() != 'Error':
+        while vm.get_status() != 'Running' and vm.get_status() != 'Error':
             pass
 
-        if vm.getStatus() == 'Running':
+        if vm.get_status() == 'Running':
             if public_ip_required:
-                vm.attachFloatingIP()
+                vm.attach_floating_ip()
 
             if extra_storage_size:
-                disk = conn.createVolume(extra_storage_size)
+                disk = conn.create_volume(extra_storage_size)
                 while disk.status != 'available':
-                    disk = conn.getDiskById(disk.id)
+                    disk = conn.get_disk_by_id(disk.id)
                 num_disks = vm.metadata()['disks']
                 disk_path = '/dev/vd' + chr(97 + num_disks)
-                vm.attachDisk(disk, disk_path)
+                vm.attach_disk(disk, disk_path)
                 vm.update(disks=num_disks + 1)
         else:
             raise Baadal.BaadalException('VM Build Failed')
@@ -185,7 +184,7 @@ def __create():
                 thread.start()
                 pass
             return jsonify()
-    except Exception as e:
+    except Baadal.BaadalException:
         return jsonify(status='fail')
 
 
