@@ -25,6 +25,15 @@ def network_name_from_id(netid):
     pass
 
 
+def convert_timezone(utctimestring, fmt="%Y-%m-%dT%H:%M:%SZ", timezone='Asia/Kolkata'):
+    from datetime import datetime
+    import pytz
+    utc_time = datetime.strptime(utctimestring, fmt)
+    utc_time_withtz = utc_time.replace(tzinfo=pytz.utc)
+    localtime = utc_time_withtz.astimezone(pytz.timezone(timezone))
+    return localtime.strftime(fmt)
+
+    
 class FuncThread(threading.Thread):
     def __init__(self, target, *args):
         self._target = target

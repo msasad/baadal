@@ -27,7 +27,7 @@ def __do(action, vmid):
                     return jsonify(status='fail', message=e.message, action=action)
             elif action == 'clone':
                 vm.clone()
-            elif action == 'powerOff':
+            elif action == 'poweroff':
                 vm.shutdown(force=True)
             elif action == 'get-vnc-console':
                 consoleurl = vm.get_vnc_console()
@@ -82,7 +82,7 @@ def __clone_vm(vmid):
 
 
 def __power_off(vmid):
-    return __do('powerOff', vmid)
+    return __do('poweroff', vmid)
 
 
 def __restore_snapshot(vmid):
@@ -116,7 +116,7 @@ def index():
         return __get_vnc_console(vmid)
     elif action == 'clone':
         return __clone_vm(vmid)
-    elif action == 'powerOff':
+    elif action == 'poweroff':
         return __power_off(vmid)
     elif action == 'restore-snapshot':
         return __restore_snapshot(vmid)
@@ -170,7 +170,7 @@ def __create():
         row = db(db.vm_requests.id == request.vars.id).select()[0]
         public_ip_required = row.public_ip_required
         extra_storage_size = row.extra_storage
-        vm = conn.createBaadalVM(row.vm_name, row.image, row.flavor, [{'net-id': row.sec_domain}])
+        vm = conn.create_baadal_vm(row.vm_name, row.image, row.flavor, [{'net-id': row.sec_domain}])
         """create port
                 attach floating IP to port
                 attach floating IP to VM

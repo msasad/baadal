@@ -11,24 +11,27 @@ def login():
 
 
 def my_vms():
-    # import json
-    vms = conn.baadalVMs()
+    vms = conn.baadal_vms()
     response = list()
     for vm in vms:
-        response.append(vm.properties())
-    # return json.dumps({'data': response})
+        vm_properties = vm.properties()
+        snapshots = vm.properties()['snapshots']
+        for index in range(0, len(snapshots)):
+            snapshots[index]['created'] = convert_timezone(snapshots[index]['created'])
+        vm_properties['snapshots'] = snapshots
+        response.append(vm_properties)
     return jsonify(data=response)
 
 
 def vm_status():
     vmid = request.vars.vmid
-    vm = conn.findBaadalVM(id=vmid)
+    vm = conn.find_baadal_vm(id=vmid)
     if vm:
-        return jsonify(vm_status=vm.getStatus())
+        return jsonify(vm_status=vm.get_status())
 
 
 def my_requests():
-    # import json
+    # FIXME: Remove hardcoded username
     rows = db(db.vm_requests.owner == 'test').select()
     l = rows.as_list()
     return jsonify(data=l)
