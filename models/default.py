@@ -17,12 +17,17 @@ def seconds_to_localtime(seconds):
 
 
 def network_name_from_id(netid):
-    netlist = conn.networks()
+    netlist = conn.networks()['networks']
     for i in netlist:
-        if netid == i.id:
-            return i.label
+        if netid == i['id']:
+            return i['name']
         pass
     pass
+
+
+def flavor_info(flavor_id):
+    flavor = conn.find_template(id=flavor_id)
+    return str(flavor.vcpus) + (' VCPU, ' if flavor.vcpus == 1 else ' VCPUs, ') + str(flavor.ram) + ' MB RAM'
 
 
 def convert_timezone(utctimestring, fmt="%Y-%m-%dT%H:%M:%SZ", timezone='Asia/Kolkata'):
@@ -42,4 +47,3 @@ class FuncThread(threading.Thread):
  
     def run(self):
         self._target(*self._args)
-
