@@ -40,8 +40,8 @@ class Machine:
 
 
 class BaadalVM(object):
-    def __init__(self, id=None, server=None, conn=None):
-        if id is not None and server is not None:
+    def __init__(self, vmid=None, server=None, conn=None):
+        if vmid is not None and server is not None:
             raise BaadalException('Cannot initialise server, please specify either server or id')
         else:
             if str(type(server)).endswith("novaclient.v2.servers.Server'>"):
@@ -84,6 +84,7 @@ class BaadalVM(object):
         pass
 
     def attach_nic(self, netid):
+        # FIXME:
         try:
             self.server.add_fixed_ip(netid)
         except Exception as e:
@@ -103,7 +104,8 @@ class BaadalVM(object):
             clone_name = clone_name or self.server.name + '_clone'
             flavor_id = self.server.flavor['id']
             networks = self.get_networks().keys()
-            network_ids = [self.__conn['neutron'].list_networks(name=network)['networks'][0]['id'] for network in networks]
+            network_ids = [
+                self.__conn['neutron'].list_networks(name=network)['networks'][0]['id'] for network in networks]
             nics = [{'net-id': netid for netid in network_ids}]
             snapshot_id = self.server.create_image("temp")
             image = self.__conn['nova'].images.find(id=snapshot_id)
@@ -287,17 +289,10 @@ class BaadalVM(object):
         except Exception as e:
             raise BaadalException(e.message or str(e.__class__))
 
-    def shutdown(self, force=False):
+    def shutdown(self):
         """
-
-        :param force:
-        :return:
-        """
-        """
-        shutdown the Virtual Machine
-        params:
-            force: bool, True for forced shutdown, False for graceful shutdown, default False
-        return: None
+        Shutdown the virtual machine
+        :return: None
         """
 
         try:
@@ -308,9 +303,8 @@ class BaadalVM(object):
         
     def start(self, ):
         """
-        starts the Vritual Machine,
-        params: None
-        return: None
+        starts the virtual machine,
+        :return: None
         """
 
         try:
@@ -384,10 +378,11 @@ class Connection:
             raise BaadalException('Not connected to openstack nova service')
         try:
             serverlist = self.__conn['nova'].servers.list()
-            serverlist = [BaadalVM(server=i, conn=self.__conn) for i in serverlist]
-            return serverlist
+            if serverlist:
+                serverlist = [BaadalVM(server=i, conn=self.__conn) for i in serverlist]
+            return serverlist or []
         except Exception as e:
-            raise BaadalException(e.message)
+            raise BaadalException(e.message or str(e.__class__))
         pass
 
     def find_baadal_vm(self, **kwargs):
@@ -537,12 +532,10 @@ class Connection:
             raise BaadalException(e.message)
 
     def _network_name_from_id(self, netid):
-        netlist = self.networks()
+        netlist = self.networks()['networks']
         for i in netlist:
-            if netid == i.id:
-                return i.label
-            pass
-        pass
+            if netid == i['id']:
+                return i['name']
 
     def _netid_from_name(self, netname):
         for net in self.networks()['networks']:
@@ -582,4 +575,4 @@ class Connection:
 
 class BaadalException(Exception):
     def __init__(self, msg):
-        self.msg = msg
+        self.message = msg
