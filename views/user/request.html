@@ -96,11 +96,11 @@
     'url': '/baadal/ajax/configs.json',
     'success': function(response) {
       console.log(response);
-      configSelect = document.getElementById('config');
+      var configSelect = document.getElementById('config');
       configSelect.options.length = 0;
-      for (i = response.length-1; i>=0; i--) {
+      for (var i = response.length-1; i>=0; i--) {
         console.log(response[i]);
-        var curr_config = response[i]
+        var curr_config = response[i];
         var text = curr_config['vcpus'] + 'CPU, ' + curr_config['ram'] + 'MB RAM';
         configSelect.options[configSelect.options.length] = new Option(text, curr_config['id']);
       }
@@ -112,11 +112,11 @@
     'url': '/baadal/ajax/templates.json',
     'success': function(response) {
       console.log(response);
-      templateSelect = document.getElementById('template');
+      var templateSelect = document.getElementById('template');
       templateSelect.options.length = 0;
-      for (i = response.length-1; i>=0; i--) {
+      for (var i = response.length-1; i>=0; i--) {
         console.log(response[i]);
-        var curr_template = response[i]
+        var curr_template = response[i];
         var text = curr_template['os_name'] + ' ' + curr_template['os_version'] + ' ' + curr_template['os_arch'] 
           + ' ' +   curr_template['disk_size'];
         templateSelect.options[templateSelect.options.length] = new Option(text, curr_template['id']);
@@ -129,9 +129,9 @@
     'url': '/baadal/ajax/networks.json',
     'success': function(response) {
       console.log(response);
-      secdomainselect = document.getElementById('sec_domain');
+      var secdomainselect = document.getElementById('sec_domain');
       secdomainselect.options.length = 0;
-      for (i = response.length-1; i>=0; i--) {
+      for (var i = response.length-1; i>=0; i--) {
         console.log(response[i]);
         var curr_domain = response[i];
         secdomainselect.options[secdomainselect.options.length] = new Option(curr_domain['name'], curr_domain['id']);
@@ -142,7 +142,7 @@
   $('#submit_request').on('click', function(e) {
     e.preventDefault();
     var data = $('#vm_request').serializeArray();
-    data  = serialize(data);
+    data  = baadalApp.serialize(data);
     console.log(data);
     $('#success-message').hide();
     $('#error-message').hide();
@@ -151,8 +151,9 @@
       'data' : data,
       'url' : '/baadal/post_request/new_vm.json',
       'error' : function(response) {
+        var error;
         if (error = response.getResponseHeader('web2py_error')) {
-          generateTicketLink(error);
+          baadalApp.generateTicketLink(error);
         }
       },
       'success' : function(response){
