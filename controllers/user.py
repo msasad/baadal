@@ -11,16 +11,20 @@ def login():
 
 
 def my_vms():
-    vms = conn.baadal_vms()
-    response = list()
-    for vm in vms:
-        vm_properties = vm.properties()
-        snapshots = vm.properties()['snapshots']
-        for index in range(0, len(snapshots)):
-            snapshots[index]['created'] = convert_timezone(snapshots[index]['created'])
-        vm_properties['snapshots'] = snapshots
-        response.append(vm_properties)
-    return jsonify(data=response)
+    try:
+        vms = conn.baadal_vms()
+        response = list()
+        for vm in vms:
+            vm_properties = vm.properties()
+            snapshots = vm.properties()['snapshots']
+            for index in range(0, len(snapshots)):
+                snapshots[index]['created'] = convert_timezone(snapshots[index]['created'])
+            vm_properties['snapshots'] = snapshots
+            response.append(vm_properties)
+        return jsonify(data=response)
+    except Exception as e:
+        logger.error(e.message or str(e.__class__))
+        return jsonify(status='fail')
 
 
 def vm_status():

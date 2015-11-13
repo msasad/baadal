@@ -1,7 +1,4 @@
-﻿from log_handler import logger
-
-
-def __do(action, vmid):
+﻿def __do(action, vmid):
     if conn:
         vm = conn.find_baadal_vm(id=vmid)
         if vm:
@@ -184,7 +181,8 @@ def __create():
                 thread.start()
                 pass
             return jsonify()
-    except Baadal.BaadalException:
+    except Baadal.BaadalException as e:
+        logger.exception(e.message)
         return jsonify(status='fail')
 
 
