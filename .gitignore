@@ -38,3 +38,4 @@ pip-log.txt
 *.swp
 .idea
 modules/osclient.py
+modules/client.py
