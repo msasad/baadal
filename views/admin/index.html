@@ -12,6 +12,7 @@
           <th>IP Address(es)</th>
           <th>VCPUs</th>
           <th>Memory (MB)</th>
+          <th>Hostname</th>
           <th>Settings</th>
         </tr>
       </thead>
@@ -42,7 +43,7 @@
         }
       },
       {
-        "aTargets": [5],
+        "aTargets": [6],
         "mData": null,
         "mRender": function (data, type, full) {
           var actions = {
@@ -72,7 +73,8 @@
       { "data": "status" },
       { "data": "ip-addresses"},
       { "data": "vcpus" },
-      { "data": "memory"  }
+      { "data": "memory"  },
+      { "data": "hostname" }
     ],
     "fnCreatedRow": function( nRow, aData, iDataIndex ) {
       nRow.setAttribute('data-vmid', aData.id);

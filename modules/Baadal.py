@@ -250,6 +250,7 @@ class BaadalVM(object):
         properties['memory'] = flavor.__getattr__('ram')
         properties['vcpus'] = flavor.__getattr__('vcpus')
         properties['hostid'] = self.server.hostId
+        properties['hostname'] = self.server.__getattr__('OS-EXT-SRV-ATTR:hypervisor_hostname')
         snapshots = self.get_snapshots()
         l = []
         for snapshot in snapshots:
