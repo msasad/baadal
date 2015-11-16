@@ -70,15 +70,15 @@ class BaadalVM(object):
         :return:
         """
         try:
-            self.__conn['nova'].volumes.create_server_volume(self.server.id, disk.id, device_path)
+            self.__conn.nova.volumes.create_server_volume(self.server.id, disk.id, device_path)
             return True
         except Exception as e:
             raise BaadalException(e.message or _UNKNOWN_ERROR_MSG)
 
     def attach_floating_ip(self, floatingip=None, fixed_address=None):
         if floatingip is None:
-            netid = self.__conn['neutron'].list_networks(name=_EXTERNAL_NETWORK)['networks'][0]['id']
-            floatingip = self.__conn['neutron'].create_floatingip(body={'floatingip': {'floating_network_id': netid}})
+            netid = self.__conn.neutron.list_networks(name=_EXTERNAL_NETWORK)['networks'][0]['id']
+            floatingip = self.__conn.neutron.create_floatingip(body={'floatingip': {'floating_network_id': netid}})
         floatingipaddress = floatingip['floatingip']['floating_ip_address']
         self.server.add_floating_ip(floatingipaddress, fixed_address)
         pass
@@ -105,16 +105,16 @@ class BaadalVM(object):
             flavor_id = self.server.flavor['id']
             networks = self.get_networks().keys()
             network_ids = [
-                self.__conn['neutron'].list_networks(name=network)['networks'][0]['id'] for network in networks]
+                self.__conn.neutron.list_networks(name=network)['networks'][0]['id'] for network in networks]
             nics = [{'net-id': netid for netid in network_ids}]
             snapshot_id = self.server.create_image("temp")
-            image = self.__conn['nova'].images.find(id=snapshot_id)
+            image = self.__conn.nova.images.find(id=snapshot_id)
             while image.status != 'ACTIVE':
-                image = self.__conn['nova'].images.find(id=snapshot_id)
+                image = self.__conn.nova.images.find(id=snapshot_id)
                 pass
             else:
                 clone = self.server.manager.create(clone_name, image,
-                                                   self.__conn['nova'].flavors.find(id=flavor_id), nics=nics,
+                                                   self.__conn.nova.flavors.find(id=flavor_id), nics=nics,
                                                    security_groups=networks, meta=self.server.metadata)
                 while clone.status != 'ACTIVE':
                     clone = clone.manager.find(id=clone.id)
@@ -124,11 +124,11 @@ class BaadalVM(object):
                     for i in attached_disks:
                         volid = i['id']
                         if clone_type == 'Full':
-                            volume_clone = self.__conn['cinder'].volumes.create(i['size'], source_volid=i['id'])
+                            volume_clone = self.__conn.cinder.volumes.create(i['size'], source_volid=i['id'])
                             volid = volume_clone.id
                             while volume_clone.status != 'available':
-                                volume_clone = self.__conn['cinder'].volumes.get(volume_clone.id)
-                        self.__conn['nova'].volumes.create_server_volume(clone.id, volid, i['path'])
+                                volume_clone = self.__conn.cinder.volumes.get(volume_clone.id)
+                        self.__conn.nova.volumes.create_server_volume(clone.id, volid, i['path'])
             return clone
         except Exception as e:
             raise BaadalException(e.message)
@@ -155,7 +155,7 @@ class BaadalVM(object):
         volume_ids = self.server.__getattr__('os-extended-volumes:volumes_attached')
         disk_list = []
         for i in volume_ids:
-            volume = self.__conn['cinder'].volumes.find(id=i['id'])
+            volume = self.__conn.cinder.volumes.find(id=i['id'])
             attachments_list = volume.attachments
             for entry in attachments_list:
                 if entry['server_id'] == self.server.id:
@@ -178,7 +178,7 @@ class BaadalVM(object):
     def get_snapshots(self):
         try:
             snapshots = []
-            all_images = self.__conn['nova'].images.list()
+            all_images = self.__conn.nova.images.list()
             for img in all_images:
                 if hasattr(img, 'server') and img.server['id'] == self.server.id:
                     snapshots.append(img)
@@ -244,7 +244,7 @@ class BaadalVM(object):
                 properties['ip-addresses'].append({
                     'network': network, 'address': address['addr'], 'MAC': address['OS-EXT-IPS-MAC:mac_addr']})
             pass
-        flavor = self.__conn['nova'].flavors.find(id=self.server.flavor['id'])
+        flavor = self.__conn.nova.flavors.find(id=self.server.flavor['id'])
         # properties['flavor'] = flavor
         properties['status'] = self.get_status()
         properties['memory'] = flavor.__getattr__('ram')
@@ -338,18 +338,22 @@ class Connection:
                            password=password, tenant_name=tenant_name)
         sess = session.Session(auth=auth)
 
-        self.__conn = dict()
-        self.__conn['nova'] = client.Client('2', session=sess)
-        self.__conn['cinder'] = cclient.Client('2', session=sess)
-        self.__conn['neutron'] = nclient.Client('2.0', session=sess)
+        class ConnectionWrapper():
+            pass
+
+        self.__conn = ConnectionWrapper()
+        del ConnectionWrapper
+        self.__conn.nova = client.Client('2', session=sess)
+        self.__conn.cinder = cclient.Client('2', session=sess)
+        self.__conn.neutron = nclient.Client('2.0', session=sess)
 
         self.userid = auth.user_id
         # self.ksclient = ksclient.Client('2.0', session=sess)
 
         # FIXME Retain these lines during testing only
-        self.nova = self.__conn['nova']
-        self.cinder = self.__conn['cinder']
-        self.neutron = self.__conn['neutron']
+        self.nova = self.__conn.nova
+        self.cinder = self.__conn.cinder
+        self.neutron = self.__conn.neutron
         # self.__cinder = cclient.Client("2", session=sess)
         # self.__conn = client.Client("2", session=sess)
         pass
@@ -365,7 +369,7 @@ class Connection:
         """
 
         values = {}
-        stats = self.__conn['nova'].hypervisor_stats.statistics().to_dict()
+        stats = self.__conn.nova.hypervisor_stats.statistics().to_dict()
         attribute_list = attribute_list or USAGE_PARAMS.keys()
         for item in attribute_list:
             values[item] = stats[USAGE_PARAMS[item]]
@@ -377,11 +381,11 @@ class Connection:
 
         :return:
         """
-        if not self.__conn['nova']:
+        if not self.__conn.nova:
             raise BaadalException('Not connected to openstack nova service')
         try:
-            # serverlist = self.__conn['nova'].servers.list()
-            serverlist = self.__conn['nova'].servers.findall(user_id=self.userid)
+            # serverlist = self.__conn.nova.servers.list()
+            serverlist = self.__conn.nova.servers.findall(user_id=self.userid)
             if serverlist:
                 serverlist = [BaadalVM(server=i, conn=self.__conn) for i in serverlist]
             return serverlist or []
@@ -395,10 +399,10 @@ class Connection:
         :param kwargs:
         :return:
         """
-        if not self.__conn['nova']:
+        if not self.__conn.nova:
             raise BaadalException('Not connected to openstack nova service')
         try:
-            baadalvm = self.__conn['nova'].servers.find(**kwargs)
+            baadalvm = self.__conn.nova.servers.find(**kwargs)
             return BaadalVM(server=baadalvm, conn=self.__conn)
         except Exception as e:
             raise BaadalException(e.message)
@@ -421,104 +425,104 @@ class Connection:
             port-id: uuid of the port if already defined
         }
         """
-        if not self.__conn['nova']:
+        if not self.__conn.nova:
             raise BaadalException('Not connected to openstack nova service')
         try:
             sec_group = self._network_name_from_id(nics[0]['net-id'])
-            server = self.__conn['nova'].servers.create(name, image, template, nics=nics, security_groups=[sec_group],
+            server = self.__conn.nova.servers.create(name, image, template, nics=nics, security_groups=[sec_group],
                                                         **kwargs)
             return BaadalVM(server=server, conn=self.__conn)
         except Exception as e:
             raise BaadalException(e.message)
 
     def create_volume(self, size, imageref=None, multiattach=False):
-        if not self.__conn['cinder']:
+        if not self.__conn.cinder:
             raise BaadalException('Not connected to openstack cinder service')
-        volume = self.__conn['cinder'].volumes.create(size, imageRef=imageref, multiattach=multiattach)
+        volume = self.__conn.cinder.volumes.create(size, imageRef=imageref, multiattach=multiattach)
         return volume
 
     def create_template(self, name, ram, disk, vcpus):
-        if not self.__conn['nova']:
+        if not self.__conn.nova:
             raise BaadalException('Not connected to openstack nova service')
         try:
-            flavor = self.__conn['nova'].flavors.create(name, ram, vcpus, disk)
+            flavor = self.__conn.nova.flavors.create(name, ram, vcpus, disk)
             return flavor
         except Exception as e:
             raise BaadalException("Could not create flavor" + e.message)
     
     def get_disk_by_id(self, diskid):
-        if not self.__conn['cinder']:
+        if not self.__conn.cinder:
             raise BaadalException('Not connected to openstack cinder service')
-        return self.__conn['cinder'].volumes.get(diskid)
+        return self.__conn.cinder.volumes.get(diskid)
 
     def images(self, ):
-        if not self.__conn['nova']:
+        if not self.__conn.nova:
             raise BaadalException('Not connected to openstack nova service')
         try:
-            imageslist = self.__conn['nova'].images.list()
+            imageslist = self.__conn.nova.images.list()
             return imageslist
         except Exception as e:
             raise BaadalException(e.message)
         pass
 
     def find_image(self, **kwargs):
-        if not self.__conn['nova']:
+        if not self.__conn.nova:
             raise BaadalException('Not connected to openstack nova service')
         try:
-            image = self.__conn['nova'].images.find(**kwargs)
+            image = self.__conn.nova.images.find(**kwargs)
             return image
         except Exception as e:
             raise BaadalException(e.message)
         pass
    
     def hypervisors(self, name=None, id=None):
-        if not self.__conn['nova']:
+        if not self.__conn.nova:
             raise BaadalException('Not connected to openstack nova service')
         if name and id:
             raise BaadalException('Cannot find hypervisor! Please specify either name or Id')
         try:
             if not name and not id:
-                hypervisors = self.__conn['nova'].hypervisors.list()
+                hypervisors = self.__conn.nova.hypervisors.list()
             elif name:
-                hypervisors = self.__conn['nova'].hypervisors.find(hypervisor_hostname=name)
+                hypervisors = self.__conn.nova.hypervisors.find(hypervisor_hostname=name)
             else:
-                hypervisors = self.__conn['nova'].hypervisors.find(id=id)
+                hypervisors = self.__conn.nova.hypervisors.find(id=id)
             return hypervisors
         except Exception as e:
             raise BaadalException(e.message or _UNKNOWN_ERROR_MSG)
 
     def templates(self):
-        if not self.__conn['nova']:
+        if not self.__conn.nova:
             raise BaadalException('Not connected to openstack nova service')
         try:
-            templates = self.__conn['nova'].flavors.list()
+            templates = self.__conn.nova.flavors.list()
             return templates
         except Exception as e:
             raise BaadalException(e.message)
         pass
 
     def find_template(self, **kwargs):
-        if not self.__conn['nova']:
+        if not self.__conn.nova:
             raise BaadalException('Not connected to openstack nova service')
         try:
-            template = self.__conn['nova'].flavors.find(**kwargs)
+            template = self.__conn.nova.flavors.find(**kwargs)
             return template
         except Exception as e:
             raise BaadalException(e.message)
         pass
     
     def sgroups(self, ):
-        if not self.__conn['neutron']:
+        if not self.__conn.neutron:
             raise BaadalException('Not connected to openstack neutron service')
         try:
-            sgroups = self.__conn['neutron'].list_security_groups()
+            sgroups = self.__conn.neutron.list_security_groups()
             return sgroups
         except Exception as e:
             raise BaadalException(e.message)
 
     def networks(self, ):
         try:
-            networks = self.__conn['neutron'].list_networks()
+            networks = self.__conn.neutron.list_networks()
             return networks
         except Exception as e:
             raise BaadalException(e.message)
@@ -528,9 +532,9 @@ class Connection:
     def subnets(self, network_id=None):
         try:
             if network_id:
-                subnet_list = self.__conn['neutron'].list_subnets(network_id=network_id)
+                subnet_list = self.__conn.neutron.list_subnets(network_id=network_id)
             else:
-                subnet_list = self.__conn['neutron'].list_subnets()
+                subnet_list = self.__conn.neutron.list_subnets()
             return subnet_list
         except Exception as e:
             raise BaadalException(e.message)
@@ -549,7 +553,7 @@ class Connection:
     def create_network(self, network_name, cidr, ip_version=None, dns_name=None):
         try:
             body_sample = {'network': {'name': network_name, 'admin_state_up': True}}
-            netw = self.__conn['neutron'].create_network(body=body_sample)
+            netw = self.__conn.neutron.create_network(body=body_sample)
             net_dict = netw['network']
             network_id = net_dict['id']
             return network_id
@@ -559,20 +563,20 @@ class Connection:
     def create_subnet(self, network_id, cidr, ip_version=None, dns_name=None):
         try:
             body_create_subnet = {'subnets': [{'cidr': cidr, 'ip_version': 4, 'network_id': network_id}]}
-            subnet = self.__conn['neutron'].create_subnet(body=body_create_subnet)
+            subnet = self.__conn.neutron.create_subnet(body=body_create_subnet)
         except Exception as e:
             raise BaadalException(e.message)
 
     def delete_network(self, network_id):
         try:
-            self.__conn['neutron'].delete_network(network_id)
+            self.__conn.neutron.delete_network(network_id)
         except Exception as e:
             raise BaadalException(e.message)
      
     def create_security_domain(self, sg_name):
         try:
             security_group = {'name': sg_name}
-            sg = self.__conn['neutron'].create_security_group({'security_group': security_group})
+            sg = self.__conn.neutron.create_security_group({'security_group': security_group})
         except Exception as e:
             raise BaadalException(e.message)
 
