@@ -330,7 +330,6 @@ class Connection:
     def __init__(self, authurl, tenant_name, username, password):
         from keystoneclient.auth.identity import v2
         from keystoneclient import session
-        # from keystoneclient import client as ksclient
         from novaclient import client
         from neutronclient.neutron import client as nclient
         from cinderclient import client as cclient 
@@ -345,20 +344,29 @@ class Connection:
                 self.cinder = cinder
             pass
 
+        self.__auth = auth
+        self.__sess = sess
         self.__conn = ConnectionWrapper(client.Client('2', session=sess), cclient.Client('2', session=sess),
                                         nclient.Client('2.0', session=sess))
         del ConnectionWrapper
 
-        self.userid = auth.user_id
-        # self.ksclient = ksclient.Client('2.0', session=sess)
+        self.userid = self.__conn.nova.client.get_user_id()
+        self.user_is_project_admin = self.__conn.user_is_project_admin = bool(self.get_user_roles().count('admin'))
 
         # FIXME Retain these lines during testing only
         self.nova = self.__conn.nova
         self.cinder = self.__conn.cinder
         self.neutron = self.__conn.neutron
-        # self.__cinder = cclient.Client("2", session=sess)
-        # self.__conn = client.Client("2", session=sess)
+        self.auth = auth
+        self.sess = sess
         pass
+
+    def get_user_roles(self):
+        roles = []
+        roles_list = self.__auth.get_access(self.__sess)['user']['roles']
+        for entry in roles_list:
+            roles.append(str(entry['name']))
+        return roles
 
     def close(self, ):
         del self.__conn
@@ -378,16 +386,21 @@ class Connection:
         return values
         pass
 
-    def baadal_vms(self, ):
+    def baadal_vms(self, all_users=False):
         """
-
+        :param all_users: optional; list VMs belonging to all users in the project, requires admin role
         :return:
         """
         if not self.__conn.nova:
             raise BaadalException('Not connected to openstack nova service')
         try:
-            # serverlist = self.__conn.nova.servers.list()
-            serverlist = self.__conn.nova.servers.findall(user_id=self.userid)
+            if all_users:
+                if not self.user_is_project_admin:
+                    raise BaadalException('Access denied! User must be project admin to list all VMs')
+                else:
+                    serverlist = self.__conn.nova.servers.list()
+            else:
+                serverlist = self.__conn.nova.servers.findall(user_id=self.userid)
             if serverlist:
                 serverlist = [BaadalVM(server=i, conn=self.__conn) for i in serverlist]
             return serverlist or []
