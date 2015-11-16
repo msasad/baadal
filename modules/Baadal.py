@@ -338,14 +338,16 @@ class Connection:
                            password=password, tenant_name=tenant_name)
         sess = session.Session(auth=auth)
 
-        class ConnectionWrapper():
+        class ConnectionWrapper:
+            def __init__(self, nova, cinder, neutron):
+                self.nova = nova
+                self.neutron = neutron
+                self.cinder = cinder
             pass
 
-        self.__conn = ConnectionWrapper()
+        self.__conn = ConnectionWrapper(client.Client('2', session=sess), cclient.Client('2', session=sess),
+                                        nclient.Client('2.0', session=sess))
         del ConnectionWrapper
-        self.__conn.nova = client.Client('2', session=sess)
-        self.__conn.cinder = cclient.Client('2', session=sess)
-        self.__conn.neutron = nclient.Client('2.0', session=sess)
 
         self.userid = auth.user_id
         # self.ksclient = ksclient.Client('2.0', session=sess)
@@ -430,7 +432,7 @@ class Connection:
         try:
             sec_group = self._network_name_from_id(nics[0]['net-id'])
             server = self.__conn.nova.servers.create(name, image, template, nics=nics, security_groups=[sec_group],
-                                                        **kwargs)
+                                                     **kwargs)
             return BaadalVM(server=server, conn=self.__conn)
         except Exception as e:
             raise BaadalException(e.message)
