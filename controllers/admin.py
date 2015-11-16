@@ -62,6 +62,23 @@ def hostaction():
         return jsonify(status='fail')
 
 
+def all_vms():
+    try:
+        vms = conn.baadal_vms(True)
+        response = list()
+        for vm in vms:
+            vm_properties = vm.properties()
+            snapshots = vm.properties()['snapshots']
+            for i in range(0, len(snapshots)):
+                snapshots[i]['created'] = convert_timezone(snapshots[i]['created'])
+            vm_properties['snapshots'] = snapshots
+            response.append(vm_properties)
+        return jsonify(data=response)
+    except Exception as e:
+        logger.error(e.message or str(e.__class__))
+        return jsonify(status='fail')
+
+
 # Empty controllers for HTML files
 def pending_requests_list():
     return dict()

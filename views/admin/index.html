@@ -1,20 +1,171 @@
-  {{extend 'blank-page.html'}}
+{{extend 'blank-page.html'}}
 <div class="panel panel-primary">
   <div class="panel-heading">
-    <h3 class="panel-title">All Virtual Machines</h3>
+    <h3 class="panel-title">My Virtual Machines</h3>
   </div>
   <div class="panel-body">
-    <table id="tableMain" class="table table-striped table-condensed table-bordered table-hover">
-      <tr>
-        <th>VM Name</th>
-        <th>Owner</th>
-        <th>IP Address(es)</th>
-        <th>Status</th>
-        <th>Host</th>
-        <th>Settings</th>
-      </tr>
+    <table id="my-vms" class="table table-bordered table-stripped table-hover table-condensed">
+     <thead>
+        <tr>
+          <th>Name</th>
+          <th>State</th>
+          <th>IP Address(es)</th>
+          <th>VCPUs</th>
+          <th>Memory (MB)</th>
+          <th>Settings</th>
+        </tr>
+      </thead>
     </table>
   </div>
 </div>
 {{include 'default-scripts.html'}}
+<script src="/baadal/static/js/datatables.min.js"></script>
+<script src="/baadal/static/js/dataTables.bootstrap.min.js"></script>
+<script>
+'use strict';
+(function() {
+  var $myvms = $('#my-vms');
+  var $table = $myvms.DataTable( {
+    "ajax": "/baadal/admin/all_vms.json",
+    "oLanguage": {
+      "sEmptyTable": "You have no VMs!"
+    },
+    "aoColumnDefs": [
+      {
+        "aTargets": [2],
+        "mData": null,
+        "mRender": function (data, type, full) {
+          if (type === 'display' || type === 'filter') {
+            return baadalApp.ipArrayToString(data, true);
+          }
+          return data;
+        }
+      },
+      {
+        "aTargets": [5],
+        "mData": null,
+        "mRender": function (data, type, full) {
+          var actions = {
+            'Running' : 'shutdown',
+            'Shutdown' : 'start',
+            'Error' : 'start'
+          };
+
+          var glyphicons = {
+            'Running' : 'stop',
+            'Shutdown' : 'play',
+            'Error' : 'play'
+          };
+          return '<div class="btn-group" role="group" aria-label="..."> \
+            <button title="'+ actions[data.status] + '" type="button" data-action="' + actions[data.status]+ '" class="btn btn-success btn-action" aria-label="Start">\
+            <span class="glyphicon glyphicon-'+ glyphicons[data.status]+'" aria-hidden="true"></span>\
+            </button> \
+            <button title="Settings" type="button" data-action="settings" class="btn btn-primary btn-settings" aria-label="Settings">\
+            <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>\
+            </button>\
+            </div>';
+        }
+      }
+    ],
+    "columns": [
+      { "data": "name" },
+      { "data": "status" },
+      { "data": "ip-addresses"},
+      { "data": "vcpus" },
+      { "data": "memory"  }
+    ],
+    "fnCreatedRow": function( nRow, aData, iDataIndex ) {
+      nRow.setAttribute('data-vmid', aData.id);
+    }
+  });
+  var reloadTable = setInterval(function(){
+    $table.ajax.reload();
+  }, 30*1000);
+
+  $myvms.on('click', '.btn-settings', function (e) {
+    var tr = this.closest('tr');
+    var context = $table.row(tr).data();
+    context['ip-addresses'] = baadalApp.ipArrayToString(context['ip-addresses']);
+    $.ajax( {
+      url : '/baadal/static/templates/vm-settings-template.html',
+      success : function(response) {
+        var template = Handlebars.compile(response);
+        var html = template(context);
+        $(document.body).prepend(html);
+        var $modal = $('#vm-settings-modal').modal('show');
+        $modal.on('shown.bs.modal', function() {
+          $modal.on('click', '.btn-action', function() {
+            $.ajax({
+              url: '/baadal/action/index.json',
+              type: 'post',
+              data: {
+                vmid: this.parentElement.getAttribute('data-vmid'),
+                action: this.getAttribute('data-action')
+              },
+              'error' : function(response) {
+                var error = response.getResponseHeader('web2py_error');
+                if (error) {
+                  baadalApp.generateTicketLink(error);
+                }
+              },
+              success: function(response) {
+                switch (response.action) {
+                  case 'get-vnc-console':
+                      $modal.find('#modal-info-message').html(response.consoleurl).fadeIn();
+                    break;
+                }
+                console.log(response);
+              }
+            });
+          });
+          $modal.on('click', '.snapshot-restore', function(e){
+            var vmid = document.getElementById('vmid').value;
+            $.ajax({
+              url: '/baadal/action/index.json',
+              type: 'post',
+              data: {
+                vmid: vmid,
+                action: 'restore-snapshot',
+                snapshot_id: this.closest('tr').getAttribute('data-snapshot-id')
+              }
+            })
+          });
+          $modal.on('hidden.bs.modal', function() {
+            $modal.remove();
+          });
+        });
+      }
+    });
+  });
+  $myvms.on('click','.btn-action', function(e) {
+    var id = this.closest('tr').getAttribute('data-vmid');
+    var action = this.getAttribute('data-action');
+    $.ajax({
+      'url': '/baadal/action/index.json',
+      'type': 'post',
+      'dataType' : 'json',
+      'data': {
+        'vmid': id,
+        'action': action
+      },
+      'error' : function(response) {
+        var error = response.getResponseHeader('web2py_error');
+        if (error) {
+          baadalApp.generateTicketLink(error);
+        }
+      },
+      'success': function(response) {
+        if(response.status == 'success') {
+          $('#success-message').fadeIn(1000, function () {
+            $table.ajax.reload();
+            $(this).fadeOut();
+          });
+        } else {
+          $('#error-message').fadeIn();
+        }
+      }
+    });
+  });
+})();
+</script>
 {{include 'wrap.html'}}
