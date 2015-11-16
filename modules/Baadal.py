@@ -577,10 +577,45 @@ class Connection:
         except Exception as e:
             raise BaadalException(e.message)
 
-    def create_subnet(self, network_id, cidr, ip_version=None, dns_name=None):
+    def create_subnet(self, name, network_id, cidr, ip_version=4, dns_nameservers=None, gateway_ip=None,
+                      enable_dhcp=True, host_routes=None, allocation_pool_start=None, allocation_pool_end=None,
+                      ):
+        """
+        creates a subnet in the specified network
+        :param name: string: name to give to the subnet
+        :param network_id: string: id of the network to which this subnet belongs
+        :param cidr: string: the CIDR to be assigned to the network
+        :param ip_version: integer: 4 or 6, defaults to 4; optional
+        :param dns_nameservers: list: list of nameservers addresses to be used by this subnet; optional
+        :param gateway_ip: string: default gateway IP of the subnet; optional
+        :param enable_dhcp: boolean: True or False, default True; optional
+        :param host_routes: list: list of dictionaries of the format {destination:xxx, nexthop:xxx}; optional
+        :param allocation_pool_start: string: starting address of the allocation pool; optional
+        :param allocation_pool_end: string: ending address of the allocation pool; optional
+        :return:
+        """
         try:
-            body_create_subnet = {'subnets': [{'cidr': cidr, 'ip_version': 4, 'network_id': network_id}]}
-            subnet = self.__conn.neutron.create_subnet(body=body_create_subnet)
+            if ip_version not in (4, 6):
+                raise BaadalException('IP version must be either 4 or 6')
+
+            if bool(allocation_pool_end) != bool(allocation_pool_start):
+                raise BaadalException('Only one among allocation_pool_start and allocation_pool_end is specified!'
+                                      ' Please specify both or specify none')
+
+            request_body = dict()
+            request_body['name'] = name
+            request_body['network_id'] = network_id
+            request_body['cidr'] = cidr
+            request_body['dns_nameservers'] = dns_nameservers
+            request_body['gateway_ip'] = gateway_ip
+            request_body['enable_dhcp'] = enable_dhcp
+            request_body['ip_version'] = ip_version
+            request_body['host_routes'] = host_routes
+            if allocation_pool_end:
+                request_body['allocation_pools'] = {'start': allocation_pool_start, 'end': allocation_pool_end}
+
+            subnet = self.__conn.neutron.create_subnet(body={'subnet': request_body})
+            return subnet
         except Exception as e:
             raise BaadalException(e.message)
 
