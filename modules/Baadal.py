@@ -212,12 +212,12 @@ class BaadalVM(object):
         snapshots.sort(cmp=self.__cmp, reverse=True)
         return snapshots[0]
 
-    def migrate(self, target_host, live=False):
+    def migrate(self, live=False):
         try:
             if live is True:
-                res = self.server.migrate(target_host)
+                res = self.server.migrate()
             else:
-                res = self.server.live_migrate(target_host)
+                res = self.server.live_migrate()
             return res
         except Exception as e:
             raise BaadalException(e)
@@ -249,6 +249,7 @@ class BaadalVM(object):
         properties['status'] = self.get_status()
         properties['memory'] = flavor.__getattr__('ram')
         properties['vcpus'] = flavor.__getattr__('vcpus')
+        properties['hostid'] = self.server.hostId
         snapshots = self.get_snapshots()
         l = []
         for snapshot in snapshots:

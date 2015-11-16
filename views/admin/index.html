@@ -87,7 +87,7 @@
     var context = $table.row(tr).data();
     context['ip-addresses'] = baadalApp.ipArrayToString(context['ip-addresses']);
     $.ajax( {
-      url : '/baadal/static/templates/vm-settings-template.html',
+      url : '/baadal/static/templates/vm-admin-settings-template.html',
       success : function(response) {
         var template = Handlebars.compile(response);
         var html = template(context);

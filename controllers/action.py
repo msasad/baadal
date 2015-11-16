@@ -4,6 +4,8 @@
         if vm:
             if action == 'start':
                 vm.start()
+            elif action == 'migrate':
+                vm.migrate()
             elif action == 'shutdown':
                 vm.shutdown()
             elif action == 'pause':
@@ -90,6 +92,10 @@ def __get_vnc_console(vmid):
     return __do('get-vnc-console', vmid)
 
 
+def __migrate(vmid):
+    return __do('migrate', vmid)
+
+
 def index():
     action = request.vars.action
     vmid = request.vars.vmid
@@ -117,6 +123,8 @@ def index():
         return __power_off(vmid)
     elif action == 'restore-snapshot':
         return __restore_snapshot(vmid)
+    elif action == 'migrate':
+        return  __migrate(vmid)
 
 
 def handle_request():
