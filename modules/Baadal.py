@@ -337,10 +337,13 @@ class Connection:
         auth = v2.Password(auth_url=authurl, username=username,
                            password=password, tenant_name=tenant_name)
         sess = session.Session(auth=auth)
+
         self.__conn = dict()
         self.__conn['nova'] = client.Client('2', session=sess)
         self.__conn['cinder'] = cclient.Client('2', session=sess)
         self.__conn['neutron'] = nclient.Client('2.0', session=sess)
+
+        self.userid = auth.user_id
         # self.ksclient = ksclient.Client('2.0', session=sess)
 
         # FIXME Retain these lines during testing only
@@ -377,7 +380,8 @@ class Connection:
         if not self.__conn['nova']:
             raise BaadalException('Not connected to openstack nova service')
         try:
-            serverlist = self.__conn['nova'].servers.list()
+            # serverlist = self.__conn['nova'].servers.list()
+            serverlist = self.__conn['nova'].servers.findall(user_id=self.userid)
             if serverlist:
                 serverlist = [BaadalVM(server=i, conn=self.__conn) for i in serverlist]
             return serverlist or []
