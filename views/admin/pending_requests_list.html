@@ -39,7 +39,7 @@
             </div>
 
             <div class="form-group">
-              <label for="config" class="col-sm-3 control-label">Configuration</label>
+              <label for="edit-config" class="col-sm-3 control-label">Configuration</label>
               <div class="col-sm-9">
                 <select id="edit-config" name="config" class="form-control select" required="required">
                   <option value=""></option>
@@ -48,7 +48,7 @@
             </div>
           
             <div class="form-group">
-              <label for="storage" class="col-sm-3 control-label">Extra Storage (GB)</label>
+              <label for="edit-storage" class="col-sm-3 control-label">Extra Storage (GB)</label>
               <div class="col-sm-9">
                 <input type="number" max="2048" min="0" id="edit-storage" name="storage" class="form-control">
               </div>
@@ -115,7 +115,8 @@
 <script src="/baadal/static/js/dataTables.bootstrap.min.js"></script>
 <script>
 (function(){
-  var $table = $('#requests').DataTable( {
+  var $requests = $('#requests');
+  var $table = $requests.DataTable( {
     "ajax": "/baadal/admin/pending_requests.json",
     "oLanguage": {
       "sEmptyTable": "No pending requests!"
@@ -127,7 +128,7 @@
       { "data": "public_ip_required" },
       { "data": "sec_domain" },
       { "data": "request_time" },
-      { "data": "collaborators" },
+      { "data": "collaborators" }
     ],
     "aoColumnDefs": [
       {
@@ -154,7 +155,8 @@
     }
   });
 
-  $('#requests').on('click','.btn-action', function(e) {
+
+  $requests.on('click','.btn-action', function(e) {
     var id = this.closest('tr').getAttribute('data-reqid');
     var action = this.getAttribute('data-action');
     $.ajax({
@@ -166,8 +168,9 @@
         'action': action
       },
       'error' : function(response) {
+        var error;
         if (error = response.getResponseHeader('web2py_error')) {
-          generateTicketLink(error);
+          baadalApp.generateTicketLink(error);
         }
       },
       'success': function(response) {
@@ -183,7 +186,7 @@
     });
   });
 
-  $('#requests').on('click','.btn-edit', function(e) {
+  $requests.on('click','.btn-edit', function(e) {
     e.preventDefault();
     var tr = this.closest('tr');//.getAttribute('data-reqid');
     var data = $table.row(tr).data();
@@ -192,11 +195,11 @@
       'url': '/baadal/ajax/configs.json',
       'success': function(response) {
         console.log(response);
-        configSelect = document.getElementById('edit-config');
+        var configSelect = document.getElementById('edit-config');
         configSelect.options.length = 0;
         for (i = response.length-1; i>=0; i--) {
           console.log(response[i]);
-          var curr_config = response[i]
+          var curr_config = response[i];
           var text = curr_config['vcpus'] + 'CPU, ' + curr_config['ram'] + 'MB RAM';
           configSelect.options[configSelect.options.length] = new Option(text, curr_config['id'], data.flavor == curr_config.id);
         }
@@ -244,18 +247,6 @@
         console.log(response);
       }
     });
-    /*$.ajax({
-          'url': '/baadal/action/handle_request',
-          'type': 'post',
-          'data': {
-              'id':document.getElementById('edit-id').value,
-              'action': 'approve'
-          },
-          'success': function(response) {
-              console.log(response);
-              $('#my-modal').modal('hide');
-          }
-    });*/
   });
 })();
 </script>
