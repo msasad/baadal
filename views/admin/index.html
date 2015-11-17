@@ -1,13 +1,14 @@
 {{extend 'blank-page.html'}}
 <div class="panel panel-primary">
   <div class="panel-heading">
-    <h3 class="panel-title">My Virtual Machines</h3>
+    <h3 class="panel-title">All Virtual Machines</h3>
   </div>
   <div class="panel-body">
     <table id="my-vms" class="table table-bordered table-stripped table-hover table-condensed">
      <thead>
         <tr>
           <th>Name</th>
+          <th>Owner</th>
           <th>State</th>
           <th>IP Address(es)</th>
           <th>VCPUs</th>
@@ -33,7 +34,7 @@
     },
     "aoColumnDefs": [
       {
-        "aTargets": [2],
+        "aTargets": [3],
         "mData": null,
         "mRender": function (data, type, full) {
           if (type === 'display' || type === 'filter') {
@@ -43,7 +44,7 @@
         }
       },
       {
-        "aTargets": [6],
+        "aTargets": [7],
         "mData": null,
         "mRender": function (data, type, full) {
           var actions = {
@@ -70,6 +71,7 @@
     ],
     "columns": [
       { "data": "name" },
+      { "data": "owner.username" },
       { "data": "status" },
       { "data": "ip-addresses"},
       { "data": "vcpus" },
