@@ -236,7 +236,6 @@ class BaadalVM(object):
         properties = dict()
         properties['id'] = self.server.id
         properties['name'] = self.server.name
-        properties['owner'] = ''
         properties['status'] = self.get_status()
         properties['ip-addresses'] = []
         for (network, addresses) in server_properties['addresses'].iteritems():            
@@ -256,6 +255,12 @@ class BaadalVM(object):
         for snapshot in snapshots:
             l.append({'id': snapshot.id, 'created': snapshot.created, 'name': snapshot.name})
         properties['snapshots'] = l
+
+        if self.__conn.user_is_project_admin:
+            userid = self.server.user_id
+            username = self.__conn.keystone.users.get(userid)
+            if username:
+                properties['owner'] = username.to_dict()
         return properties
         pass
 
@@ -332,6 +337,7 @@ class Connection:
     def __init__(self, authurl, tenant_name, username, password):
         from keystoneclient.auth.identity import v2
         from keystoneclient import session
+        from keystoneclient.v2_0 import client as ksclient
         from novaclient import client
         from neutronclient.neutron import client as nclient
         from cinderclient import client as cclient 
@@ -340,16 +346,17 @@ class Connection:
         sess = session.Session(auth=auth)
 
         class ConnectionWrapper:
-            def __init__(self, nova, cinder, neutron):
+            def __init__(self, nova, cinder, neutron, keystone):
                 self.nova = nova
                 self.neutron = neutron
                 self.cinder = cinder
+                self.keystone = keystone
             pass
 
         self.__auth = auth
         self.__sess = sess
         self.__conn = ConnectionWrapper(client.Client('2', session=sess), cclient.Client('2', session=sess),
-                                        nclient.Client('2.0', session=sess))
+                                        nclient.Client('2.0', session=sess), ksclient.Client(session=sess))
         del ConnectionWrapper
 
         self.userid = self.__conn.nova.client.get_user_id()
@@ -422,7 +429,7 @@ class Connection:
             baadalvm = self.__conn.nova.servers.find(**kwargs)
             return BaadalVM(server=baadalvm, conn=self.__conn)
         except Exception as e:
-            raise BaadalException(e.message)
+            raise BaadalException(e.message or str(e.__class__))
         pass
 
     def create_baadal_vm(self, name, image, template, nics, **kwargs):
@@ -479,7 +486,7 @@ class Connection:
             imageslist = self.__conn.nova.images.list()
             return imageslist
         except Exception as e:
-            raise BaadalException(e.message)
+            raise BaadalException(e.message or str(e.__class__))
         pass
 
     def find_image(self, **kwargs):
@@ -489,7 +496,7 @@ class Connection:
             image = self.__conn.nova.images.find(**kwargs)
             return image
         except Exception as e:
-            raise BaadalException(e.message)
+            raise BaadalException(e.message or str(e.__class__))
         pass
    
     def hypervisors(self, name=None, id=None):
@@ -506,7 +513,7 @@ class Connection:
                 hypervisors = self.__conn.nova.hypervisors.find(id=id)
             return hypervisors
         except Exception as e:
-            raise BaadalException(e.message or _UNKNOWN_ERROR_MSG)
+            raise BaadalException(e.message or str(e.__class__))
 
     def templates(self):
         if not self.__conn.nova:
@@ -515,7 +522,7 @@ class Connection:
             templates = self.__conn.nova.flavors.list()
             return templates
         except Exception as e:
-            raise BaadalException(e.message)
+            raise BaadalException(e.message or str(e.__class__))
         pass
 
     def find_template(self, **kwargs):
@@ -525,7 +532,7 @@ class Connection:
             template = self.__conn.nova.flavors.find(**kwargs)
             return template
         except Exception as e:
-            raise BaadalException(e.message)
+            raise BaadalException(e.message or str(e.__class__))
         pass
     
     def sgroups(self, ):
@@ -535,14 +542,14 @@ class Connection:
             sgroups = self.__conn.neutron.list_security_groups()
             return sgroups
         except Exception as e:
-            raise BaadalException(e.message)
+            raise BaadalException(e.message or str(e.__class__))
 
     def networks(self, ):
         try:
             networks = self.__conn.neutron.list_networks()
             return networks
         except Exception as e:
-            raise BaadalException(e.message)
+            raise BaadalException(e.message or str(e.__class__))
         pass
     pass
 
@@ -554,7 +561,7 @@ class Connection:
                 subnet_list = self.__conn.neutron.list_subnets()
             return subnet_list
         except Exception as e:
-            raise BaadalException(e.message)
+            raise BaadalException(e.message or str(e.__class__))
 
     def _network_name_from_id(self, netid):
         netlist = self.networks()['networks']
@@ -575,7 +582,7 @@ class Connection:
             network_id = net_dict['id']
             return network_id
         except Exception as e:
-            raise BaadalException(e.message)
+            raise BaadalException(e.message or str(e.__class__))
 
     def create_subnet(self, name, network_id, cidr, ip_version=4, dns_nameservers=None, gateway_ip=None,
                       enable_dhcp=True, host_routes=None, allocation_pool_start=None, allocation_pool_end=None,
@@ -617,7 +624,7 @@ class Connection:
             subnet = self.__conn.neutron.create_subnet(body={'subnet': request_body})
             return subnet
         except Exception as e:
-            raise BaadalException(e.message)
+            raise BaadalException(e.message or str(e.__class__))
 
     def delete_network(self, network_id):
         try:
@@ -630,7 +637,7 @@ class Connection:
             security_group = {'name': sg_name}
             sg = self.__conn.neutron.create_security_group({'security_group': security_group})
         except Exception as e:
-            raise BaadalException(e.message)
+            raise BaadalException(e.message or str(e.__class__))
 
 
 class BaadalException(Exception):
