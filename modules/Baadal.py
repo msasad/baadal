@@ -249,7 +249,6 @@ class BaadalVM(object):
         properties['memory'] = flavor.__getattr__('ram')
         properties['vcpus'] = flavor.__getattr__('vcpus')
         properties['hostid'] = self.server.hostId
-        properties['hostname'] = self.server.__getattr__('OS-EXT-SRV-ATTR:hypervisor_hostname')
         snapshots = self.get_snapshots()
         l = []
         for snapshot in snapshots:
@@ -257,6 +256,7 @@ class BaadalVM(object):
         properties['snapshots'] = l
 
         if self.__conn.user_is_project_admin:
+            properties['hostname'] = self.server.__getattr__('OS-EXT-SRV-ATTR:hypervisor_hostname')
             userid = self.server.user_id
             username = self.__conn.keystone.users.get(userid)
             if username:
