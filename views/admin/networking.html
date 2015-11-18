@@ -72,16 +72,13 @@ $t.on('click', '.subnet-link', function(e) {
   // Will work only on Firefox 34+, Chrome 45+, Opera 32+, Safari 9+
   // Will not work on Internet Explorer
   var data = Object.assign({}, $table.row(this.closest('tr')).data());
-  console.log('row data', data);
   var subnetid = this.getAttribute('data-subnet');
   $.ajax({
     url: '/baadal/static/templates/subnet-settings-template.html',
     success: function(response) {
       var template = Handlebars.compile(response);
       var filtered_data = baadalApp.filterArrayObject(data, 'subnets', 'id', subnetid);
-      //data.subnet = data.subnets[0]
       var html = template(filtered_data);
-      console.log(data);
       $(document.body).prepend(html);
       var $modal = $('#subnets-modal').modal('show');
       $modal.on('hidden.bs.modal', function() {
@@ -89,7 +86,6 @@ $t.on('click', '.subnet-link', function(e) {
       });
     }
   });
-  //console.log(data);
 });
   })(jQuery);
 </script>
