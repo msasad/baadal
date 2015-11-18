@@ -94,29 +94,73 @@
         $(document.body).prepend(html);
         var $modal = $('#vm-settings-modal').modal('show');
         $modal.on('shown.bs.modal', function() {
-          $modal.on('click', '.btn-action', function() {
-            $.ajax({
-              url: '/baadal/action/index.json',
-              type: 'post',
-              data: {
-                vmid: this.parentElement.getAttribute('data-vmid'),
-                action: this.getAttribute('data-action')
-              },
-              'error' : function(response) {
-                var error = response.getResponseHeader('web2py_error');
-                if (error) {
-                  baadalApp.generateTicketLink(error);
+          $modal.on('click', '.btn-action', function(e) {
+            var vmid = this.parentElement.getAttribute('data-vmid');
+            var action = this.getAttribute('data-action');
+            if (action === 'delete') {
+              var buttons_html = '\
+              <span>Do you really want to delete this VM?</span>\
+             \
+                <button type="button" name="btn-yes" class="btn btn-danger" data-confirm="yes">Yes</button>\
+                <button type="button" name="btn-no" class="btn btn-success" data-confirm="no">No</button>\
+              ';
+              var footer;
+              $modal.find('.panel-footer').html(buttons_html).slideDown(function () {
+                footer = this;
+                this.children.namedItem('btn-no').addEventListener('click', function () {
+                  footer && $(footer).slideUp().html('');
+                });
+                this.children.namedItem('btn-yes').addEventListener('click', function () {
+                  $.ajax({
+                    url: '/baadal/action/index.json',
+                    type: 'post',
+                    data: {
+                      'vmid': vmid,
+                      'action': action
+                    },
+                    'error': function (response) {
+                      var error = response.getResponseHeader('web2py_error');
+                      if (error) {
+                        baadalApp.generateTicketLink(error);
+                      }
+                    },
+                    success: function (response) {
+                      switch (response.action) {
+                        case 'get-vnc-console':
+                          $modal.find('#modal-info-message').html(response.consoleurl).slideDown();
+                          break;
+                      }
+                      console.log(response);
+                    }
+                  });
+                  footer && $(footer).slideUp().html('');
+                });
+              });
+
+            } else {
+              $.ajax({
+                url: '/baadal/action/index.json',
+                type: 'post',
+                data: {
+                  'vmid': vmid,
+                  'action': action
+                },
+                'error': function (response) {
+                  var error = response.getResponseHeader('web2py_error');
+                  if (error) {
+                    baadalApp.generateTicketLink(error);
+                  }
+                },
+                success: function (response) {
+                  switch (response.action) {
+                    case 'get-vnc-console':
+                      $modal.find('#modal-info-message').html(response.consoleurl).slideDown();
+                      break;
+                  }
+                  console.log(response);
                 }
-              },
-              success: function(response) {
-                switch (response.action) {
-                  case 'get-vnc-console':
-                      $modal.find('#modal-info-message').html(response.consoleurl).fadeIn();
-                    break;
-                }
-                console.log(response);
-              }
-            });
+              });
+            }
           });
           $modal.on('click', '.snapshot-restore', function(e){
             var vmid = document.getElementById('vmid').value;
