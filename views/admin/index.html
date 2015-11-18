@@ -4,7 +4,7 @@
     <h3 class="panel-title">All Virtual Machines</h3>
   </div>
   <div class="panel-body">
-    <table id="my-vms" class="table table-bordered table-stripped table-hover table-condensed">
+    <table id="all-vms" class="table table-bordered table-stripped table-hover table-condensed">
      <thead>
         <tr>
           <th>Name</th>
@@ -26,8 +26,8 @@
 <script>
 'use strict';
 (function() {
-  var $myvms = $('#my-vms');
-  var $table = $myvms.DataTable( {
+  var $allvms = $('#all-vms');
+  var $table = $allvms.DataTable( {
     "ajax": "/baadal/admin/all_vms.json",
     "oLanguage": {
       "sEmptyTable": "You have no VMs!"
@@ -86,10 +86,10 @@
     $table.ajax.reload();
   }, 30*1000);
 
-  $myvms.on('click', '.btn-settings', function (e) {
+  $allvms.on('click', '.btn-settings', function (e) {
     var tr = this.closest('tr');
     var context = $table.row(tr).data();
-    context['ip-addresses'] = baadalApp.ipArrayToString(context['ip-addresses']);
+    context['ip-addresses'] = baadalApp.ipArrayToString(context['ip-addresses'], true);
     $.ajax( {
       url : '/baadal/static/templates/vm-admin-settings-template.html',
       success : function(response) {
@@ -141,7 +141,7 @@
       }
     });
   });
-  $myvms.on('click','.btn-action', function(e) {
+  $allvms.on('click','.btn-action', function(e) {
     var id = this.closest('tr').getAttribute('data-vmid');
     var action = this.getAttribute('data-action');
     $.ajax({

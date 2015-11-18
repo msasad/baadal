@@ -5,3 +5,11 @@
 textarea {
   resize: vertical;
 }
+
+#all-vms > tbody > tr> td:nth-child(4) {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  width: 35%;
+  max-width: 0;
+  overflow-x: hidden;
+}

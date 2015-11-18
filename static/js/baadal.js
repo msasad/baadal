@@ -14,20 +14,17 @@ baadalApp.generateTicketLink = function(error) {
 
 baadalApp.ipArrayToString = function(data, usebr) {
   if (typeof data == 'string') return data;
-  var str = '';
+  var arr = [];
   for (var i = data.length - 1; i>=0; i--) {
+    var str = '';
     var keys = Object.keys(data[i]);
     for (var j = keys.length - 1; j >= 0; j--) {
       str += keys[j] + ':' + data[i][keys[j]] + ' ';
     }
-    if (usebr) {
-      str += '<br>';
-    } else {
-      str += '\n';
-    }
+    arr.push(str);
   }
-  return str;
-}
+  return arr.join(usebr ? '<br>' : '\n');
+};
 
 if (Handlebars) {
   Handlebars.registerHelper('ifCond', function (v1, operator, v2, options) {
@@ -66,4 +63,4 @@ baadalApp.filterArrayObject = function(object, array_name, field_name, value) {
   }
   object[array_name] = newarray;
   return object;
-}
+};
