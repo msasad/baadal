@@ -1,25 +1,84 @@
-<div class="modal fade" id="subnets-modal">
+<div class="modal fade" id="add-subnet-modal">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title">Add Subnet</h4>
       </div>
       <div class="modal-body">
         <div class="panel panel-default">
           <div class="panel-heading">
-            <h3 class="panel-title">{{name}}</h3>
+            <h3 class="panel-title">Adding Subnet</h3>
           </div>
           <div class="panel-body">
-            <form action="#" class="form">
-              <div class="form-group"></div>
-              <div class="form-group"></div>
-              <div class="form-group"></div>
-              <div class="form-group"></div>
-              <div class="form-group"></div>
-              <div class="form-group"></div>
-              <div class="form-group"></div>
-              <div class="form-group"></div>
+            <form action="#" class="form form-horizontal">
+              <div class="form-group">
+                <label for="net-name" class="control-label col-sm-3">Network Name*</label>
+                <div class="col-sm-9">
+                  <input type="text" class="form-control form-control-static" id="subnet-name" disabled>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="subnet-name" class="control-label col-sm-3">Subnet Name*</label>
+                <div class="col-sm-9">
+                  <input type="text" class="form-control" id="subnet-name">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="cidr" class="control-label col-sm-3">CIDR*</label>
+                <div class="col-sm-9">
+                  <input type="text" class="form-control" id="cidr">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="nameservers" class="control-label col-sm-3">DNS Nameservers</label>
+                <div class="col-sm-9">
+                  <input type="text" class="form-control" id="nameservers">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="allocation-pool" class="control-label col-sm-3">Allocation Pool</label>
+                <div class="col-sm-9">
+                  <input type="text" class="form-control" id="allocation-pool">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="gateway-ip" class="control-label col-sm-3">Gateway IP</label>
+                <div class="col-sm-9">
+                  <input type="text" class="form-control" id="gateway-ip">
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-9 col-sm-offset-3">
+                  <div class="checkbox">
+                    <label>
+                      <input type="checkbox" id="dhcp-enabled" checked> DHCP Enabled
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="control-label col-sm-3">IP Version</label>
+                <div class="col-sm-9">
+                  <div class="radio-inline">
+                    <label>
+                      <input type="radio" name="ip-version" id="ip-version" value="4" checked>
+                      IPv4
+                    </label>
+                  </div>
+                  <div class="radio-inline">
+                    <label>
+                      <input type="radio" name="ip-version" id="ip-version" value="6">
+                      IPv6
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="static-routes" class="control-label col-sm-3">Static Routes</label>
+                <div class="col-sm-9">
+                  <textarea class="form-control" id="static-routes"></textarea>
+                </div>
+              </div>
             </form>
           </div>
           <div class="panel-footer">
