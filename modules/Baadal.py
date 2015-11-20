@@ -317,7 +317,7 @@ class BaadalVM(object):
         try:
             self.server.start()
         except Exception as e:
-            raise BaadalException(e)
+            raise BaadalException(e.message or str(e.__class__))
         pass
 
     def update(self, **kwargs):
