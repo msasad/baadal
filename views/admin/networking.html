@@ -70,7 +70,7 @@
     });
     $t.on('click', '.subnet-link', function(e) {
       // Will work only on Firefox 34+, Chrome 45+, Opera 32+, Safari 9+
-      // Will not work on Internet Explorer
+      // Will not work on any verison of Internet Explorer
       var data = Object.assign({}, $table.row(this.closest('tr')).data());
       var subnetid = this.getAttribute('data-subnet');
       $.ajax({
@@ -88,18 +88,41 @@
       });
     });
     $t.on('click', '.btn-add-subnet', function(){
-      var netid = $table.row(this.closest('tr')).data().id;
+      var netname = $table.row(this.closest('tr')).data().name;
+      console.log(netname);
       $.ajax({
         url: '/baadal/static/templates/add-subnet-template.html',
         success: function(response) {
           $(document.body).prepend(response);
           var $modal = $('#add-subnet-modal').modal('show');
-
+          document.getElementById('net-name').value = netname;
+          $modal.on('shown.bs.modal', function () {
+            $('#subnet-name').focus();
+            $('#btn-add-subnet-now').on('click', function(){
+              $.ajax({
+                url: null,
+                type: 'post',
+                dataType: 'json',
+                success: function(response) {
+                  if(response.hasErrors) {
+                    $('#modal-error-message').fadeIn();
+                    for(var elem in response.errorfields) {
+                      document.getElementById(elem).classList.add('has-error')
+                    }
+                  } else {
+                    if(response.status == 'success') {
+                      $('#modal-success-message').fadeIn();
+                    }
+                  }
+                }
+              })
+            });
+          });
           $modal.on('hidden.bs.modal', function() {
             $modal.remove();
           });
         }
-      })
+      });
     });
   })(jQuery);
 </script>
