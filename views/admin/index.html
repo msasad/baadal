@@ -86,6 +86,7 @@
     $table.ajax.reload();
   }, 30*1000);
 
+  var $modal;
   $allvms.on('click', '.btn-settings', function (e) {
     var tr = this.closest('tr');
     var context = $table.row(tr).data();
@@ -96,31 +97,74 @@
         var template = Handlebars.compile(response);
         var html = template(context);
         $(document.body).prepend(html);
-        var $modal = $('#vm-settings-modal').modal('show');
+        $modal = $('#vm-settings-modal').modal('show');
         $modal.on('shown.bs.modal', function() {
           $modal.on('click', '.btn-action', function() {
-            $.ajax({
-              url: '/baadal/action/index.json',
-              type: 'post',
-              data: {
-                vmid: this.parentElement.getAttribute('data-vmid'),
-                action: this.getAttribute('data-action')
-              },
-              'error' : function(response) {
-                var error = response.getResponseHeader('web2py_error');
-                if (error) {
-                  baadalApp.generateTicketLink(error);
-                }
-              },
-              success: function(response) {
-                switch (response.action) {
-                  case 'get-vnc-console':
+            var vmid = this.parentElement.getAttribute('data-vmid');
+            var action = this.getAttribute('data-action');
+            if (action === 'delete') {
+              var buttons_html = '\
+              <span>Do you really want to delete this VM? This action cannot be undone!</span>\
+             \
+                <button type="button" name="btn-yes" class="btn btn-danger" data-confirm="yes">Yes</button>\
+                <button type="button" name="btn-no" class="btn btn-success" data-confirm="no">No</button>\
+              ';
+              var footer;
+              $modal.find('.panel-footer').html(buttons_html).slideDown(function () {
+                footer = this;
+                this.children.namedItem('btn-no').addEventListener('click', function () {
+                  footer && $(footer).slideUp().html('');
+                });
+                this.children.namedItem('btn-yes').addEventListener('click', function () {
+                  $.ajax({
+                    url: '/baadal/action/index.json',
+                    type: 'post',
+                    data: {
+                      'vmid': id,
+                      'action': action
+                    },
+                    'error': function (response) {
+                      var error = response.getResponseHeader('web2py_error');
+                      if (error) {
+                        baadalApp.generateTicketLink(error);
+                      }
+                    },
+                    success: function (response) {
+                      switch (response.action) {
+                        case 'get-vnc-console':
+                          $modal.find('#modal-info-message').html(response.consoleurl).slideDown();
+                          break;
+                      }
+                      console.log(response);
+                    }
+                  });
+                  footer && $(footer).slideUp().html('');
+                });
+              });
+            } else {
+              $.ajax({
+                url: '/baadal/action/index.json',
+                type: 'post',
+                data: {
+                  'vmid': this.parentElement.getAttribute('data-vmid'),
+                  'action': this.getAttribute('data-action')
+                },
+                'error': function (response) {
+                  var error = response.getResponseHeader('web2py_error');
+                  if (error) {
+                    baadalApp.generateTicketLink(error);
+                  }
+                },
+                success: function (response) {
+                  switch (response.action) {
+                    case 'get-vnc-console':
                       $modal.find('#modal-info-message').html(response.consoleurl).fadeIn();
-                    break;
+                      break;
+                  }
+                  console.log(response);
                 }
-                console.log(response);
-              }
-            });
+              });
+            }
           });
           $modal.on('click', '.snapshot-restore', function(e){
             var vmid = document.getElementById('vmid').value;
@@ -144,31 +188,31 @@
   $allvms.on('click','.btn-action', function(e) {
     var id = this.closest('tr').getAttribute('data-vmid');
     var action = this.getAttribute('data-action');
-    $.ajax({
-      'url': '/baadal/action/index.json',
-      'type': 'post',
-      'dataType' : 'json',
-      'data': {
-        'vmid': id,
-        'action': action
-      },
-      'error' : function(response) {
-        var error = response.getResponseHeader('web2py_error');
-        if (error) {
-          baadalApp.generateTicketLink(error);
+      $.ajax({
+        'url': '/baadal/action/index.json',
+        'type': 'post',
+        'dataType': 'json',
+        'data': {
+          'vmid': id,
+          'action': action
+        },
+        'error': function (response) {
+          var error = response.getResponseHeader('web2py_error');
+          if (error) {
+            baadalApp.generateTicketLink(error);
+          }
+        },
+        'success': function (response) {
+          if (response.status == 'success') {
+            $('#success-message').fadeIn(1000, function () {
+              $table.ajax.reload();
+              $(this).fadeOut();
+            });
+          } else {
+            $('#error-message').fadeIn();
+          }
         }
-      },
-      'success': function(response) {
-        if(response.status == 'success') {
-          $('#success-message').fadeIn(1000, function () {
-            $table.ajax.reload();
-            $(this).fadeOut();
-          });
-        } else {
-          $('#error-message').fadeIn();
-        }
-      }
-    });
+      });
   });
 })();
 </script>
