@@ -14,7 +14,7 @@
               <div class="form-group">
                 <label for="net-name" class="control-label col-sm-3">Network Name*</label>
                 <div class="col-sm-9">
-                  <input type="text" class="form-control form-control-static" id="subnet-name" disabled>
+                  <input type="text" class="form-control form-control-static" id="net-name" disabled>
                 </div>
               </div>
               <div class="form-group">
@@ -32,13 +32,13 @@
               <div class="form-group">
                 <label for="nameservers" class="control-label col-sm-3">DNS Nameservers</label>
                 <div class="col-sm-9">
-                  <input type="text" class="form-control" id="nameservers">
+                  <input type="text" class="form-control" id="nameservers" placeholder="Comma separated list of DNS addresses, default None">
                 </div>
               </div>
               <div class="form-group">
                 <label for="allocation-pool" class="control-label col-sm-3">Allocation Pool</label>
                 <div class="col-sm-9">
-                  <input type="text" class="form-control" id="allocation-pool">
+                  <input type="text" class="form-control" id="allocation-pool" placeholder="Default">
                 </div>
               </div>
               <div class="form-group">
@@ -77,6 +77,12 @@
                 <label for="static-routes" class="control-label col-sm-3">Static Routes</label>
                 <div class="col-sm-9">
                   <textarea class="form-control" id="static-routes"></textarea>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-9 col-sm-offset-3">
+                  <button id="btn-add-subnet-now" class="btn btn-primary">Add</button>
+                  <button id="btn-cancel-subnet-add" class="btn btn-default">Cancel</button>
                 </div>
               </div>
             </form>
