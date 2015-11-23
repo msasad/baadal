@@ -22,7 +22,8 @@ STATUS = {
                 'SHUTOFF': 'Shutdown',
                 'PAUSED': 'Paused',
                 'BUILD': 'Building',
-                'ERROR': 'Error'
+                'ERROR': 'Error',
+                'VERIFY_RESIZE': 'Resizing'
         }
 
 
@@ -282,8 +283,8 @@ class BaadalVM(object):
     def resize(self, flavor):
         try:
             self.server.resize(flavor)
-            while self.server.status != 'VERIFY_RESIZE':
-                pass
+            while self.get_status() != 'Resizing':
+                self.refresh_status()
             self.server.confirm_resize()
         except Exception as e:
             raise BaadalException(e.message or str(e.__class__))
