@@ -154,7 +154,8 @@
                 success: function (response) {
                   switch (response.action) {
                     case 'get-vnc-console':
-                      $modal.find('#modal-info-message').html(response.consoleurl).slideDown();
+                      $modal.find('.panel-footer').show();
+                      $modal.find('#modal-info-message').html('<a target="_blank" href="' + response.consoleurl + '">' + response.consoleurl+ '</a>').slideDown();
                       break;
                   }
                   console.log(response);
