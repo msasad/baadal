@@ -279,6 +279,15 @@ class BaadalVM(object):
         except Exception as e:
             raise BaadalException(e)
 
+    def resize(self, flavor):
+        try:
+            self.server.resize(flavor)
+            while self.server.status != 'VERIFY_RESIZE':
+                pass
+            self.server.confirm_resize()
+        except Exception as e:
+            raise BaadalException(e.message or str(e.__class__))
+
     def refresh_status(self):
         self.server = self.server.manager.find(id=self.server.id)
 
