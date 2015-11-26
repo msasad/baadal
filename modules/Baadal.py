@@ -193,7 +193,10 @@ class BaadalVM(object):
         pass
 
     def get_vnc_console(self, console_type='novnc'):
-        return self.server.get_vnc_console(console_type)['console']['url']
+        if console_type == 'spice':
+            return self.server.get_spice_console('spice-html5')['console']['url']
+        else:
+            return self.server.get_vnc_console(console_type)['console']['url']
 
     @staticmethod
     def __cmp(x, y):
@@ -286,7 +289,7 @@ class BaadalVM(object):
             while self.get_status() != 'Resizing':
                 self.refresh_status()
             self.server.confirm_resize()
-        except Exception as e:
+        except Exception as e:vir
             raise BaadalException(e.message or str(e.__class__))
 
     def refresh_status(self):
