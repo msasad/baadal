@@ -79,6 +79,51 @@ def all_vms():
         return jsonify(status='fail')
 
 
+def create_subnet():
+    try:
+        logger.info(request.vars)
+
+        if request.vars.gateway_ip != '':
+            if IS_IPV4()(request.vars.gateway_ip):
+                gateway_ip = request.vars.gateway_ip
+            else:
+                # TODO add each erroneous value to a list and return it to client
+                pass
+        else:
+            gateway_ip = None
+
+        if request.vars.nameservers != '':
+            nslist = request.vars.nameservers.translate(None, ' ').split(',')
+            for ns in nslist:
+                if not IS_IPV4().regex.match(ns):
+                    pass
+        else:
+            nslist = None
+
+        if __validate_ips(request.vars.static_routes):
+            routes_list = str_to_route_list(request.vars.static_routes)
+        else:
+            # TODO send err msg
+            pass
+
+        subnet = conn.create_subnet(name=request.vars.subnet_name, network_id=request.vars.net_id,
+                                    cidr=request.vars.cidr, ip_version=request.vars.ip_version,
+                                    gateway_ip=gateway_ip, enable_dhcp=request.vars.dhcp_enabled,
+                                    dns_nameservers=nslist, host_routes=routes_list)
+        return jsonify(data=subnet)
+    except Exception as e:
+        logger.error(e.message or str(e.__class__))
+        return jsonify(status='fail')
+
+
+def __validate_ips(string, replace='\r\n', delim=':'):
+    l = string.replace(replace,delim).split(delim)
+    for addr in l:
+        if not IS_IPV4().regex.match(addr):
+            return False
+        return True
+
+
 # Empty controllers for HTML files
 def pending_requests_list():
     return dict()
