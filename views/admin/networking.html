@@ -89,6 +89,7 @@
     });
     $t.on('click', '.btn-add-subnet', function(){
       var netname = $table.row(this.closest('tr')).data().name;
+      var netid = $table.row(this.closest('tr')).data().id;
       console.log(netname);
       $.ajax({
         url: '/baadal/static/templates/add-subnet-template.html',
@@ -98,10 +99,16 @@
           document.getElementById('net-name').value = netname;
           $modal.on('shown.bs.modal', function () {
             $('#subnet-name').focus();
-            $('#btn-add-subnet-now').on('click', function(){
+            document.getElementById('net-id').value = netid;
+            $('#btn-add-subnet-now').on('click', function(e){
+              e.preventDefault();
+              var data = baadalApp.serialize($('#frm-add-subnet').serializeArray());
+              data['dhcp-enabled'] = !(!data['dhcp-enabled']);
+              console.log(data);
               $.ajax({
-                url: null,
+                url: '/baadal/admin/create_subnet.json',
                 type: 'post',
+                data: data,
                 dataType: 'json',
                 success: function(response) {
                   if(response.hasErrors) {
