@@ -25,6 +25,15 @@ def network_name_from_id(netid):
     pass
 
 
+def str_to_route_list(s):
+    l = s.split('\r\n')
+    route_list = []
+    for i in l:
+        temp = i.split(':')
+        route_list.append({'destination': temp[0], 'nexthop': temp[1]})
+    return route_list
+
+
 def flavor_info(flavor_id):
     flavor = conn.find_template(id=flavor_id)
     return str(flavor.vcpus) + (' VCPU, ' if flavor.vcpus == 1 else ' VCPUs, ') + str(flavor.ram) + ' MB RAM'
