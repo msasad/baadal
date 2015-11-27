@@ -10,48 +10,49 @@
             <h3 class="panel-title">Adding Subnet</h3>
           </div>
           <div class="panel-body">
-            <form action="#" class="form form-horizontal">
+            <form action="#" class="form form-horizontal" id="frm-add-subnet">
+              <input type="hidden" id="net-id" name="net_id">
               <div class="form-group">
                 <label for="net-name" class="control-label col-sm-3">Network Name*</label>
                 <div class="col-sm-9">
-                  <input type="text" class="form-control form-control-static" id="net-name" disabled>
+                  <input type="text" class="form-control form-control-static" id="net-name" name="net_name" readonly>
                 </div>
               </div>
               <div class="form-group">
                 <label for="subnet-name" class="control-label col-sm-3">Subnet Name*</label>
                 <div class="col-sm-9">
-                  <input type="text" class="form-control" id="subnet-name">
+                  <input type="text" class="form-control" id="subnet-name" name="subnet_name">
                 </div>
               </div>
               <div class="form-group">
                 <label for="cidr" class="control-label col-sm-3">CIDR*</label>
                 <div class="col-sm-9">
-                  <input type="text" class="form-control" id="cidr">
+                  <input type="text" class="form-control" id="cidr" name="cidr">
                 </div>
               </div>
               <div class="form-group">
                 <label for="nameservers" class="control-label col-sm-3">DNS Nameservers</label>
                 <div class="col-sm-9">
-                  <input type="text" class="form-control" id="nameservers" placeholder="Comma separated list of DNS addresses, default None">
+                  <input type="text" class="form-control" id="nameservers" name="nameservers" placeholder="Comma separated list of DNS addresses, default None">
                 </div>
               </div>
               <div class="form-group">
                 <label for="allocation-pool" class="control-label col-sm-3">Allocation Pool</label>
                 <div class="col-sm-9">
-                  <input type="text" class="form-control" id="allocation-pool" placeholder="Default">
+                  <input type="text" class="form-control" id="allocation-pool" name="allocation_pool" placeholder="Use Default Values">
                 </div>
               </div>
               <div class="form-group">
                 <label for="gateway-ip" class="control-label col-sm-3">Gateway IP</label>
                 <div class="col-sm-9">
-                  <input type="text" class="form-control" id="gateway-ip">
+                  <input type="text" class="form-control" id="gateway-ip" name="gateway_ip" placeholder="Use Default Value">
                 </div>
               </div>
               <div class="form-group">
                 <div class="col-sm-9 col-sm-offset-3">
                   <div class="checkbox">
                     <label>
-                      <input type="checkbox" id="dhcp-enabled" checked> DHCP Enabled
+                      <input type="checkbox" id="dhcp-enabled" name="dhcp_enabled" value="true" checked> DHCP Enabled
                     </label>
                   </div>
                 </div>
@@ -61,13 +62,13 @@
                 <div class="col-sm-9">
                   <div class="radio-inline">
                     <label>
-                      <input type="radio" name="ip-version" id="ip-version" value="4" checked>
+                      <input type="radio" name="ip_version" id="ip-version" value="4" checked>
                       IPv4
                     </label>
                   </div>
                   <div class="radio-inline">
                     <label>
-                      <input type="radio" name="ip-version" id="ip-version" value="6">
+                      <input type="radio" name="ip_version" id="ip-version" value="6">
                       IPv6
                     </label>
                   </div>
@@ -76,13 +77,12 @@
               <div class="form-group">
                 <label for="static-routes" class="control-label col-sm-3">Static Routes</label>
                 <div class="col-sm-9">
-                  <textarea class="form-control" id="static-routes"></textarea>
+                  <textarea class="form-control" id="static-routes" name="static_routes"></textarea>
                 </div>
               </div>
               <div class="form-group">
                 <div class="col-sm-9 col-sm-offset-3">
                   <button id="btn-add-subnet-now" class="btn btn-primary">Add</button>
-                  <button id="btn-cancel-subnet-add" class="btn btn-default">Cancel</button>
                 </div>
               </div>
             </form>
