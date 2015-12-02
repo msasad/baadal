@@ -17,7 +17,7 @@
     </table>
   </div>
   <div class="panel-footer">
-    <button class="btn btn-default">Add </button>
+    <button class="btn btn-default" id="btn-add-network">Create new network</button>
   </div>
 </div>
 {{include 'default-scripts.html'}}
@@ -103,7 +103,7 @@
             $('#btn-add-subnet-now').on('click', function(e){
               e.preventDefault();
               var data = baadalApp.serialize($('#frm-add-subnet').serializeArray());
-              data['dhcp-enabled'] = !(!data['dhcp-enabled']);
+              data['dhcp_enabled'] = !(!data['dhcp_enabled']);
               console.log(data);
               $.ajax({
                 url: '/baadal/admin/create_subnet.json',
@@ -114,7 +114,7 @@
                   if(response.hasErrors) {
                     $('#modal-error-message').fadeIn();
                     for(var elem in response.errorfields) {
-                      document.getElementById(elem).classList.add('has-error')
+                      document.getElementById(elem).classList.add('has-error');
                     }
                   } else {
                     if(response.status == 'success') {
@@ -130,6 +130,43 @@
           });
         }
       });
+    });
+    $('#btn-add-network').on('click', function(){
+      $.ajax({
+        url: '/baadal/static/templates/add-network-template.html',
+        success: function(response) {
+          $(document.body).prepend(response);
+          var $modal = $('#add-network-modal').modal('show');
+          $('#btn-add-network-now').on('click', function (e) {
+            e.preventDefault();
+            var data = baadalApp.serialize($('#frm-add-network').serializeArray());
+            data['shared'] = !(!data['shared']);
+            data['network_up'] = !(!data['network_up']);
+            data['external'] = !(!data['external']);
+            console.log(data);
+            $.ajax({
+              url: '/baadal/admin/create_network.html',
+              type: 'post',
+              dataType: 'json',
+              success: function (response) {
+                if(response.hasErrors) {
+                  $('#modal-error-message').fadeIn();
+                  for(var elem in response.errorFields) {
+                    document.getElementById(elem).classList.add('has-error');
+                  }
+                } else {
+                  if(response.status == 'success') {
+                      $('#modal-success-message').fadeIn();
+                  }
+                }
+              }
+            });
+          });
+          $modal.on('hidden.bs.modal', function() {
+            $modal.remove();
+          });
+        }
+      })
     });
   })(jQuery);
 </script>
