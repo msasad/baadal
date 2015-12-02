@@ -587,13 +587,19 @@ class Connection:
             if net['name'] == netname:
                 return net['id']
 
-    def create_network(self, network_name, cidr, ip_version=None, dns_name=None):
+    def create_network(self, network_name, provider_segmentation_id, shared=True,
+                       external=False, provider_network_type='gre', provider_physical_network=None, admin_state_up=True):
         try:
-            body_sample = {'network': {'name': network_name, 'admin_state_up': True}}
-            netw = self.__conn.neutron.create_network(body=body_sample)
-            net_dict = netw['network']
-            network_id = net_dict['id']
-            return network_id
+            request_body = dict()
+            request_body['name'] = network_name
+            request_body['provider:segmentation_id'] = provider_segmentation_id
+            # request_body['provider:physical_network'] = provider_physical_network
+            request_body['provider:network_type'] = provider_network_type
+            request_body['shared'] = shared
+            request_body['router:external'] = external
+
+            network = self.__conn.neutron.create_network(body={'network': request_body})
+            return network
         except Exception as e:
             raise BaadalException(e.message or str(e.__class__))
 
@@ -632,8 +638,8 @@ class Connection:
             request_body['enable_dhcp'] = enable_dhcp
             request_body['ip_version'] = int(ip_version)
             request_body['host_routes'] = host_routes
-            if allocation_pool_end:
-                request_body['allocation_pools'] = {'start': allocation_pool_start, 'end': allocation_pool_end}
+            if allocation_pool_end is not None:
+                request_body['allocation_pools'] = [{'start': allocation_pool_start, 'end': allocation_pool_end}]
 
             subnet = self.__conn.neutron.create_subnet(body={'subnet': request_body})
             return subnet
@@ -650,6 +656,7 @@ class Connection:
         try:
             security_group = {'name': sg_name}
             sg = self.__conn.neutron.create_security_group({'security_group': security_group})
+            return sg
         except Exception as e:
             raise BaadalException(e.message or str(e.__class__))
 
