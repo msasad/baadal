@@ -1,0 +1,72 @@
+<div class="modal fade" id="add-network-modal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Create New Network</h3>
+          </div>
+          <div class="panel-body">
+            <form action="#" class="form form-horizontal" id="frm-add-network">
+              <div class="form-group">
+                <label for="net-name" class="control-label col-sm-3">Network Name*</label>
+                <div class="col-sm-9">
+                  <input type="text" class="form-control" id="net-name" name="net_name">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="segmentation-id" class="control-label col-sm-3">Segmentation ID*</label>
+                <div class="col-sm-9">
+                  <input type="text" class="form-control" id="segmentation-id" name="segmentation_id">
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-9 col-sm-offset-3">
+                  <div class="checkbox">
+                    <label>
+                      <input type="checkbox" id="shared" name="shared" value="true"> Shared Network
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-9 col-sm-offset-3">
+                  <div class="checkbox">
+                    <label>
+                      <input type="checkbox" id="external" name="external" value="true" checked> External Network
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-9 col-sm-offset-3">
+                  <div class="checkbox">
+                    <label>
+                      <input type="checkbox" id="network_up" name="network_up" value="true" checked> Network Enabled
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-9 col-sm-offset-3">
+                  <button id="btn-add-network-now" class="btn btn-primary">Create</button>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="panel-footer">
+            <span style="display:none" class="text-danger" id="modal-error-message">There was some error in the form. Please check the values and submit the form again.</span>
+            <span style="display:none" class="text-info" id="modal-info-message"></span>
+            <span style="display:none" class="text-success" id="modal-success-message">Network successfully created.</span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div>
