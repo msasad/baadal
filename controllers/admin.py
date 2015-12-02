@@ -83,14 +83,13 @@ def create_subnet():
     try:
         logger.info(request.vars)
 
+        gateway_ip = None
         if request.vars.gateway_ip != '':
             if IS_IPV4()(request.vars.gateway_ip):
                 gateway_ip = request.vars.gateway_ip
             else:
                 # TODO add each erroneous value to a list and return it to client
                 pass
-        else:
-            gateway_ip = None
 
         if request.vars.nameservers != '':
             nslist = request.vars.nameservers.translate(None, ' ').split(',')
@@ -100,28 +99,41 @@ def create_subnet():
         else:
             nslist = None
 
-        if __validate_ips(request.vars.static_routes):
-            routes_list = str_to_route_list(request.vars.static_routes)
+        routes_list = str_to_route_list(request.vars.static_routes) if request.vars.static_routes != '' else None
+
+        if request.vars.allocation_pool != '':
+            allocation_pool_start, allocation_pool_end = request.vars.allocation_pool.translate(None, ' ').split('-')
         else:
-            # TODO send err msg
-            pass
+            allocation_pool_end = allocation_pool_start = None
 
         subnet = conn.create_subnet(name=request.vars.subnet_name, network_id=request.vars.net_id,
                                     cidr=request.vars.cidr, ip_version=request.vars.ip_version,
                                     gateway_ip=gateway_ip, enable_dhcp=request.vars.dhcp_enabled,
-                                    dns_nameservers=nslist, host_routes=routes_list)
+                                    dns_nameservers=nslist, host_routes=routes_list,
+                                    allocation_pool_start=allocation_pool_start,
+                                    allocation_pool_end=allocation_pool_end)
         return jsonify(data=subnet)
     except Exception as e:
-        logger.error(e.message or str(e.__class__))
-        return jsonify(status='fail')
+        logger.exception(e.message or str(e.__class__))
+        return jsonify(status='fail', message=e.message or str(e.__class__))
 
 
 def __validate_ips(string, replace='\r\n', delim=':'):
-    l = string.replace(replace,delim).split(delim)
+    l = string.replace(replace, delim).split(delim)
     for addr in l:
         if not IS_IPV4().regex.match(addr):
             return False
         return True
+
+def create_network():
+    try:
+        # create network
+        # create security group with same name
+        # add security group rules to allow traffic within the same network
+        pass
+    except Exception as e:
+        logger.exception(e.message or str(e.__class__))
+        return jsonify(status='fail', message=e.message or str(e.__class__))
 
 
 # Empty controllers for HTML files
