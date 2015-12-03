@@ -125,12 +125,22 @@ def __validate_ips(string, replace='\r\n', delim=':'):
             return False
         return True
 
+
 def create_network():
     try:
-        # create network
-        # create security group with same name
-        # add security group rules to allow traffic within the same network
-        pass
+        network = conn.create_network(request.vars.net_name, request.vars.segmentation_id,
+                                      shared=request.vars.shared, external=request.vars.external,
+                                      admin_state_up=request.vars.network_up)
+
+        try:
+            sg_id = conn.create_security_group(request.vars.net_name)['security_group']['id']
+            conn.create_security_group_rule(sg_id=sg_id, direction='egress', remote_group=sg_id)
+            conn.create_security_group_rule(sg_id=sg_id, direction='ingress', remote_group=sg_id)
+        except Exception as e:
+            logger.error('Failed to create Security group for new network')
+            logger.exception(e.message or str(e.__class__))
+            conn.delete_network(network['network']['id'])
+            logger.info('Deleted the newly created network')
     except Exception as e:
         logger.exception(e.message or str(e.__class__))
         return jsonify(status='fail', message=e.message or str(e.__class__))
