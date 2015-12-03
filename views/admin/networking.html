@@ -145,9 +145,10 @@
             data['external'] = !(!data['external']);
             console.log(data);
             $.ajax({
-              url: '/baadal/admin/create_network.html',
+              url: '/baadal/admin/create_network.json',
               type: 'post',
               dataType: 'json',
+              'data': data,
               success: function (response) {
                 if(response.hasErrors) {
                   $('#modal-error-message').fadeIn();
