@@ -650,9 +650,9 @@ class Connection:
         try:
             self.__conn.neutron.delete_network(network_id)
         except Exception as e:
-            raise BaadalException(e.message)
+            raise BaadalException(e.message or str(e.__class__))
      
-    def create_security_domain(self, sg_name):
+    def create_security_group(self, sg_name):
         try:
             security_group = {'name': sg_name}
             sg = self.__conn.neutron.create_security_group({'security_group': security_group})
@@ -660,6 +660,50 @@ class Connection:
         except Exception as e:
             raise BaadalException(e.message or str(e.__class__))
 
+    def delete_security_group(self, sg_id):
+        try:
+            self.__conn.neutron.delete_security_group(sg_id)
+        except Exception as e:
+            raise BaadalException(e.message or str(e.__class__))
+
+    def delete_security_group_rule(self, security_group_rule_id):
+        try:
+            self.__conn.neutron.delete_security_group_rule(security_group_rule_id)
+        except Exception as e:
+            raise BaadalException(e.message or str(e.__class__))
+
+    def create_security_group_rule(self, sg_id, direction, protocol=None, remote_group=None, ethertype=None,
+                                   remote_ip_prefix=None, port_range_min=None, port_range_max=None):
+        try:
+            if bool(port_range_min) != bool(port_range_max):
+                raise BaadalException('Only one among min port and max port is specified'
+                                      ' Please specify both or specify none')
+
+            security_group_rule_dict = dict()
+            security_group_rule_dict['security_group_id'] = sg_id
+            security_group_rule_dict['protocol'] = protocol
+            security_group_rule_dict['direction'] = direction
+            security_group_rule_dict['remote_group_id'] = remote_group
+            if ethertype is not None:
+                security_group_rule_dict['ethertype'] = ethertype
+            security_group_rule_dict['remote_ip_prefix'] = remote_ip_prefix
+            security_group_rule_dict['port_range_min'] = port_range_min
+            security_group_rule_dict['port_range_max'] = port_range_max
+
+            request_body = {'security_group_rule': security_group_rule_dict}
+
+            security_group_rule = self.__conn.neutron.create_security_group_rule(body=request_body)
+
+            return security_group_rule
+        except Exception as e:
+            raise BaadalException(e.message or str(e.__class__))
+
+    def delete_subnet(self, subnet_id):
+        try:
+            self.__conn.neutron.delete_subnet(id=subnet_id)
+            return True
+        except Exception as e:
+            raise BaadalException(e.message or str(e.__class__))
 
 class BaadalException(Exception):
     def __init__(self, msg):
