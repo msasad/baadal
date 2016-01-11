@@ -38,7 +38,7 @@
               <button type="button" data-action="snapshot" class="btn btn-lg btn-default btn-action" title="Take Snapshot">
                 <span class="fa fa-camera" aria-hidden="true"></span>
               </button>
-              <button type="button" data-action="get-vnc-console" class="btn btn-lg btn-default btn-action" title="Get VNC Console URL">
+              <button type="button" data-action="get-spice-console" class="btn btn-lg btn-default btn-action" title="Get VNC Console URL">
                 <span class="fa fa-terminal" aria-hidden="true"></span>
               </button>
               {{#ifCond status '==' 'Running'}}
@@ -55,6 +55,9 @@
               </button>
               <button type="button" data-action="clone" class="btn btn-lg btn-default btn-action" title="Clone">
                 <span class="fa fa-copy" aria-hidden="true"></span>
+              </button>
+               <button type="button" data-action="resize" class="btn btn-lg btn-default btn-action" title="Resize">
+                <span class="fa fa-expand" aria-hidden="true"></span>
               </button>
               <button type="button" data-action="soft-reboot" class="btn btn-lg btn-default btn-action" title="Soft Reboot">
                 <span class="fa fa-refresh" aria-hidden="true"></span>
