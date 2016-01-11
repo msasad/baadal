@@ -1,47 +1,53 @@
 ﻿def __do(action, vmid):
-    if conn:
-        vm = conn.find_baadal_vm(id=vmid)
-        if vm:
-            if action == 'start':
-                vm.start()
-            elif action == 'migrate':
-                vm.migrate()
-            elif action == 'shutdown':
-                vm.shutdown()
-            elif action == 'pause':
-                vm.pause()
-            elif action == 'reboot':
-                vm.reboot()
-            elif action == 'delete':
-                vm.delete()
-            elif action == 'resume':
-                vm.resume()
-            elif action == 'restore-snapshot':
-                vm.restore_snapshot(request.vars.snapshot_id)
-            elif action == 'snapshot':
-                try:
-                    snapshotid = vm.create_snapshot()
-                    return jsonify(snapshotid=snapshotid)
-                except Exception as e:
-                    return jsonify(status='fail', message=e.message, action=action)
-            elif action == 'clone':
-                vm.clone()
-            elif action == 'poweroff':
-                vm.shutdown(force=True)
-            elif action == 'get-vnc-console':
-                consoleurl = vm.get_vnc_console()
-                return jsonify(consoleurl=consoleurl, action=action)
-            elif action == 'start-resume':
-                status = vm.get_status()
-                if status == 'Paused':
-                    vm.resume()
-                elif status == 'Shutdown':
+    try:
+        if conn:
+            vm = conn.find_baadal_vm(id=vmid)
+            if vm:
+                if action == 'start':
                     vm.start()
-        conn.close()
-        return jsonify(status='success', action=action)
-    else:
-        conn.close()
-        return jsonify(status='failure')
+                elif action == 'migrate':
+                    vm.migrate()
+                elif action == 'shutdown':
+                    vm.shutdown()
+                elif action == 'pause':
+                    vm.pause()
+                elif action == 'reboot':
+                    vm.reboot()
+                elif action == 'delete':
+                    vm.delete()
+                elif action == 'resume':
+                    vm.resume()
+                elif action == 'restore-snapshot':
+                    vm.restore_snapshot(request.vars.snapshot_id)
+                elif action == 'snapshot':
+                    try:
+                        snapshotid = vm.create_snapshot()
+                        return jsonify(snapshotid=snapshotid)
+                    except Exception as e:
+                        return jsonify(status='fail', message=e.message, action=action)
+                elif action == 'clone':
+                    vm.clone()
+                elif action == 'poweroff':
+                    vm.shutdown(force=True)
+                elif action == 'get-vnc-console':
+                    consoleurl = vm.get_console_url()
+                    return jsonify(consoleurl=consoleurl, action=action)
+                elif action == 'get-spice-console':
+                    consoleurl = vm.get_console_url(console_type='spice')
+                    return jsonify(consoleurl=consoleurl, action=action)
+                elif action == 'start-resume':
+                    status = vm.get_status()
+                    if status == 'Paused':
+                        vm.resume()
+                    elif status == 'Shutdown':
+                        vm.start()
+            conn.close()
+            return jsonify(status='success', action=action)
+        else:
+            conn.close()
+            return jsonify(status='failure')
+    except Exception as e:
+        logger.exception(e.message or str(e.__class__))
 
 
 def __start(vmid):
@@ -91,6 +97,8 @@ def __restore_snapshot(vmid):
 def __get_vnc_console(vmid):
     return __do('get-vnc-console', vmid)
 
+def __get_spice_console(vmid):
+    return __do('get-spice-console', vmid)
 
 def __migrate(vmid):
     return __do('migrate', vmid)
@@ -117,6 +125,8 @@ def index():
         return __snapshot(vmid)
     elif action == 'get-vnc-console':
         return __get_vnc_console(vmid)
+    elif action == 'get-spice-console':
+        return __get_spice_console(vmid)
     elif action == 'clone':
         return __clone_vm(vmid)
     elif action == 'poweroff':
