@@ -45,9 +45,14 @@ Enable ping and ssh through floating IP
 $ neutron security-group-rule-create --protocol icmp  --direction ingress --remote-ip-prefix 0.0.0.0/0 SECURITY_GROUP_NAME
 $ neutron security-group-rule-create --protocol tcp  --port-range-min 22 --port-range-max 22  --direction ingress --remote-ip-prefix 0.0.0.0/0 SECURITY_GROUP_NAME
 
+Enable SPICE Console
+Enable migrations
+Enable Instance Resizing.
 ---------------------------------------------------------------------------------------------
 
 Following configuration of VM has been used for setting up openstack on VM (using VirtualBox):
+First, create two host-only-networks (one for management and one for instance tunnel) in VirtualBox Preferences
+Then create virtual machines as follows.
 Network Node
     1 GB RAM, 8GB HDD, 1VCPU
     4 NICs
