@@ -1,3 +1,4 @@
+@auth.requires_login()
 def index():
     return dict()
 
@@ -9,7 +10,7 @@ def request():
 def login():
     return dict()
 
-
+@auth.requires_login()
 def my_vms():
     try:
         vms = conn.baadal_vms()
