@@ -192,7 +192,7 @@ class BaadalVM(object):
         return STATUS.get(self.server.status, 'Unknown')
         pass
 
-    def get_vnc_console(self, console_type='novnc'):
+    def get_console_url(self, console_type='novnc'):
         if console_type == 'spice':
             return self.server.get_spice_console('spice-html5')['console']['url']
         else:
@@ -486,7 +486,7 @@ class Connection:
             return flavor
         except Exception as e:
             raise BaadalException("Could not create flavor" + e.message)
-    
+
     def get_disk_by_id(self, diskid):
         if not self.__conn.cinder:
             raise BaadalException('Not connected to openstack cinder service')
@@ -511,7 +511,7 @@ class Connection:
         except Exception as e:
             raise BaadalException(e.message or str(e.__class__))
         pass
-   
+
     def hypervisors(self, name=None, id=None):
         if not self.__conn.nova:
             raise BaadalException('Not connected to openstack nova service')
@@ -547,7 +547,7 @@ class Connection:
         except Exception as e:
             raise BaadalException(e.message or str(e.__class__))
         pass
-    
+
     def sgroups(self, ):
         if not self.__conn.neutron:
             raise BaadalException('Not connected to openstack neutron service')
@@ -651,7 +651,7 @@ class Connection:
             self.__conn.neutron.delete_network(network_id)
         except Exception as e:
             raise BaadalException(e.message or str(e.__class__))
-     
+
     def create_security_group(self, sg_name):
         try:
             security_group = {'name': sg_name}
