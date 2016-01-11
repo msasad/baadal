@@ -2,7 +2,7 @@
 # FIXME Remove hardcoded values before going live
 username = 'baadal'
 password = 'baadal'
-dbhost = '10.237.23.178'
+dbhost = '192.168.56.101'
 dbname = 'baadal2'
 db = DAL('mysql://' + username + ':' + password + '@' + dbhost + '/' + dbname, migrate=False)
 db.define_table('vm_requests',
@@ -19,3 +19,12 @@ db.define_table('vm_requests',
                 Field('purpose', 'string'),
                 Field('state', 'integer'),
                 )
+
+
+authdb = DAL('mysql://' + username + ':' + password + '@' + dbhost + '/' + dbname)
+from gluon.tools import Auth
+from gluon.contrib.login_methods.ldap_auth import ldap_auth
+auth = Auth(authdb)
+auth.define_tables(username=True)
+auth.settings.login_methods.append(ldap_auth(mode='cn',
+    server='192.168.56.201', base_dn='ou=People,dc=baadal,dc=iitd,dc=ernet,dc=in'))
