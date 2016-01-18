@@ -21,10 +21,16 @@ db.define_table('vm_requests',
                 )
 
 
-authdb = DAL('mysql://' + username + ':' + password + '@' + dbhost + '/' + dbname)
+# authdb = DAL('mysql://' + username + ':' + password + '@' + dbhost + '/' + dbname)
 from gluon.tools import Auth
 from gluon.contrib.login_methods.ldap_auth import ldap_auth
-auth = Auth(authdb)
+auth = Auth(db)
 auth.define_tables(username=True)
 auth.settings.login_methods.append(ldap_auth(mode='cn',
     server='192.168.56.201', base_dn='ou=People,dc=baadal,dc=iitd,dc=ernet,dc=in'))
+
+#auth.settings.login_url = '/baadal/user/login.html'
+auth.settings.remember_me_form = False
+auth.settings.logout_next = '/baadal/default/user/login'
+auth.settings.login_next = '/baadal/user/index'
+#auth.settings.on_failed_authorization = '/baadal/default/404.html'
