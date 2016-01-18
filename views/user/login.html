@@ -8,7 +8,7 @@
   <meta name="description" content="">
   <meta name="author" content="">
 
-  <title>{{=response.title or request.application}}</title>
+  <title>{{=(response.title or request.application).capitalize()}}</title>
   <link rel="icon" href="/baadal/static/images/favicon.png" />
   <link rel="stylesheet" href="/baadal/static/css/bootstrap.min.css" />
   <link href="/baadal/static/css/sb-admin.css" rel="stylesheet">
@@ -26,18 +26,74 @@
 
 </head>
 <body>
-  <div class="container">
-    <form class="form-signin">
+  <div class="container" id="web2py_user_form">
+    <form action="#" class="form-signin" method="post" enctype="multipart/form-data">
       <h2 class="form-signin-heading">Please sign in</h2>
-      <label for="inputEmail" class="sr-only">Email address</label>
-      <input type="email" id="inputEmail" class="form-control" placeholder="Email address"
-             required autofocus>
-      <label for="inputPassword" class="sr-only">Password</label>
-      <input type="password" id="inputPassword" class="form-control" placeholder="Password"
-             required>
+      <label for="auth_user_username" class="sr-only">Email address</label>
+      <input type="text" id="auth_user_username" class="form-control string" placeholder="Username"
+             name="username" required autofocus>
+      <label for="auth_user_password" class="sr-only">Password</label>
+      <input type="password" id="auth_user_password" class="form-control password"
+             name="password" placeholder="Password" required>
+      <div style="display:none;">
+        <input name="_next" type="hidden" />
+        <input name="_formkey" type="hidden" />
+        <input name="_formname" type="hidden" value="login" />
+      </div>
       <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
     </form>
   </div>
 </body>
 </html>
 
+<!--
+<h2>Login</h2>
+<div id="web2py_user_form">
+    <form action="#" enctype="multipart/form-data" method="post">
+      <table>
+        <tr id="auth_user_email__row">
+          <td class="w2p_fl">
+            <label for="auth_user_email" id="auth_user_email__label">E-mail: </label>
+          </td>
+          <td class="w2p_fw">
+            <input class="string" id="auth_user_email" name="email" type="text" value="" />
+          </td>
+          <td class="w2p_fc"></td>
+        </tr>
+        <tr id="auth_user_password__row">
+          <td class="w2p_fl">
+            <label for="auth_user_password" id="auth_user_password__label">Password: </label>
+          </td>
+          <td class="w2p_fw">
+            <input class="password" id="auth_user_password" name="password" type="password" value="" />
+          </td>
+          <td class="w2p_fc"></td>
+        </tr>
+        <tr id="auth_user_remember_me__row">
+          <td class="w2p_fl">
+            <label for="auth_user_remember_me" id="auth_user_remember_me__label">Remember me (for 30 days): </label>
+          </td>
+          <td class="w2p_fw">
+            <input class="boolean" id="auth_user_remember_me" name="remember_me" type="checkbox" value="on" />
+          </td>
+          <td class="w2p_fc"></td>
+        </tr>
+        <tr id="submit_record__row">
+          <td class="w2p_fl"></td>
+          <td class="w2p_fw">
+            <input type="submit" value="Log In" />
+          </td>
+          <td class="w2p_fc"></td>
+        </tr>
+      </table>
+      <div style="display:none;">
+        <input name="_next" type="hidden" value="/baadal/user/index" />
+        <input name="_formkey" type="hidden" value="5b1d1e6e-a2b3-47a6-8462-f0fc9a990afc" />
+        <input name="_formname" type="hidden" value="login" />
+      </div>
+    </form>
+    <br/><a href="/baadal/default/user/register">register</a>
+    <br/>
+    <a href="/baadal/default/user/request_reset_password">lost password</a>
+</div>
+-->
