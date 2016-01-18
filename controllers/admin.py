@@ -1,6 +1,6 @@
 import json
 
-
+@auth.requires(auth.user.username == 'admin')
 def pending_requests():
     rows = db(db.vm_requests.state == 0).select()
     l = rows.as_list()
@@ -13,6 +13,7 @@ def pending_requests():
     pass
 
 
+@auth.requires(auth.user.username == 'admin')
 def networks():
     try:
         networklist = conn.networks()['networks']
@@ -24,6 +25,7 @@ def networks():
         return jsonify(status='fail', message=e.message)
 
 
+@auth.requires(auth.user.username == 'admin')
 def subnets():
     try:
         subnet_list = conn.subnets(request.vars.netid)
@@ -33,6 +35,7 @@ def subnets():
         return jsonify('fail', message=e.message)
 
 
+@auth.requires(auth.user.username == 'admin')
 def secgroups():
     try:
         secgroupslist = conn.sgroups()
@@ -42,6 +45,7 @@ def secgroups():
         return jsonify(status='fail')
 
 
+@auth.requires(auth.user.username == 'admin')
 def hostinfo():
     try:
         hostid = request.vars.id
@@ -52,6 +56,7 @@ def hostinfo():
         return jsonify(status='fail')
 
 
+@auth.requires(auth.user.username == 'admin')
 def hostaction():
     try:
         hostname = request.vars.hostname
@@ -62,6 +67,7 @@ def hostaction():
         return jsonify(status='fail')
 
 
+@auth.requires(auth.user.username == 'admin')
 def all_vms():
     try:
         vms = conn.baadal_vms(True)
@@ -79,6 +85,7 @@ def all_vms():
         return jsonify(status='fail')
 
 
+@auth.requires(auth.user.username == 'admin')
 def create_subnet():
     try:
         logger.info(request.vars)
@@ -126,6 +133,7 @@ def __validate_ips(string, replace='\r\n', delim=':'):
         return True
 
 
+@auth.requires(auth.user.username == 'admin')
 def create_network():
     try:
         network = conn.create_network(request.vars.net_name, request.vars.segmentation_id,
@@ -147,30 +155,37 @@ def create_network():
 
 
 # Empty controllers for HTML files
+@auth.requires(auth.user.username == 'admin')
 def pending_requests_list():
     return dict()
 
 
+@auth.requires(auth.user.username == 'admin')
 def floatingips():
     return dict()
 
 
+@auth.requires(auth.user.username == 'admin')
 def hosts():
     return dict()
 
 
+@auth.requires(auth.user.username == 'admin')
 def configure():
     return dict()
 
 
+@auth.requires(auth.user.username == 'admin')
 def networking():
     return dict()
 
 
+@auth.requires(auth.user.username == 'admin')
 def security_groups():
     return dict()
 
 
+@auth.requires(auth.user.username == 'admin')
 def index():
     return dict()
     pass

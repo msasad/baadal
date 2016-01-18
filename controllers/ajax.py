@@ -1,3 +1,4 @@
+@auth.requires_login()
 def configs():
     if conn:
         templates = conn.templates()
@@ -9,6 +10,7 @@ def configs():
         return json.dumps(values)
 
 
+@auth.requires_login()
 def templates():
     """The following metadata needs to be attached to each image
         os-name,
@@ -28,6 +30,7 @@ def templates():
         return json.dumps(values)
 
 
+@auth.requires_login()
 def networks():
     if conn:
         network_list = conn.networks()
@@ -39,6 +42,7 @@ def networks():
         return json.dumps(values)
 
 
+@auth.requires_login()
 def sgroups():
     if conn:
         sgroups = conn.sgroups()

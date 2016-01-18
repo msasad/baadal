@@ -1,6 +1,7 @@
 import time
 
 
+@auth.requires_login()
 def new_vm():
     try:
         db.vm_requests.insert(vm_name=request.vars.vm_name, flavor=request.vars.config,
@@ -18,6 +19,7 @@ def new_vm():
         return jsonify(status='fail', message=e.message or str(e.__class__))
 
 
+@auth.requires_login()
 def modify_request():
     try:
         db(db.vm_requests.id == request.vars.id).update(

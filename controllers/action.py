@@ -104,6 +104,7 @@ def __migrate(vmid):
     return __do('migrate', vmid)
 
 
+@auth.requires_login()
 def index():
     action = request.vars.action
     vmid = request.vars.vmid
@@ -137,6 +138,7 @@ def index():
         return  __migrate(vmid)
 
 
+@auth.requires_login()
 def handle_request():
     action = request.vars.action
     if action == 'approve':

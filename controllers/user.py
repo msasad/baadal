@@ -3,6 +3,7 @@ def index():
     return dict()
 
 
+@auth.requires_login()
 def request():
     return dict()
 
@@ -28,6 +29,7 @@ def my_vms():
         return jsonify(status='fail')
 
 
+@auth.requires_login()
 def vm_status():
     vmid = request.vars.vmid
     vm = conn.find_baadal_vm(id=vmid)
@@ -35,6 +37,7 @@ def vm_status():
         return jsonify(vm_status=vm.get_status())
 
 
+@auth.requires_login()
 def my_requests():
     rows = db(db.vm_requests.owner == session.username).select()
     l = rows.as_list()
@@ -46,5 +49,6 @@ def my_requests():
     return jsonify(data=l)
 
 
+@auth.requires_login()
 def my_requests_list():
     return dict()
