@@ -26,7 +26,15 @@
 (function() {
   var $myvms = $('#my-vms');
   var $table = $myvms.DataTable( {
-    "ajax": "/baadal/user/my_vms.json",
+    "ajax": {
+      "url": "/baadal/user/my_vms.json",
+      "error" : function (response, code) {
+        console.log(response.status,code);
+        if (response.status == 401) {
+          alert('You have been logged out. Please log in again');
+        }
+      }
+    },
     "oLanguage": {
       "sEmptyTable": "You have no VMs!"
     },
