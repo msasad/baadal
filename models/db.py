@@ -26,8 +26,10 @@ from gluon.tools import Auth
 from gluon.contrib.login_methods.ldap_auth import ldap_auth
 auth = Auth(db)
 auth.define_tables(username=True)
-auth.settings.login_methods.append(ldap_auth(mode='cn',
+auth.settings.login_methods.append(ldap_auth(mode='custom', username_attrib='cn', custom_scope='subtree',
     server='192.168.56.201', base_dn='ou=People,dc=baadal,dc=iitd,dc=ernet,dc=in'))
+# auth.settings.login_methods.append(ldap_auth(mode='uid', username_attrib='cn',
+#     server='192.168.56.201', base_dn='ou=People,dc=baadal,dc=iitd,dc=ernet,dc=in'))
 
 #auth.settings.login_url = '/baadal/user/login.html'
 auth.settings.remember_me_form = False
