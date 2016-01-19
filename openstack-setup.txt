@@ -48,6 +48,20 @@ $ neutron security-group-rule-create --protocol tcp  --port-range-min 22 --port-
 Enable SPICE Console
 Enable migrations
 Enable Instance Resizing.
+
+Setup LDAP Server
+    Install and configure openldap server
+    - Modify the ldapshema, add attributes cn, userPassword, email (and any other if required) to account class
+    - set base dn = dc=baadal,dc=iitd,dc=ernet,dc=in
+    - create two organizationalUnits
+        ou=Groups,dc=baadal,dc=iitd,dc=ernet,dc=in
+        ou=People,dc=baadal,dc=iitd,dc=ernet,dc=in
+    - Inside ou=Groups, create entry with objectClass groupOfNames with dn cn=enabled_users,ou=Groups,dc=baadal,dc=iitd,dc=ernet,dc=in
+
+Configure keystone to use LDAP for identity
+    - set appropriate values for basedn, and objectclasses
+    - set enabled user emulation to true
+    - set cn=enabled_users,ou=Groups,dc=baadal,dc=iitd,dc=ernet,dc=in
 ---------------------------------------------------------------------------------------------
 
 Following configuration of VM has been used for setting up openstack on VM (using VirtualBox):
