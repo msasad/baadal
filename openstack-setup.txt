@@ -1,3 +1,8 @@
+# INFO: This file is an informal dump of actions needed to setup openstack
+# as required by Baadal.
+
+# TODO: Rewrite this file in more readable and self-explainatory manner.
+
 Install refering to the official openstack installation guide for ubuntu 14.04 Kilo (located at http://docs.openstack.org/kilo/install-guide/install/apt/content/index.html)
 
 For networing, use neutron networking (not nova-networking)
