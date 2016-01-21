@@ -9,7 +9,7 @@ For networing, use neutron networking (not nova-networking)
 
 Follow the guide for rest of the process, till network creation.
 
-edit /etc/neutron/dhcp_agent.ini file in the controller node to contain the following value
+edit /etc/neutron/dhcp_agent.ini file in the neutron node to contain the following value
 dhcp_domain = iitd.ac.in
 
 Create a router by following the guide. (Do not change the name of the external network, keep it 'ext-net')
