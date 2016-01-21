@@ -1,5 +1,6 @@
 ﻿def __do(action, vmid):
     try:
+        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
         if conn:
             vm = conn.find_baadal_vm(id=vmid)
             if vm:
@@ -48,6 +49,8 @@
             return jsonify(status='failure')
     except Exception as e:
         logger.exception(e.message or str(e.__class__))
+    finally:
+        conn.close()
 
 
 def __start(vmid):
@@ -161,6 +164,7 @@ def __finalize_vm(vm, extra_storage_size, public_ip_required=False):
     :return: None
     """
     try:
+        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
         while vm.get_status() != 'Running' and vm.get_status() != 'Error':
             pass
 
@@ -180,10 +184,13 @@ def __finalize_vm(vm, extra_storage_size, public_ip_required=False):
             raise Baadal.BaadalException('VM Build Failed')
     except Exception as e:
         logger.error(e.message)
+    finally:
+        conn.close()
 
 
 def __create():
-    try:
+    try:  
+        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
         row = db(db.vm_requests.id == request.vars.id).select()[0]
         public_ip_required = row.public_ip_required
         extra_storage_size = row.extra_storage
@@ -204,6 +211,8 @@ def __create():
     except Baadal.BaadalException as e:
         logger.exception(e.message)
         return jsonify(status='fail')
+    finally:
+        conn.close()
 
 
 def __reject():

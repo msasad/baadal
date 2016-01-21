@@ -14,6 +14,7 @@ def login():
 @auth.requires_login()
 def my_vms():
     try:
+        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
         vms = conn.baadal_vms()
         response = list()
         for vm in vms:
@@ -27,14 +28,22 @@ def my_vms():
     except Exception as e:
         logger.error(e.message or str(e.__class__))
         return jsonify(status='fail')
+    finally:
+        conn.close()
 
 
 @auth.requires_login()
 def vm_status():
-    vmid = request.vars.vmid
-    vm = conn.find_baadal_vm(id=vmid)
-    if vm:
-        return jsonify(vm_status=vm.get_status())
+    try:
+        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
+        vmid = request.vars.vmid
+        vm = conn.find_baadal_vm(id=vmid)
+        if vm:
+            return jsonify(vm_status=vm.get_status())
+    except Exception as e:
+        logger.error(e.message() or str(e.__class__))
+    finally:
+        conn.close()
 
 
 @auth.requires_login()

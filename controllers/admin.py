@@ -16,6 +16,7 @@ def pending_requests():
 @auth.requires(auth.user.username == 'admin')
 def networks():
     try:
+        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
         networklist = conn.networks()['networks']
         for network in networklist:
             network['subnets'] = conn.subnets(network['id'])['subnets']
@@ -23,53 +24,68 @@ def networks():
     except Exception as e:
         logger.error(e.message)
         return jsonify(status='fail', message=e.message)
+    finally:
+        conn.close()
 
 
 @auth.requires(auth.user.username == 'admin')
 def subnets():
     try:
+        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
         subnet_list = conn.subnets(request.vars.netid)
         return jsonify(data=subnet_list)
     except Exception as e:
         logger.debug(e.message)
         return jsonify('fail', message=e.message)
+    finally:
+        conn.close()
 
 
 @auth.requires(auth.user.username == 'admin')
 def secgroups():
     try:
+        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
         secgroupslist = conn.sgroups()
         return jsonify(data=secgroupslist)
     except Exception as e:
         logger.error(e.message)
         return jsonify(status='fail')
+    finally:
+        conn.close()
 
 
 @auth.requires(auth.user.username == 'admin')
 def hostinfo():
     try:
+        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
         hostid = request.vars.id
         hypervisors = conn.hypervisors(id=hostid)
         return jsonify(data=[h.to_dict() for h in hypervisors])
     except Exception as e:
         logger.error(e.message)
         return jsonify(status='fail')
+    finally:
+        conn.close()
 
 
 @auth.requires(auth.user.username == 'admin')
 def hostaction():
     try:
+        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
         hostname = request.vars.hostname
         action = request.vars.action
         conn.nova.hosts.host_action(hostname, action)
     except Exception as e:
         logger.error(e.message)
         return jsonify(status='fail')
+    finally:
+        conn.close()
 
 
 @auth.requires(auth.user.username == 'admin')
 def all_vms():
     try:
+        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
         vms = conn.baadal_vms(True)
         response = list()
         for vm in vms:
@@ -83,11 +99,14 @@ def all_vms():
     except Exception as e:
         logger.error(e.message or str(e.__class__))
         return jsonify(status='fail')
+    finally:
+        conn.close()
 
 
 @auth.requires(auth.user.username == 'admin')
 def create_subnet():
     try:
+        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
         logger.info(request.vars)
 
         gateway_ip = None
@@ -123,6 +142,8 @@ def create_subnet():
     except Exception as e:
         logger.exception(e.message or str(e.__class__))
         return jsonify(status='fail', message=e.message or str(e.__class__))
+    finally:
+        conn.close()
 
 
 def __validate_ips(string, replace='\r\n', delim=':'):
@@ -136,6 +157,7 @@ def __validate_ips(string, replace='\r\n', delim=':'):
 @auth.requires(auth.user.username == 'admin')
 def create_network():
     try:
+        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
         network = conn.create_network(request.vars.net_name, request.vars.segmentation_id,
                                       shared=request.vars.shared, external=request.vars.external,
                                       admin_state_up=request.vars.network_up)
@@ -152,6 +174,8 @@ def create_network():
     except Exception as e:
         logger.exception(e.message or str(e.__class__))
         return jsonify(status='fail', message=e.message or str(e.__class__))
+    finally:
+        conn.close()
 
 
 # Empty controllers for HTML files
