@@ -1,9 +1,18 @@
+from gluon.tools import Auth
+from gluon.contrib.login_methods.ldap_auth import ldap_auth
+import ConfigParser
 
-# FIXME Remove hardcoded values before going live
-username = 'baadal'
-password = 'baadal'
-dbhost = '192.168.56.101'
-dbname = 'baadal2'
+config = ConfigParser.ConfigParser()
+config.read('/etc/baadal/baadal.conf')
+
+dbhost = config.get('database', 'dbhost')
+username = config.get('database', 'username')
+password = config.get('database', 'password')
+dbname = config.get('database', 'database')
+
+ldap_host = config.get('ldap', 'ldap_host')
+ldap_dn = config.get('ldap', 'ldap_dn')
+
 db = DAL('mysql://' + username + ':' + password + '@' + dbhost + '/' + dbname, migrate=False)
 db.define_table('vm_requests',
                 Field('id', 'integer'),
@@ -20,16 +29,10 @@ db.define_table('vm_requests',
                 Field('state', 'integer'),
                 )
 
-
-# authdb = DAL('mysql://' + username + ':' + password + '@' + dbhost + '/' + dbname)
-from gluon.tools import Auth
-from gluon.contrib.login_methods.ldap_auth import ldap_auth
 auth = Auth(db)
 auth.define_tables(username=True)
 auth.settings.login_methods.append(ldap_auth(mode='custom', username_attrib='cn', custom_scope='subtree',
-    server='192.168.56.201', base_dn='ou=People,dc=baadal,dc=iitd,dc=ernet,dc=in'))
-# auth.settings.login_methods.append(ldap_auth(mode='uid', username_attrib='cn',
-#     server='192.168.56.201', base_dn='ou=People,dc=baadal,dc=iitd,dc=ernet,dc=in'))
+    server=ldap_host, base_dn=ldap_dn))
 
 #auth.settings.login_url = '/baadal/user/login.html'
 auth.settings.remember_me_form = False
