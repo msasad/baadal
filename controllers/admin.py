@@ -1,6 +1,6 @@
 import json
 
-@auth.requires(auth.user.username == 'admin')
+@auth.requires(user_is_project_admin)
 def pending_requests():
     rows = db(db.vm_requests.state == 0).select()
     l = rows.as_list()
@@ -13,7 +13,7 @@ def pending_requests():
     pass
 
 
-@auth.requires(auth.user.username == 'admin')
+@auth.requires(user_is_project_admin)
 def networks():
     try:
         conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
@@ -31,7 +31,7 @@ def networks():
             pass
 
 
-@auth.requires(auth.user.username == 'admin')
+@auth.requires(user_is_project_admin)
 def subnets():
     try:
         conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
@@ -47,7 +47,7 @@ def subnets():
             pass
 
 
-@auth.requires(auth.user.username == 'admin')
+@auth.requires(user_is_project_admin)
 def secgroups():
     try:
         conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
@@ -63,7 +63,7 @@ def secgroups():
             pass
 
 
-@auth.requires(auth.user.username == 'admin')
+@auth.requires(user_is_project_admin)
 def hostinfo():
     try:
         conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
@@ -80,7 +80,7 @@ def hostinfo():
             pass
 
 
-@auth.requires(auth.user.username == 'admin')
+@auth.requires(user_is_project_admin)
 def hostaction():
     try:
         conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
@@ -97,7 +97,7 @@ def hostaction():
             pass
 
 
-@auth.requires(auth.user.username == 'admin')
+@auth.requires(user_is_project_admin)
 def all_vms():
     try:
         conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
@@ -121,7 +121,7 @@ def all_vms():
             pass
 
 
-@auth.requires(auth.user.username == 'admin')
+@auth.requires(user_is_project_admin)
 def create_subnet():
     try:
         conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
@@ -175,7 +175,7 @@ def __validate_ips(string, replace='\r\n', delim=':'):
         return True
 
 
-@auth.requires(auth.user.username == 'admin')
+@auth.requires(user_is_project_admin)
 def create_network():
     try:
         conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
@@ -203,37 +203,37 @@ def create_network():
 
 
 # Empty controllers for HTML files
-@auth.requires(auth.user.username == 'admin')
+@auth.requires(user_is_project_admin)
 def pending_requests_list():
     return dict()
 
 
-@auth.requires(auth.user.username == 'admin')
+@auth.requires(user_is_project_admin)
 def floatingips():
     return dict()
 
 
-@auth.requires(auth.user.username == 'admin')
+@auth.requires(user_is_project_admin)
 def hosts():
     return dict()
 
 
-@auth.requires(auth.user.username == 'admin')
+@auth.requires(user_is_project_admin)
 def configure():
     return dict()
 
 
-@auth.requires(auth.user.username == 'admin')
+@auth.requires(user_is_project_admin)
 def networking():
     return dict()
 
 
-@auth.requires(auth.user.username == 'admin')
+@auth.requires(user_is_project_admin)
 def security_groups():
     return dict()
 
 
-@auth.requires(auth.user.username == 'admin')
+@auth.requires(user_is_project_admin)
 def index():
     return dict()
     pass
