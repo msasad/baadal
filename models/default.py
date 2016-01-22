@@ -17,12 +17,16 @@ def seconds_to_localtime(seconds):
 
 
 def network_name_from_id(netid):
-    netlist = conn.networks()['networks']
-    for i in netlist:
-        if netid == i['id']:
-            return i['name']
+    try:
+        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
+        netlist = conn.networks()['networks']
+        for i in netlist:
+            if netid == i['id']:
+                return i['name']
+    except Exception:
         pass
-    pass
+    finally:
+        conn.close()
 
 
 def str_to_route_list(s):
@@ -35,8 +39,14 @@ def str_to_route_list(s):
 
 
 def flavor_info(flavor_id):
-    flavor = conn.find_template(id=flavor_id)
-    return str(flavor.vcpus) + (' VCPU, ' if flavor.vcpus == 1 else ' VCPUs, ') + str(flavor.ram) + ' MB RAM'
+    try:
+        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
+        flavor = conn.find_template(id=flavor_id)
+        return str(flavor.vcpus) + (' VCPU, ' if flavor.vcpus == 1 else ' VCPUs, ') + str(flavor.ram) + ' MB RAM'
+    except Exception:
+        pass
+    finally:
+        conn.close()
 
 
 def convert_timezone(utctimestring, fmt="%Y-%m-%dT%H:%M:%SZ", timezone='Asia/Kolkata'):
