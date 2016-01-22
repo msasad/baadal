@@ -50,7 +50,10 @@
     except Exception as e:
         logger.exception(e.message or str(e.__class__))
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except NameError:
+            pass
 
 
 def __start(vmid):
@@ -185,7 +188,10 @@ def __finalize_vm(vm, extra_storage_size, public_ip_required=False):
     except Exception as e:
         logger.error(e.message)
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except NameError:
+            pass
 
 
 def __create():
@@ -212,7 +218,10 @@ def __create():
         logger.exception(e.message)
         return jsonify(status='fail')
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except NameError:
+            pass
 
 
 def __reject():

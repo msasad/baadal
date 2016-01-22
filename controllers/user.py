@@ -29,7 +29,10 @@ def my_vms():
         logger.error(e.message or str(e.__class__))
         return jsonify(status='fail')
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except NameError:
+            pass
 
 
 @auth.requires_login()
@@ -43,7 +46,10 @@ def vm_status():
     except Exception as e:
         logger.error(e.message() or str(e.__class__))
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except NameError:
+            pass
 
 
 @auth.requires_login()

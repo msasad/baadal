@@ -14,7 +14,10 @@ def configs():
         logger.error(e.message)
         return jsonify(status='fail', message=e.message)
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except NameError:
+            pass
 
 
 
@@ -42,7 +45,10 @@ def templates():
         logger.error(e.message)
         return jsonify(status='fail', message=e.message)
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except NameError:
+            pass
 
 
 @auth.requires_login()
@@ -61,7 +67,10 @@ def networks():
         logger.error(e.message)
         return jsonify(status='fail', message=e.message)
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except NameError:
+            pass
 
 
 @auth.requires_login()
@@ -78,4 +87,7 @@ def sgroups():
         logger.error(e.message)
         return jsonify(status='fail', message=e.message)
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except NameError:
+            pass

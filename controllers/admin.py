@@ -25,7 +25,10 @@ def networks():
         logger.error(e.message)
         return jsonify(status='fail', message=e.message)
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except NameError:
+            pass
 
 
 @auth.requires(auth.user.username == 'admin')
@@ -38,7 +41,10 @@ def subnets():
         logger.debug(e.message)
         return jsonify('fail', message=e.message)
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except NameError:
+            pass
 
 
 @auth.requires(auth.user.username == 'admin')
@@ -51,7 +57,10 @@ def secgroups():
         logger.error(e.message)
         return jsonify(status='fail')
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except NameError:
+            pass
 
 
 @auth.requires(auth.user.username == 'admin')
@@ -65,7 +74,10 @@ def hostinfo():
         logger.error(e.message)
         return jsonify(status='fail')
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except NameError:
+            pass
 
 
 @auth.requires(auth.user.username == 'admin')
@@ -79,7 +91,10 @@ def hostaction():
         logger.error(e.message)
         return jsonify(status='fail')
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except NameError:
+            pass
 
 
 @auth.requires(auth.user.username == 'admin')
@@ -100,7 +115,10 @@ def all_vms():
         logger.error(e.message or str(e.__class__))
         return jsonify(status='fail')
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except NameError:
+            pass
 
 
 @auth.requires(auth.user.username == 'admin')
@@ -143,7 +161,10 @@ def create_subnet():
         logger.exception(e.message or str(e.__class__))
         return jsonify(status='fail', message=e.message or str(e.__class__))
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except NameError:
+            pass
 
 
 def __validate_ips(string, replace='\r\n', delim=':'):
@@ -175,7 +196,10 @@ def create_network():
         logger.exception(e.message or str(e.__class__))
         return jsonify(status='fail', message=e.message or str(e.__class__))
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except NameError:
+            pass
 
 
 # Empty controllers for HTML files
