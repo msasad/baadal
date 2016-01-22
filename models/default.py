@@ -2,6 +2,19 @@ import json
 import threading
 
 
+user_is_project_admin = False
+
+try:
+    conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
+    user_is_project_admin = conn.user_is_project_admin
+except Exception:
+    pass
+finally:
+    try:
+        conn.close()
+    except NameError:
+        pass
+
 def jsonify(status='success', **kwargs):
     d = dict()
     d['status'] = status
