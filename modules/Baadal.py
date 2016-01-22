@@ -492,12 +492,16 @@ class Connection:
             raise BaadalException('Not connected to openstack cinder service')
         return self.__conn.cinder.volumes.get(diskid)
 
-    def images(self, ):
+    def images(self,image_type='all'):
         if not self.__conn.nova:
             raise BaadalException('Not connected to openstack nova service')
         try:
-            imageslist = self.__conn.nova.images.list()
-            return imageslist
+            imagelist = self.__conn.nova.images.list()
+            if image_type == 'snapshot':
+                imagelist = [i for i in imagelist if hasattr(i, 'server')]
+            elif image_type == 'template':
+                imagelist = [i for i in imagelist if not hasattr(i, 'server')]
+            return imagelist
         except Exception as e:
             raise BaadalException(e.message or str(e.__class__))
         pass

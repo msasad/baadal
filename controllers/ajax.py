@@ -30,7 +30,7 @@ def templates():
     try:
         conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
         if conn:
-            images = conn.images()
+            images = conn.images(image_type='template')
             values = []
             for i in images:
                 # FIXME if images are wrapped in Baadal.Images
