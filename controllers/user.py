@@ -54,7 +54,7 @@ def vm_status():
 
 @auth.requires_login()
 def my_requests():
-    rows = db(db.vm_requests.owner == session.username).select()
+    rows = db(db.vm_requests.requester == session.username).select()
     l = rows.as_list()
     for i in l:
         i['flavor'] = flavor_info(i['flavor'])

@@ -4,9 +4,18 @@ import time
 @auth.requires_login()
 def new_vm():
     try:
-        db.vm_requests.insert(vm_name=request.vars.vm_name, flavor=request.vars.config,
-                              sec_domain=request.vars.sec_domain, image=request.vars.template,
-                              owner=session.username, purpose=request.vars.purpose,
+        if ('faculty' in auth.user_groups.values()) or ('admin' in auth.user_groups.values()):
+            owner_id = session.username
+        else:
+            owner_id = request.vars.faculty
+
+        db.vm_requests.insert(vm_name=request.vars.vm_name, 
+                              flavor=request.vars.config,
+                              sec_domain=request.vars.sec_domain, 
+                              image=request.vars.template,
+                              owner=owner_id, 
+                              requester=session.username, 
+                              purpose=request.vars.purpose,
                               public_ip_required=1 if request.vars.public_ip == 'yes' else 0,
                               extra_storage=request.vars.storage,
                               collaborators=request.vars.collaborators,

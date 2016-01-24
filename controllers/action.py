@@ -150,11 +150,18 @@ def handle_request():
     if action == 'approve':
         return __create()
     elif action == 'edit':
-        return __modify_request()
+        __modify_request()
+        return __create()
         pass
     elif action == 'reject':
         return __reject()
         pass
+    elif action == 'faculty_edit':
+        __modify_request()
+        return __faculty_approve()
+        pass
+    elif action == 'faculty_approve':
+        return __faculty_approve()
 
 
 def __finalize_vm(vm, extra_storage_size, public_ip_required=False):
@@ -240,6 +247,11 @@ def __modify_request():
             public_ip_required=1 if request.vars.public_ip == 'yes' else 0,
             flavor=request.vars.flavor)
         db.commit()
-        return __create()
     except Exception as e:
         return jsonify(status='fail', message=str(e.__class__))
+
+def __faculty_approve():
+    db(db.vm_requests.id == request.vars.id).update(state=1)
+    return jsonify()
+
+

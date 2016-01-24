@@ -21,6 +21,7 @@ db.define_table('vm_requests',
                 Field('sec_domain', 'string'),
                 Field('image', 'string'),
                 Field('owner', 'string'),
+                Field('requester', 'string'),
                 Field('public_ip_required', 'integer'),
                 Field('extra_storage', 'integer'),
                 Field('collaborators', 'string'),
@@ -33,6 +34,8 @@ auth = Auth(db)
 auth.define_tables(username=True)
 auth.settings.login_methods.append(ldap_auth(mode='custom', username_attrib='cn', custom_scope='subtree',
     server=ldap_host, base_dn=ldap_dn))
+auth.settings.create_user_groups = False
+auth.settings.login_onaccept = [login_callback]
 
 #auth.settings.login_url = '/baadal/user/login.html'
 auth.settings.remember_me_form = False

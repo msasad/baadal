@@ -1,0 +1,253 @@
+{{extend 'blank-page.html'}}
+<div class="modal fade" id="my-modal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Modify pending request</h4>
+      </div>
+      <div class="modal-body">
+        <div class="panel-body">
+          <input type="hidden" id="edit-id">
+          <form role="form" id="vm_request" name="vm_request" action="/baadal/user/post_request" method="post" class="form-horizontal">
+            <div class="form-group">
+              <label for="vm_name" class="col-sm-3 control-label">VM Name</label>
+              <div class="col-sm-9">
+                <p class="form-control-static" id="edit-vm-name"></p>
+              </div>
+            </div>
+          
+            <div class="form-group">
+              <label for="template" class="col-sm-3 control-label">Template</label>
+              <div class="col-sm-9">
+                <p class="form-control-static" id="edit-template"></p>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="sec_domain" class="col-sm-3 control-label">Security Domain</label>
+              <div class="col-sm-9">
+                <p class="form-control-static" id="edit-sec-domain"></p>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="purpose" class="col-sm-3 control-label">Purpose</label>
+              <div class="col-sm-9">
+                <p class="form-control-static" id="edit-purpose"></p>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="edit-config" class="col-sm-3 control-label">Configuration</label>
+              <div class="col-sm-9">
+                <select id="edit-config" name="config" class="form-control select" required="required">
+                  <option value=""></option>
+                </select>
+              </div>
+            </div>
+          
+            <div class="form-group">
+              <label for="edit-storage" class="col-sm-3 control-label">Extra Storage (GB)</label>
+              <div class="col-sm-9">
+                <input type="number" max="2048" min="0" id="edit-storage" name="storage" class="form-control">
+              </div>
+            </div>
+          
+            <div class="form-group">
+              <label class="col-sm-3 control-label">Public IP Required</label>
+              <div class="col-sm-9">
+                <div class="radio radio-inline">
+                  <label>
+                    <input type="radio" name="public_ip" id="edit-public_ip" value="yes">Yes
+                  </label>
+                </div>
+                <div class="radio radio-inline">
+                  <label>
+                    <input type="radio" name="public_ip" id="edit-public_ip" value="no" checked>No
+                  </label>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="panel-footer">
+          <span style="display:none" class="text-danger" id="modal-error-message">There was some error in the form. Please check the values and submit the form again.</span>
+          <span style="display:none" class="text-success" id="modal-success-message">Request successfully posted.</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="btn-mod-approve">Modify and Approve</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div>
+
+<div class="panel panel-primary">
+  <div class="panel-heading">
+    <h3 class="panel-title">Pending VM Approvals</h3>
+  </div>
+  <div class="panel-body">
+    <table id="requests" class="table table-striped table-condensed table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>VM Name</th>
+                <th>Requested By</th>
+                <th>Config</th>
+                <th>Public IP</th>
+                <th>Security Domain</th>
+                <th>Request Time</th>
+                <th>Collaborators</th>
+                <th>Actions</th>
+                <!--<th>Purpose</th> -->
+            </tr>
+        </thead>
+    </table>
+  </div>
+  <div class="panel-footer">
+    <span style="display:none" class="text-success" id="success-message">Request approved.</span>
+    <span style="display:none" class="text-danger" id="error-message">Request cannot be approved.</span>
+  </div>
+</div>
+{{include 'default-scripts.html'}}
+<script src="/baadal/static/js/datatables.min.js"></script>
+<script src="/baadal/static/js/dataTables.bootstrap.min.js"></script>
+<script>
+(function(){
+  var $requests = $('#requests');
+  var $table = $requests.DataTable( {
+    "ajax": "/baadal/faculty/pending_requests.json",
+    "oLanguage": {
+      "sEmptyTable": "No pending requests!"
+    },
+    "columns": [
+      { "data": "vm_name" },
+      { "data": "owner" },
+      { "data": "flavor" },
+      { "data": "public_ip_required" },
+      { "data": "sec_domain" },
+      { "data": "request_time" },
+      { "data": "collaborators" }
+    ],
+    "aoColumnDefs": [
+      {
+        "aTargets": [7],
+        "mData": null,
+        "mRender": function (data, type, full) {
+          return '<div class="btn-group" role="group" aria-label="..."> \
+            <button title="Approve" type="button" data-action="faculty_approve" class="btn btn-success btn-action" aria-label="Approve">\
+            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>\
+            </button> \
+            <button title="Edit" type="button" data-action="edit" class="btn btn-info btn-edit" aria-label="Edit">\
+            <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>\
+            </button> \
+            <button title="Reject" type="button" data-action="reject" class="btn btn-danger btn-action" aria-label="Reject">\
+            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>\
+            </button>\
+            </div>';
+        }
+      },
+      {"visible": false,  "targets": [0]}
+    ],
+    "fnCreatedRow": function( nRow, aData, iDataIndex ) {
+      nRow.setAttribute('data-reqid',aData.id);
+    }
+  });
+
+
+  $requests.on('click','.btn-action', function(e) {
+    var id = this.closest('tr').getAttribute('data-reqid');
+    var action = this.getAttribute('data-action');
+    $.ajax({
+      'url': '/baadal/action/handle_request.json',
+      'type': 'post',
+      'dataType' : 'json',
+      'data': {
+        'id':id,
+        'action': action
+      },
+      'error' : function(response) {
+        var error;
+        if (error = response.getResponseHeader('web2py_error')) {
+          baadalApp.generateTicketLink(error);
+        }
+      },
+      'success': function(response) {
+        if(response.status == 'success') {
+          $('#success-message').fadeIn(1000, function () {
+            $table.ajax.reload();
+            $(this).fadeOut();
+          });
+        } else {
+          $('#error-message').fadeIn();
+        }
+      }
+    });
+  });
+
+  $requests.on('click','.btn-edit', function(e) {
+    e.preventDefault();
+    var tr = this.closest('tr');//.getAttribute('data-reqid');
+    var data = $table.row(tr).data();
+    $.ajax({
+      'type': 'GET',
+      'url': '/baadal/ajax/configs.json',
+      'success': function(response) {
+        console.log(response);
+        var configSelect = document.getElementById('edit-config');
+        configSelect.options.length = 0;
+        for (i = response.length-1; i>=0; i--) {
+          console.log(response[i]);
+          var curr_config = response[i];
+          var text = curr_config['vcpus'] + 'CPU, ' + curr_config['ram'] + 'MB RAM';
+          configSelect.options[configSelect.options.length] = new Option(text, curr_config['id'], data.flavor == curr_config.id);
+        }
+      }
+    });      
+    document.getElementById('edit-vm-name').innerHTML = data.vm_name;
+    document.getElementById('edit-template').innerHTML = data.image;
+    document.getElementById('edit-sec-domain').innerHTML = data.sec_domain;
+    document.getElementById('edit-purpose').innerHTML = data.purpose || '<i>Not specified</i>';
+    document.getElementById('edit-storage').value = data.extra_storage;
+    document.getElementById('edit-id').value = data.id;
+    var radios = document.getElementsByName('public_ip');
+    var temp = data.public_ip_required == 'Required' ? 'yes' : 'no';
+    for (var i=radios.length-1; i>=0; i--) {
+      if (radios[i].value == temp) {
+        radios[i].checked = true;
+        break;
+      }
+    }
+    console.log(data);
+    $('#my-modal').modal('show');
+  });
+
+  $('#btn-mod-approve').one('click', function (e){
+    //save the new request to db
+    //send it to backend for processing
+    var data = {
+      'id' : document.getElementById('edit-id').value,
+      'flavor': document.getElementById('edit-config').value,
+      'storage': document.getElementById('edit-storage').value,
+      'public_ip': document.forms['vm_request'].elements['public_ip'].value,
+      'action' : 'faculty_edit'
+    };
+    console.log(data);
+    $.ajax({
+      'type' : 'POST',
+      'data' : data,
+      'url' : '/baadal/action/handle_request.json',
+      'success' : function(response) {
+        if (response.status == 'success') {
+          $('#modal-success-message').fadeIn();
+        } else {
+          $('#modal-error-message').fadeIn();
+        }
+        console.log(response);
+      }
+    });
+  });
+})();
+</script>
+{{include 'wrap.html'}}

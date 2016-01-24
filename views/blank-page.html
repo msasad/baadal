@@ -105,14 +105,17 @@
             <li><a href="#">Mail Admin</a></li>
           </ul>
         </li>
+        {{if ('faculty' in auth.user_groups.values()) or ('admin' in auth.user_groups.values()):}}
         <li>
           <a href="javascript:;" data-toggle="collapse" data-target="#faculty-menu">
             <i class="fa fa-fw fa-arrows-v"></i> Faculty Menu <i class="fa fa-fw fa-caret-down"></i>
           </a>
           <ul id="faculty-menu" class="collapse">
-            <li><a href="#">Pending Approvals</a></li>
+            <li><a href="/baadal/faculty/pending_requests_list.html">Pending Approvals</a></li>
           </ul>
         </li>
+        {{pass}}
+        {{if 'admin' in auth.user_groups.values():}}
         <li>
           <a href="javascript:;" data-toggle="collapse" data-target="#orgadmin-menu">
             <i class="fa fa-fw fa-arrows-v"></i> Org-Admin Menu <i class="fa fa-fw fa-caret-down"></i>
@@ -137,6 +140,7 @@
             <li><a href="#">Shutdown Baadal</a></li>
           </ul>
         </li>
+        {{pass}}
       </ul>
     </div>
     <!-- /.navbar-collapse -->
