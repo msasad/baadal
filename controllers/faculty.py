@@ -8,8 +8,6 @@ import json
 def pending_requests():
     rows = db((db.vm_requests.state == 0) & (db.vm_requests.owner == session.username)).select()
     l = rows.as_list()
-    print 'Here'
-    print db._lastsql
     for i in l:
         i['flavor'] = flavor_info(i['flavor'])
         i['sec_domain'] = network_name_from_id(i['sec_domain'])
