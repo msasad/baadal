@@ -74,6 +74,16 @@
         </div>
       </div>
 
+      {{if ('faculty' not in auth.user_groups.values()) and ('admin' not in auth.user_groups.values()):}}
+      <div class="form-group">
+        <label for="faculty" class="col-sm-3 control-label">Faculty Approver*</label>
+        <div class="col-sm-9">
+          <input type="text" id="faculty" name="faculty" class="form-control" required="required">
+        </div>
+      </div>
+
+      {{pass}}
+
       <div class="form-group">
         <div class="col-sm-9 col-sm-offset-3">
           <button class="btn btn-primary" type="submit" id="submit_request">Submit</button>

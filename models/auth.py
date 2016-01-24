@@ -41,20 +41,13 @@ def fetch_ldap_user(username):
                 if result_type == ldap.RES_SEARCH_ENTRY:
                     for name,attrs in result_data:
                         for k,vals in attrs.items():
-                            print 1
-                            print k
                             if k == 'cn':
-                                print 2
-                                print vals
                                 name_lst = vals[0].split(' ')
                                 user_info['first_name'] = name_lst[0]
                                 if len(name_lst) == 2:
                                     user_info['last_name'] = name_lst[1]
                                 elif len(name_lst) > 2:
                                     user_info['last_name'] = vals[0][vals[0].index(' '):].lstrip()
-                            #if k == 'objectClass':
-                            #    print 3
-                            #    print vals
 
         #TODO:FIX finding group of user
         if username in ['admin']:
@@ -66,13 +59,6 @@ def fetch_ldap_user(username):
 
         if user_info['last_name'] == '':
             user_info['last_name'] = 'user'
-        #user_info['email'] = username + config.get("MAIL_CONF", "email_domain")                                    
-        #user_info['roles'] = fetch_user_role(username)
-        # If user has super admin rights; it is added to separate organization
-        #if ADMIN in user_info['roles']:
-        #    user_info['organisation'] = 'ADMIN'
-        #else:
-        #    user_info['organisation'] = 'IITD'
 
     except ldap.LDAPError, e:
         logger.error(e)
