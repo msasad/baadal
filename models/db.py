@@ -13,7 +13,7 @@ dbname = config.get('database', 'database')
 ldap_host = config.get('ldap', 'ldap_host')
 ldap_dn = config.get('ldap', 'ldap_dn')
 
-db = DAL('mysql://' + username + ':' + password + '@' + dbhost + '/' + dbname, migrate=False)
+db = DAL('mysql://' + username + ':' + password + '@' + dbhost + '/' + dbname, fake_migrate_all=True)
 db.define_table('vm_requests',
                 Field('id', 'integer'),
                 Field('vm_name', 'string'),

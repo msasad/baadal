@@ -6,8 +6,10 @@ def new_vm():
     try:
         if ('faculty' in auth.user_groups.values()) or ('admin' in auth.user_groups.values()):
             owner_id = session.username
+            vm_state = 1
         else:
             owner_id = request.vars.faculty
+            vm_state = 0
 
         db.vm_requests.insert(vm_name=request.vars.vm_name, 
                               flavor=request.vars.config,
@@ -19,7 +21,8 @@ def new_vm():
                               public_ip_required=1 if request.vars.public_ip == 'yes' else 0,
                               extra_storage=request.vars.storage,
                               collaborators=request.vars.collaborators,
-                              request_time=int(time.time())
+                              request_time=int(time.time()),
+                              state=vm_state
                               )
         db.commit()
         return jsonify(flavor=request.vars.config)
