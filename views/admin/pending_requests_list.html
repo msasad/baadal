@@ -135,8 +135,13 @@
         "aTargets": [7],
         "mData": null,
         "mRender": function (data, type, full) {
-          return '<div class="btn-group" role="group" aria-label="..."> \
-            <button title="Approve" type="button" data-action="approve" class="btn btn-success btn-action" aria-label="Approve">\
+
+          approve_class = 'btn-success';
+          if(data.state == 0){
+              approve_class = 'btn-warning';
+          }
+          
+          return '<div class="btn-group" role="group" aria-label="..."> <button title="Approve" type="button" data-action="approve" class="btn '+approve_class+' btn-action" aria-label="Approve">\
             <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>\
             </button> \
             <button title="Edit" type="button" data-action="edit" class="btn btn-info btn-edit" aria-label="Edit">\
@@ -148,7 +153,7 @@
             </div>';
         }
       },
-      {"visible": false,  "targets": [0]}
+
     ],
     "fnCreatedRow": function( nRow, aData, iDataIndex ) {
       nRow.setAttribute('data-reqid',aData.id);
