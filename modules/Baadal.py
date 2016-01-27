@@ -391,8 +391,10 @@ class Connection:
         return roles
 
     def close(self, ):
-        del self.__conn
-        pass
+        try:
+            del self.__conn
+        except Exception:
+            pass
 
     def usage(self, attribute_list=None):
         """
@@ -469,8 +471,11 @@ class Connection:
             server = self.__conn.nova.servers.create(name, image, template, nics=nics, security_groups=[sec_group],
                                                      **kwargs)
             return BaadalVM(server=server, conn=self.__conn)
+        #except AttributeError as e:
+        #    if e.message == "'SessionClient' object has no attribute 'last_request_id'":
+        #        pass
         except Exception as e:
-            raise BaadalException(e.message)
+            raise BaadalException(e.message or str(e.__class__))
 
     def create_volume(self, size, imageref=None, multiattach=False):
         if not self.__conn.cinder:
