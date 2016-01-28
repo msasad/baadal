@@ -43,3 +43,18 @@ def modify_request():
     except Exception as e:
         logger.exception(e.message or str(e.__class__))
         return jsonify(status='fail', message=e.message or str(e.__class__))
+
+
+@auth.requires_login()
+def request_resize():
+    try:
+        db.resize_requests.insert(vm_name=request.vars.vm_name,
+                vm_id=request.vars.vm_id,
+                new_flavor=request.vars.new_flavor,
+                request_time=int(time.time())
+                )
+        db.commit()
+        return jsonify()
+    except Exception as e:
+        logger.exception(e.message or str(e.__class__))
+        return jsonify(status='fail', message=e.message or str(e.__class__))
