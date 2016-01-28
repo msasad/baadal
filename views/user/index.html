@@ -146,14 +146,13 @@
               });
 
             } else if (action == 'resize') {
-              var flavor_selector = document.createElement('select');
-              flavor_selector.name = 'new_flavor';
-              flavor_selector.id = 'new_flavor';
-              flavor_selector.classList.add('form-control');
-              var label = document.createElement('label');
-              label.classList.add('control-label');
-              label.for = 'new_flavor';
-              label.innerHTML = 'Select new configuration';
+              var html = '<form class="form-inline">'
+                + '<label for="new_flavor" class="control-label">'
+                + 'Select new configuration</label>'
+                + '<select class="form-control" name="new_flavor" id="new_flavor"></select>'
+                + '<button class="btn btn-primary btn-sm">Submit Request</button>'
+              var $footer = $modal.find('.panel-footer').html('').append(html);
+              var flavor_selector = document.getElementById('new_flavor');
               $.ajax({
                 url: '/baadal/ajax/configs.json',
                 dataType: 'json',
@@ -162,8 +161,7 @@
                     flavor_selector.options.add(new Option(response[index].vcpus + 'CPU, '
                       + response[index].ram + 'MB RAM', response[index].id));
                   }
-                  var html_to_append = '<label class="control-label" for="new_flavor"> Select new configuration</label>'
-                  $modal.find('.panel-footer').html('').append([label, flavor_selector]).slideDown();
+                  $footer.slideDown();
                 }
               });
             } else {
