@@ -39,3 +39,4 @@ pip-log.txt
 .idea
 modules/osclient.py
 modules/client.py
+databases/*.*
