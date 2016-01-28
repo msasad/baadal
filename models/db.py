@@ -30,6 +30,14 @@ db.define_table('vm_requests',
                 Field('state', 'integer'),
                 )
 
+db.define_table('resize_requests',
+        Field('id', 'integer'),
+        Field('vm_name', 'string'),
+        Field('vm_id', 'string'),
+        Field('new_flavor', 'string'),
+        Field('request_time', 'integer')
+        )
+
 auth = Auth(db)
 auth.define_tables(username=True)
 auth.settings.login_methods.append(ldap_auth(mode='custom', username_attrib='cn', custom_scope='subtree',
