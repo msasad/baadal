@@ -49,7 +49,7 @@ def modify_request():
 def request_resize():
     try:
         db.resize_requests.insert(vm_name=request.vars.vm_name,
-                vm_id=request.vars.vm_id,
+                vm_id=request.vars.vmid,
                 new_flavor=request.vars.new_flavor,
                 request_time=int(time.time())
                 )
