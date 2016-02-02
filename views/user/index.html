@@ -146,11 +146,11 @@
               });
 
             } else if (action == 'resize') {
-              var html = '<form class="form-inline">'
+              var html = '<form class="form-inline" action="#">'
                 + '<label for="new_flavor" class="control-label">'
                 + 'Select new configuration</label>'
                 + '<select class="form-control" name="new_flavor" id="new_flavor"></select>'
-                + '<button class="btn btn-primary btn-sm">Submit Request</button>'
+                + '<button class="btn btn-primary btn-sm" id="btn-resize-request">Submit Request</button>'
               var $footer = $modal.find('.panel-footer').html('').append(html);
               var flavor_selector = document.getElementById('new_flavor');
               $.ajax({
@@ -161,7 +161,29 @@
                     flavor_selector.options.add(new Option(response[index].vcpus + 'CPU, '
                       + response[index].ram + 'MB RAM', response[index].id));
                   }
+                  $('#btn-resize-request').on('click', function(e) {
+                    e.preventDefault();
+                    $.ajax({
+                      url: '/baadal/post_request/request_resize.json',
+                      type: 'post',
+                      data: {
+                        'vmid': vmid,
+                        new_flavor: flavor_selector.value
+                      },
+                      success: function(response) {
+                        console.log(response);
+                      }
+                    });
+                    console.log(vmid, flavor_selector.value)
+                    return false;
+                  });
                   $footer.slideDown();
+                },
+                'error': function (response) {
+                  var error = response.getResponseHeader('web2py_error');
+                  if (error) {
+                    baadalApp.generateTicketLink(error);
+                  }
                 }
               });
             } else {
