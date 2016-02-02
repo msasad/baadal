@@ -32,7 +32,7 @@ db.define_table('vm_requests',
 
 db.define_table('resize_requests',
         Field('id', 'integer'),
-        Field('vm_name', 'string'),
+        Field('vm_name', 'string', default=None),
         Field('vm_id', 'string'),
         Field('new_flavor', 'string'),
         Field('request_time', 'integer')
