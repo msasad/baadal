@@ -381,7 +381,14 @@ class Connection:
         self.neutron = self.__conn.neutron
         self.auth = auth
         self.sess = sess
+        self.keystone = self.__conn.keystone
         pass
+
+    def add_user_role(self, username, tenant_name, role):
+        tenant_id = self.__conn.keystone.tenants.find(name=tenant_name).to_dict()['id']
+        user_id = self.__conn.keystone.users.find(name=username).to_dict()['id']
+        role_id = self.__conn.keystone.roles.find(name=role).to_dict()['id']
+        self.__conn.keystone.users.role_manager.add_user_role(username, role_id, tenant_id)
 
     def get_user_roles(self):
         roles = []
