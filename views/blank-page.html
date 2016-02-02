@@ -105,7 +105,7 @@
             <li><a href="#">Mail Admin</a></li>
           </ul>
         </li>
-        {{if ('faculty' in auth.user_groups.values()) or ('admin' in auth.user_groups.values()):}}
+        {{if ('faculty' in auth.user_groups.values()) or (user_is_project_admin):}}
         <li>
           <a href="javascript:;" data-toggle="collapse" data-target="#faculty-menu">
             <i class="fa fa-fw fa-arrows-v"></i> Faculty Menu <i class="fa fa-fw fa-caret-down"></i>
@@ -115,7 +115,7 @@
           </ul>
         </li>
         {{pass}}
-        {{if 'admin' in auth.user_groups.values():}}
+        {{if user_is_project_admin:}}
         <li>
           <a href="javascript:;" data-toggle="collapse" data-target="#orgadmin-menu">
             <i class="fa fa-fw fa-arrows-v"></i> Org-Admin Menu <i class="fa fa-fw fa-caret-down"></i>
@@ -130,7 +130,8 @@
           </a>
           <ul id="admin-menu" class="collapse">
             <li><a href="/baadal/admin/">All VMs</a></li>
-            <li><a href="/baadal/admin/pending_requests_list.html">All Pending Requests</a></li>
+            <li><a href="/baadal/admin/pending_requests_list.html">Pending VM Requests</a></li>
+            <li><a href="/baadal/admin/resize_requests_list.html">VM Resize Requests</a></li>
             <li><a href="#">VM Utilization</a></li>
             <li><a href="#">Tasks</a></li>
             <li><a href="#">Sanity Check</a></li>
