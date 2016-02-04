@@ -52,7 +52,7 @@
     finally:
         try:
             conn.close()
-        except NameError:
+        except Exception:
             pass
 
 
