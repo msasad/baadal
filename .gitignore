@@ -40,3 +40,8 @@ pip-log.txt
 modules/osclient.py
 modules/client.py
 databases/*.*
+modules/novaclient/*
+modules/keystoneclient/*
+modules/cinderclient/*
+modules/glanceclient/*
+modules/neutronclient/*
