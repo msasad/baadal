@@ -386,7 +386,7 @@ class Connection:
 
     def add_user_role(self, username, tenant_name, role):
         tenant_id = self.__conn.keystone.tenants.find(name=tenant_name).to_dict()['id']
-        user_id = self.__conn.keystone.users.find(name=username).to_dict()['id']
+        # user_id = self.__conn.keystone.users.find(name=username).to_dict()['id']
         role_id = self.__conn.keystone.roles.find(name=role).to_dict()['id']
         self.__conn.keystone.users.role_manager.add_user_role(username, role_id, tenant_id)
 
@@ -400,7 +400,7 @@ class Connection:
     def close(self, ):
         try:
             del self.__conn
-        except Exception:
+        except NameError:
             pass
 
     def usage(self, attribute_list=None):
@@ -478,7 +478,7 @@ class Connection:
             server = self.__conn.nova.servers.create(name, image, template, nics=nics, security_groups=[sec_group],
                                                      **kwargs)
             return BaadalVM(server=server, conn=self.__conn)
-        #except AttributeError as e:
+        # except AttributeError as e:
         #    if e.message == "'SessionClient' object has no attribute 'last_request_id'":
         #        pass
         except Exception as e:
@@ -504,7 +504,7 @@ class Connection:
             raise BaadalException('Not connected to openstack cinder service')
         return self.__conn.cinder.volumes.get(diskid)
 
-    def images(self,image_type='all'):
+    def images(self, image_type='all'):
         if not self.__conn.nova:
             raise BaadalException('Not connected to openstack nova service')
         try:
@@ -720,6 +720,7 @@ class Connection:
             return True
         except Exception as e:
             raise BaadalException(e.message or str(e.__class__))
+
 
 class BaadalException(Exception):
     def __init__(self, msg):
