@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>{{=(response.title or request.application).capitalize()}}</title>
+  <link rel="icon" href="/baadal/static/images/favicon.png" />
+  <link rel="stylesheet" href="/baadal/static/css/bootstrap.min.css" />
+  <link href="/baadal/static/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+  <link href="/baadal/static/css/dataTables.bootstrap.min.css" rel="stylesheet" type="text/css">
+  <link href="/baadal/static/css/baadal-custom.css" rel="stylesheet" type="text/css">
+  <style type="text/css">
+    body {
+      margin-top:60px;
+      margin-left: auto;
+      margin-right: auto;
+      background-color: #eee;
+    }
+  </style>
+    
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="/baadal/static/js/html5shiv.js"></script>
+        <script src="/baadal/static/js/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+<body>
+  <div id="wrapper">
+    <div class="container">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-heading">
+            Register
+          </h3>
+        </div>
+        <div class="panel-body">
+          <form action="#" role="form" class="form-horizontal" id="register-form">
+            <div class="form-group">
+              <label for="username" class="control-label col-sm-offset-2 col-sm-2">Username</label>
+              <div class="col-sm-6">
+                <input type="text" class="form-control" id="username" name="username">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="userid" class="control-label col-sm-offset-2 col-sm-2">UserID</label>
+              <div class="col-sm-6">
+                <input type="text" class="form-control" id="userid" name="userid">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="email" class="control-label col-sm-offset-2 col-sm-2">E-Mail</label>
+              <div class="col-sm-6">
+                <input type="text" class="form-control" id="email" name="email">
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-sm-offset-4 col-sm-6">
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" name="chk-faculty-privileges" value="true"> Request faculty privileges
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="password" class="control-label col-sm-offset-2 col-sm-2">Password</label>
+              <div class="col-sm-6">
+                <input type="password" class="form-control" id="password" name="password">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="password-repeat" class="control-label col-sm-offset-2 col-sm-2">Repeat Password</label>
+              <div class="col-sm-6">
+                <input type="password" class="form-control" id="password-repeat" name="password-repeat">
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-sm-offset-4 col-sm-10">
+                <button class="btn btn-default">Register</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {{include 'default-scripts.html'}}
+  <script>
+  (function($) {
+    $('#register-form').on('submit', function(e) {
+      e.preventDefault();
+      console.log('clicked');
+      var data = $('.form-horizontal').serializeArray();
+      console.log(data);
+      $.ajax({
+        url: '/baadal/default/register_request',
+        type: 'post',
+        data: data,
+        success:function(response){
+          console.log(response);
+        },
+        error: function(error, code) {
+          console.log(error, code);
+        }
+      });
+    });
+  })(jQuery);
+  </script>
+</body>
+</html>
+
