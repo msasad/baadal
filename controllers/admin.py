@@ -1,5 +1,6 @@
 import json
 
+
 @auth.requires(user_is_project_admin)
 def pending_requests():
     rows = db(db.vm_requests.state < 2).select()
