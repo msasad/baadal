@@ -46,7 +46,7 @@ def user():
     else:
         if auth.user and request.args(0) in ('login', None):
             redirect('/baadal/user')
-        from gluon.html import INPUT, H2
+        from gluon.html import INPUT, H2, A
         form = auth()
         el = list()
         el.append(H2('Please log in')) 
@@ -61,6 +61,16 @@ def user():
                 if i.attributes['_type'] == 'submit':
                     i.add_class('btn btn-primary btn-lg btn-block')
                 el.append(i)
+        link = A('Request an account',callback='/baadal/user/register')
+        link.add_class('btn btn-link')
+        el.append(link)
         form.components = el
         form.add_class('form-signin')
         return dict(form=form)
+
+def register():
+    return dict()
+
+def register_request():
+     
+    return jsonify()
