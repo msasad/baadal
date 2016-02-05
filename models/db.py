@@ -38,6 +38,14 @@ db.define_table('resize_requests',
         Field('request_time', 'integer')
         )
 
+db.define_table('account_requests',
+        Field('id', 'integer'),
+        Field('username', 'string', required=True),
+        Field('userid', 'string', required=True, unique=True),
+        Field('email', 'string', requires=IS_EMAIL()),
+        Field('faculty_privileges', 'integer', requires=IS_INT_IN_RANGE(0.1))
+        )
+
 auth = Auth(db)
 auth.define_tables(username=True)
 auth.settings.login_methods.append(ldap_auth(mode='custom', username_attrib='cn', custom_scope='subtree',
