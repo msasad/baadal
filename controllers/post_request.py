@@ -58,3 +58,22 @@ def request_resize():
     except Exception as e:
         logger.exception(e.message or str(e.__class__))
         return jsonify(status='fail', message=e.message or str(e.__class__))
+
+def register_user():
+    try:
+        faculty_privileges = 0
+        try:
+            faculty_privileges = int(bool(request.vars.chk_faculty_privileges))
+        except Exception:
+            pass
+        db.account_requests.insert(username=request.vars.username,
+                userid=request.vars.userid,
+                password=request.vars.password,
+                email=request.vars.email,
+                faculty_privileges=faculty_privileges
+                )
+        return jsonify()
+    except Exception as e:
+        logger.exception(e.message or str(e.__class__))
+        return jsonify(status='fail', message=e.message or str(e.__class__))
+
