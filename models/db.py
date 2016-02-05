@@ -43,7 +43,8 @@ db.define_table('account_requests',
         Field('username', 'string', required=True),
         Field('userid', 'string', required=True, unique=True),
         Field('email', 'string', requires=IS_EMAIL()),
-        Field('faculty_privileges', 'integer', requires=IS_INT_IN_RANGE(0.1))
+        Field('faculty_privileges', 'integer', requires=IS_INT_IN_RANGE(0.1)),
+        Field('password', 'string', required=True)
         )
 
 auth = Auth(db)

@@ -28,6 +28,7 @@ CREATE TABLE `account_requests` (
   `userid` varchar(20) NOT NULL,
   `email` varchar(50) NOT NULL,
   `faculty_previleges` tinyint(1) DEFAULT '0',
+  `password` varchar(50) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `userid` (`userid`),
   UNIQUE KEY `email` (`email`)
@@ -200,4 +201,4 @@ CREATE TABLE `vm_requests` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-02-05 11:55:16
+-- Dump completed on 2016-02-05 16:18:34
