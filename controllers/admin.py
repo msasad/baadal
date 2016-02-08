@@ -235,6 +235,19 @@ def security_groups():
 
 
 @auth.requires(user_is_project_admin)
+def account_requests():
+    if request.extension == 'html':
+        return dict()
+    elif request.extension == 'json':
+        rows = db(db.account_requests.approval_status==0).select()
+        l = rows.as_list()
+        for i in l:
+            i['request_time'] = seconds_to_localtime(i['request_time'])
+            i['faculty_privileges'] = 'Yes' if i['faculty_privileges'] else 'No'
+        return jsonify(data=l)
+
+
+@auth.requires(user_is_project_admin)
 def index():
     return dict()
     pass
