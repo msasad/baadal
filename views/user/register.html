@@ -47,26 +47,26 @@
             <div class="form-group">
               <label for="username" class="control-label col-sm-offset-2 col-sm-2">Username</label>
               <div class="col-sm-6">
-                <input type="text" class="form-control" id="username" name="username">
+                <input type="text" class="form-control" id="username" name="username" placeholder="Your full name">
               </div>
             </div>
             <div class="form-group">
               <label for="userid" class="control-label col-sm-offset-2 col-sm-2">UserID</label>
               <div class="col-sm-6">
-                <input type="text" class="form-control" id="userid" name="userid">
+                <input type="text" class="form-control" id="userid" name="userid" placeholder="Desired userid">
               </div>
             </div>
             <div class="form-group">
               <label for="email" class="control-label col-sm-offset-2 col-sm-2">E-Mail</label>
               <div class="col-sm-6">
-                <input type="text" class="form-control" id="email" name="email">
+                <input type="text" class="form-control" id="email" name="email" placeholder="E-mail address provided by your institution">
               </div>
             </div>
             <div class="form-group">
               <div class="col-sm-offset-4 col-sm-6">
                 <div class="checkbox">
                   <label>
-                    <input type="checkbox" name="chk-faculty-privileges" value="true"> Request faculty privileges
+                    <input type="checkbox" name="chk_faculty_privileges" value="true"> Request faculty privileges
                   </label>
                 </div>
               </div>
@@ -74,13 +74,13 @@
             <div class="form-group">
               <label for="password" class="control-label col-sm-offset-2 col-sm-2">Password</label>
               <div class="col-sm-6">
-                <input type="password" class="form-control" id="password" name="password">
+                <input type="password" class="form-control" id="password" name="password" placeholder="Choose a password">
               </div>
             </div>
             <div class="form-group">
               <label for="password-repeat" class="control-label col-sm-offset-2 col-sm-2">Repeat Password</label>
               <div class="col-sm-6">
-                <input type="password" class="form-control" id="password-repeat" name="password-repeat">
+                <input type="password" class="form-control" id="password-repeat" name="password-repeat" placeholder="Repeat password">
               </div>
             </div>
             <div class="form-group">
@@ -102,7 +102,7 @@
       var data = $('.form-horizontal').serializeArray();
       console.log(data);
       $.ajax({
-        url: '/baadal/default/register_request',
+        url: '/baadal/post_request/register_user',
         type: 'post',
         data: data,
         success:function(response){
