@@ -43,14 +43,16 @@ db.define_table('account_requests',
         Field('username', 'string', required=True),
         Field('userid', 'string', required=True, unique=True),
         Field('email', 'string', requires=IS_EMAIL()),
-        Field('faculty_privileges', 'integer', requires=IS_INT_IN_RANGE(0.1)),
-        Field('password', 'string', required=True)
+        Field('faculty_privileges', 'integer', requires=IS_INT_IN_RANGE(0,1)),
+        Field('password', 'string', required=True),
+        Field('request_time', 'integer', requires=IS_INT_IN_RANGE(0,1)),
+        Field('approval_status', 'integer')
         )
 
 auth = Auth(db)
 auth.define_tables(username=True)
-auth.settings.login_methods.append(ldap_auth(mode='custom', username_attrib='cn', custom_scope='subtree',
-    server=ldap_host, base_dn=ldap_dn))
+auth.settings.login_methods.append(ldap_auth(mode='custom', username_attrib='cn',
+    custom_scope='subtree', server=ldap_host, base_dn=ldap_dn))
 auth.settings.create_user_groups = False
 auth.settings.login_onaccept = [login_callback]
 
