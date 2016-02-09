@@ -354,7 +354,7 @@ class Connection:
         from novaclient import client
         from neutronclient.neutron import client as nclient
         from cinderclient import client as cclient 
-        auth = v2.Password(auth_url=authurl, username=username,
+        auth = v2.Password(auth_url=authurl, user_id=username,
                            password=password, tenant_name=tenant_name)
         sess = session.Session(auth=auth)
 
@@ -384,11 +384,11 @@ class Connection:
         self.keystone = self.__conn.keystone
         pass
 
-    def add_user_role(self, username, tenant_name, role):
+    def add_user_role(self, user_id, tenant_name, role):
         tenant_id = self.__conn.keystone.tenants.find(name=tenant_name).to_dict()['id']
         # user_id = self.__conn.keystone.users.find(name=username).to_dict()['id']
         role_id = self.__conn.keystone.roles.find(name=role).to_dict()['id']
-        self.__conn.keystone.users.role_manager.add_user_role(username, role_id, tenant_id)
+        self.__conn.keystone.users.role_manager.add_user_role(user_id, role_id, tenant_id)
 
     def get_user_roles(self):
         roles = []
@@ -548,7 +548,7 @@ class Connection:
         if not self.__conn.nova:
             raise BaadalException('Not connected to openstack nova service')
         try:
-            templates = self.__conn.nova.flavors.list()
+            templates = self.__conn.nova.flavors.list(sort_key='memory_mb')
             return templates
         except Exception as e:
             raise BaadalException(e.message or str(e.__class__))
