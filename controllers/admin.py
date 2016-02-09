@@ -236,7 +236,7 @@ def security_groups():
 
 @auth.requires(user_is_project_admin)
 def account_requests():
-    if request.extension == 'html':
+    if request.extension in ('', None, 'html'):
         return dict()
     elif request.extension == 'json':
         rows = db(db.account_requests.approval_status==0).select()
@@ -245,6 +245,41 @@ def account_requests():
             i['request_time'] = seconds_to_localtime(i['request_time'])
             i['faculty_privileges'] = 'Yes' if i['faculty_privileges'] else 'No'
         return jsonify(data=l)
+
+
+@auth.requires(user_is_project_admin)
+def resize_requests():
+    if request.extension in ('', None, 'html'):
+        return dict()
+    elif request.extension == 'json':
+        try:
+            # TODO: Return a list of dictionaries with following keys
+            # user,
+            # vm_name,
+            # vm_id
+            # current_config,
+            # requested_config,
+            # request_time
+            rows = db(db.resize_requests.status == 0).select()
+            l = rows.as_list()
+            conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
+            for i in l:
+                i['request_time'] = seconds_to_localtime(i['request_time'])
+                vm = conn.find_baadal_vm(id=i['vm_id'])
+                i['vm_name'] = vm.name
+                template = conn.find_template(id=vm.server.flavor['id'])
+                i['current_config'] = 'RAM : %s, vCPUs: %s' % (template.ram, template.vcpus)
+                template = conn.find_template(id=i['new_flavor'])
+                i['requested_config'] = 'RAM : %s, vCPUs: %s' % (template.ram, template.vcpus)
+            return jsonify(data=l)
+        except Exception as e:
+            logger.error(e.message or str(e.__class__))
+            return jsonify(status='fail', message= e.message or str(e.__class__))
+        finally:
+            try:
+                conn.close()
+            except:
+                pass
 
 
 @auth.requires(user_is_project_admin)
