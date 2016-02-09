@@ -51,7 +51,7 @@ db.define_table('account_requests',
 
 auth = Auth(db)
 auth.define_tables(username=True)
-auth.settings.login_methods.append(ldap_auth(mode='custom', username_attrib='cn',
+auth.settings.login_methods.append(ldap_auth(mode='custom', username_attrib='uid',
     custom_scope='subtree', server=ldap_host, base_dn=ldap_dn))
 auth.settings.create_user_groups = False
 auth.settings.login_onaccept = [login_callback]
