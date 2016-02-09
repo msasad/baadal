@@ -70,7 +70,9 @@ def register_user():
                 userid=request.vars.userid,
                 password=request.vars.password,
                 email=request.vars.email,
-                faculty_privileges=faculty_privileges
+                faculty_privileges=faculty_privileges,
+                request_time=int(time.time()),
+                approval_status=0
                 )
         return jsonify()
     except Exception as e:
