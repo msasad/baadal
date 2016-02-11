@@ -50,6 +50,16 @@ db.define_table('account_requests',
         Field('approval_status', 'integer')
         )
 
+db.define_table('clone_requests',
+        Field('id', 'integer'),
+        Field('user', 'string', required=True),
+        Field('vm_id', 'string', required=True),
+        Field('clone_name', 'string'),
+        Field('full_clone', 'integer', requires=IS_INT_IN_RANGE(0,1)),
+        Field('request_time', 'integer', requires=IS_INT_IN_RANGE(0,1)),
+        Field('status', 'integer')
+        )
+
 auth = Auth(db)
 auth.define_tables(username=True)
 auth.settings.login_methods.append(ldap_auth(mode='custom', username_attrib='uid',
