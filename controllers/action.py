@@ -278,3 +278,21 @@ def handle_account_request():
             conn.close()
         except:
             pass
+
+
+@auth.requires(user_is_project_admin)
+def handle_resize_request():
+    try:
+        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
+        row = db(db.account_requests.id == request.vars.id).select()[0]
+        vm = conn.find_baadal_vm(id=row.vm_id)
+        vm.resize(row['new_flavor'])
+    except Exception as e:
+        message = e.message or str(e.__class__)
+        logger.error(message)
+        return jsonify(status='fail', message=message)
+    finally:
+        try:
+            conn.close()
+        except:
+            pass
