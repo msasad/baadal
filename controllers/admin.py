@@ -283,6 +283,31 @@ def resize_requests():
 
 
 @auth.requires(user_is_project_admin)
+def clone_requests():
+    if request.extension in ('', None, 'html'):
+        return dict()
+    elif request.extension == 'json':
+        try:
+            rows = db(db.clone_requests.status == 0).select()
+            l = rows.as_list()
+            conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
+            for i in l:
+                i['request_time'] = seconds_to_localtime(i['request_time'])
+                vm = conn.find_baadal_vm(id=i['vm_id'])
+                i['vm_name'] = vm.name
+                i['full_clone'] = 'Yes' if i['full_clone'] == 1 else 'No'
+            return jsonify(data=l)
+        except Exception as e:
+            logger.error(e.message or str(e.__class__))
+            return jsonify(status='fail', message= e.message or str(e.__class__))
+        finally:
+            try:
+                conn.close()
+            except:
+                pass
+
+
+@auth.requires(user_is_project_admin)
 def index():
     return dict()
     pass
