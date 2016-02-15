@@ -59,6 +59,7 @@ def request_resize():
         logger.exception(e.message or str(e.__class__))
         return jsonify(status='fail', message=e.message or str(e.__class__))
 
+
 def register_user():
     try:
         faculty_privileges = 0
@@ -79,3 +80,18 @@ def register_user():
         logger.exception(e.message or str(e.__class__))
         return jsonify(status='fail', message=e.message or str(e.__class__))
 
+@auth.requires_login()
+def request_clone():
+    try:
+        db.clone_requests.insert(user=request.vars.user,
+                vm_id=request.vars.vmid,
+                request_time=int(time.time()),
+                user=session.username,
+                full_clone=1,
+                status=0
+                )
+        db.commit()
+        return jsonify()
+    except Exception as e:
+        logger.exception(e.message or str(e.__class__))
+        return jsonify(status='fail', message=e.message or str(e.__class__))
