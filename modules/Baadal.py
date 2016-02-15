@@ -643,10 +643,12 @@ class Connection:
         """
         try:
             if int(ip_version) not in (4, 6):
-                raise BaadalException('IP version must be either 4 or 6. ' + str(ip_version) + 'provided')
+                raise BaadalException('IP version must be either 4 or 6. ' +
+                                      str(ip_version) + 'provided')
 
             if bool(allocation_pool_end) != bool(allocation_pool_start):
-                raise BaadalException('Only one among allocation_pool_start and allocation_pool_end is specified!'
+                raise BaadalException('Only one among allocation_pool_start'
+                                      'and allocation_pool_end is specified!'
                                       ' Please specify both or specify none')
 
             request_body = dict()
@@ -659,9 +661,11 @@ class Connection:
             request_body['ip_version'] = int(ip_version)
             request_body['host_routes'] = host_routes
             if allocation_pool_end is not None:
-                request_body['allocation_pools'] = [{'start': allocation_pool_start, 'end': allocation_pool_end}]
+                request_body['allocation_pools'] =
+                [{'start': allocation_pool_start, 'end': allocation_pool_end}]
 
-            subnet = self.__conn.neutron.create_subnet(body={'subnet': request_body})
+            subnet = self.__conn.neutron.\
+                create_subnet(body={'subnet': request_body})
             return subnet
         except Exception as e:
             raise BaadalException(e.message or str(e.__class__))
@@ -677,7 +681,8 @@ class Connection:
             security_group = {'name': sg_name}
             if description:
                 security_group['description'] = description
-            sg = self.__conn.neutron.create_security_group({'security_group': security_group})
+            sg = self.__conn.neutron.\
+                create_security_group({'security_group': security_group})
             return sg
         except Exception as e:
             raise BaadalException(e.message or str(e.__class__))
@@ -690,15 +695,19 @@ class Connection:
 
     def delete_security_group_rule(self, security_group_rule_id):
         try:
-            self.__conn.neutron.delete_security_group_rule(security_group_rule_id)
+            self.__conn.neutron.\
+                delete_security_group_rule(security_group_rule_id)
         except Exception as e:
             raise BaadalException(e.message or str(e.__class__))
 
-    def create_security_group_rule(self, sg_id, direction, protocol=None, remote_group=None, ethertype=None,
-                                   remote_ip_prefix=None, port_range_min=None, port_range_max=None):
+    def create_security_group_rule(self, sg_id, direction, protocol=None,
+                                   remote_group=None, ethertype=None,
+                                   remote_ip_prefix=None, port_range_min=None,
+                                   port_range_max=None):
         try:
             if bool(port_range_min) != bool(port_range_max):
-                raise BaadalException('Only one among min port and max port is specified'
+                raise BaadalException('Only one among min port and max port'
+                                      'is specified'
                                       ' Please specify both or specify none')
 
             security_group_rule_dict = dict()
@@ -714,7 +723,8 @@ class Connection:
 
             request_body = {'security_group_rule': security_group_rule_dict}
 
-            security_group_rule = self.__conn.neutron.create_security_group_rule(body=request_body)
+            security_group_rule = self.__conn.neutron.\
+                create_security_group_rule(body=request_body)
 
             return security_group_rule
         except Exception as e:
