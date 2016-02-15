@@ -49,19 +49,23 @@ def subnets():
 
 
 @auth.requires(user_is_project_admin)
-def secgroups():
-    try:
-        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
-        secgroupslist = conn.sgroups()
-        return jsonify(data=secgroupslist)
-    except Exception as e:
-        logger.error(e.message)
-        return jsonify(status='fail')
-    finally:
+def security_groups():
+    if request.extension in ('', 'html', None):
+        return dict()
+    elif request.extension == 'json':
         try:
-            conn.close()
-        except NameError:
-            pass
+            conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
+            tenant_id = conn.get_tenant_id()
+            secgroupslist = conn.sgroups(tenant_id=tenant_id)['security_groups']
+            return jsonify(data=secgroupslist)
+        except Exception as e:
+            logger.error(e.message)
+            return jsonify(status='fail')
+        finally:
+            try:
+                conn.close()
+            except NameError:
+                pass
 
 
 @auth.requires(user_is_project_admin)
@@ -226,11 +230,6 @@ def configure():
 
 @auth.requires(user_is_project_admin)
 def networking():
-    return dict()
-
-
-@auth.requires(user_is_project_admin)
-def security_groups():
     return dict()
 
 
