@@ -71,6 +71,21 @@ Configure keystone to use LDAP for identity
 To implement custom access control
     - configure /etc/nova/policy.json file to allow all users to list, start, shutdown VM owned by any user
 
+Client Packages:
+    - The following versions of client packages are verified to work together
+        python-barbicanclient (3.0.2)
+        python-cinderclient (1.1.1)
+        python-glanceclient (1.2.0)
+        python-keystoneclient (2.1.2)
+        python-neutronclient (2.3.11)
+        python-novaclient (2.22.0)
+        python-openstackclient (1.0.3)
+        python-swiftclient (2.3.1)
+        keystone (2015.1.2)
+        keystoneauth1 (2.2.0)
+        keystonemiddleware (1.5.0)
+        python-openstackclient (1.0.3)
+
 ---------------------------------------------------------------------------------------------
 
 Following configuration of VM has been used for setting up openstack on VM (using VirtualBox):
