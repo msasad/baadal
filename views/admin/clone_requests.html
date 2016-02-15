@@ -1,0 +1,95 @@
+{{extend 'blank-page.html'}}
+<div class="panel panel-primary">
+  <div class="panel-heading">
+    <h3 class="panel-title">Pending VM Resize Requests</h3>
+  </div>
+  <div class="panel-body">
+    <table id="requests" class="table table-striped table-condensed table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>VM Name</th>
+                <th>Clone Name</th>
+                <th>Full Clone</th>
+                <th>Request Time</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+    </table>
+  </div>
+  <div class="panel-footer">
+    <span style="display:none" class="text-success" id="success-message">Request approved.</span>
+    <span style="display:none" class="text-danger" id="error-message">Request cannot be approved.</span>
+  </div>
+</div>
+{{include 'default-scripts.html'}}
+<script src="/baadal/static/js/datatables.min.js"></script>
+<script src="/baadal/static/js/dataTables.bootstrap.min.js"></script>
+<script>
+(function(){
+  var $requests = $('#requests');
+  var $table = $requests.DataTable( {
+    "ajax": "/baadal/admin/clone_requests.json",
+    "oLanguage": {
+      "sEmptyTable": "No pending requests!"
+    },
+    "columns": [
+      { "data": "user" },
+      { "data": "vm_name" },
+      { "data": "clone_name" },
+      { "data": "full_clone" },
+      { "data": "request_time" }
+    ],
+    "aoColumnDefs": [
+      {
+        "aTargets": [5],
+        "mData": null,
+        "mRender": function (data, type, full) {
+          return '<div class="btn-group" role="group" aria-label="..."> <button title="Approve" type="button" data-action="approve" class="btn btn-action btn-success" aria-label="Approve">\
+            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>\
+            </button> \
+            <button title="Reject" type="button" data-action="reject" class="btn btn-danger btn-action" aria-label="Reject">\
+            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>\
+            </button>\
+            </div>';
+        }
+      }
+    ],
+    "fnCreatedRow": function( nRow, aData, iDataIndex ) {
+      nRow.setAttribute('data-reqid',aData.id);
+    }
+  });
+
+
+  $requests.on('click','.btn-action', function(e) {
+    var id = this.closest('tr').getAttribute('data-reqid');
+    var action = this.getAttribute('data-action');
+    $.ajax({
+      'url': '/baadal/action/handle_clone_request.json',
+      'type': 'post',
+      'dataType' : 'json',
+      'data': {
+        'id':id,
+        'action': action
+      },
+      'error' : function(response) {
+        var error;
+        if (error = response.getResponseHeader('web2py_error')) {
+          baadalApp.generateTicketLink(error);
+        }
+      },
+      'success': function(response) {
+        if(response.status == 'success') {
+          $('#success-message').fadeIn(1000, function () {
+            $table.ajax.reload();
+            $(this).fadeOut();
+          });
+        } else {
+          $('#error-message').fadeIn();
+        }
+      }
+    });
+  });
+})();
+</script>
+{{include 'wrap.html'}}
