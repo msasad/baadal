@@ -1,6 +1,7 @@
 ﻿def __do(action, vmid):
     try:
-        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
+        conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                 session.password)
         if conn:
             vm = conn.find_baadal_vm(id=vmid)
             if vm:
@@ -25,7 +26,8 @@
                         snapshotid = vm.create_snapshot()
                         return jsonify(snapshotid=snapshotid)
                     except Exception as e:
-                        return jsonify(status='fail', message=e.message, action=action)
+                        return jsonify(status='fail', message=e.message,
+                                       action=action)
                 elif action == 'clone':
                     vm.clone()
                 elif action == 'poweroff':
@@ -89,7 +91,20 @@ def __snapshot(vmid):
 
 
 def __clone_vm(vmid):
-    return __do('clone', vmid)
+    import time
+    try:
+        db.clone_requests.insert(vm_id=request.vars.vmid,
+                                 request_time=int(time.time()),
+                                 user=session.username,
+                                 full_clone=1,
+                                 status=0
+                                 )
+        db.commit()
+        return jsonify()
+    except Exception as e:
+        logger.exception(e.message or str(e.__class__))
+        return jsonify(status='fail', message=e.message or str(e.__class__))
+    # return __do('clone', vmid)
 
 
 def __power_off(vmid):
@@ -103,8 +118,10 @@ def __restore_snapshot(vmid):
 def __get_vnc_console(vmid):
     return __do('get-vnc-console', vmid)
 
+
 def __get_spice_console(vmid):
     return __do('get-spice-console', vmid)
+
 
 def __migrate(vmid):
     return __do('migrate', vmid)
@@ -141,7 +158,7 @@ def index():
     elif action == 'restore-snapshot':
         return __restore_snapshot(vmid)
     elif action == 'migrate':
-        return  __migrate(vmid)
+        return __migrate(vmid)
 
 
 @auth.requires(user_is_project_admin)
@@ -170,11 +187,13 @@ def __finalize_vm(vm, extra_storage_size, public_ip_required=False):
     This function is specially meant to be run on a separate thread
     :param vm: BaadalVM object representing the newly created VM
     :param extra_storage_size: Integer size of extra disk to be attached
-    :param public_ip_required: Boolean value to indicate if the newly created VM requires floating ip
+    :param public_ip_required: Boolean value to indicate if the newly created
+        VM requires floating ip
     :return: None
     """
     try:
-        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
+        conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                 session.password)
         while vm.get_status() != 'Running' and vm.get_status() != 'Error':
             pass
 
@@ -202,12 +221,14 @@ def __finalize_vm(vm, extra_storage_size, public_ip_required=False):
 
 
 def __create():
-    try:  
-        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
+    try:
+        conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                 session.password)
         row = db(db.vm_requests.id == request.vars.id).select()[0]
         public_ip_required = row.public_ip_required
         extra_storage_size = row.extra_storage
-        vm = conn.create_baadal_vm(row.vm_name, row.image, row.flavor, [{'net-id': row.sec_domain}])
+        vm = conn.create_baadal_vm(row.vm_name, row.image, row.flavor,
+                                   [{'net-id': row.sec_domain}])
         """create port
                 attach floating IP to port
                 attach floating IP to VM
@@ -217,7 +238,8 @@ def __create():
             db.commit()
             if public_ip_required == 1 or extra_storage_size:
                 # __finalize_vm(vm, extra_storage_size, public_ip_required)
-                thread = FuncThread(__finalize_vm, vm, extra_storage_size, public_ip_required)
+                thread = FuncThread(__finalize_vm, vm, extra_storage_size,
+                                    public_ip_required)
                 thread.start()
                 pass
             return jsonify()
@@ -250,6 +272,7 @@ def __modify_request():
     except Exception as e:
         return jsonify(status='fail', message=str(e.__class__))
 
+
 def __faculty_approve():
     db(db.vm_requests.id == request.vars.id).update(state=1)
     return jsonify()
@@ -258,17 +281,21 @@ def __faculty_approve():
 @auth.requires(user_is_project_admin)
 def handle_account_request():
     try:
-        l = BaadalLDAP.BaadalLDAP(ldap_host, ldap_base_dn, ldap_admin_dn, ldap_admin_password)
+        l = BaadalLDAP.BaadalLDAP(ldap_host, ldap_base_dn, ldap_admin_dn,
+                                  ldap_admin_password)
         row = db(db.account_requests.id == request.vars.id).select()[0]
         username = row.username
         user_is_faculty = bool(row.faculty_privileges)
         password = row.password
         email = row.email
         userid = row.userid
-        l.add_user(username, userid, password, user_is_faculty=user_is_faculty, email=email)
-        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
+        l.add_user(username, userid, password, user_is_faculty=user_is_faculty,
+                   email=email)
+        conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                 session.password)
         conn.add_user_role(userid, _tenant, 'user')
-        row.update_record(approval_status = 1)
+        row.update_record(approval_status=1)
+        db.commit()
         return jsonify()
     except Exception as e:
         logger.error(e.message or str(e.__class__))
@@ -283,10 +310,34 @@ def handle_account_request():
 @auth.requires(user_is_project_admin)
 def handle_resize_request():
     try:
-        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
-        row = db(db.account_requests.id == request.vars.id).select()[0]
+        conn = Baadal.Connection(_authurl, _tenant, session.username
+                                 session.password)
+        row = db(db.resize_requests.id == request.vars.id).select()[0]
         vm = conn.find_baadal_vm(id=row.vm_id)
         vm.resize(row['new_flavor'])
+        row.update_record(status=1)
+        db.commit()
+    except Exception as e:
+        message = e.message or str(e.__class__)
+        logger.error(message)
+        return jsonify(status='fail', message=message)
+    finally:
+        try:
+            conn.close()
+        except:
+            pass
+
+
+@auth.requires(user_is_project_admin)
+def handle_clone_request():
+    try:
+        conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                 session.password)
+        row = db(db.clone_requests.id == request.vars.id).select()[0]
+        vm = conn.find_baadal_vm(id=row.vm_id)
+        vm.clone()
+        row.update_record(status=1)
+        db.commit()
     except Exception as e:
         message = e.message or str(e.__class__)
         logger.error(message)
