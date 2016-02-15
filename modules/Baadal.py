@@ -92,7 +92,7 @@ class BaadalVM(object):
             raise BaadalException(e.message or _UNKNOWN_ERROR_MSG)
         pass
     
-    def clone(self, clone_name=None, clone_type='Full'):
+    def clone(self, clone_name=None, full=False):
         """
         :param clone_name: name of the newly created clone instance (optional)
         :param clone_type: type of clone Full or Linked, defaults to Full (optional)
@@ -124,7 +124,7 @@ class BaadalVM(object):
                     attached_disks = self.get_attached_disks()
                     for i in attached_disks:
                         volid = i['id']
-                        if clone_type == 'Full':
+                        if full:
                             volume_clone = self.__conn.cinder.volumes.create(i['size'], source_volid=i['id'])
                             volid = volume_clone.id
                             while volume_clone.status != 'available':
@@ -133,7 +133,6 @@ class BaadalVM(object):
             return clone
         except Exception as e:
             raise BaadalException(e.message)
-        pass
 
     def create_snapshot(self, snapshot_name=None):
         try:
@@ -499,6 +498,9 @@ class Connection:
         except Exception as e:
             raise BaadalException("Could not create flavor" + e.message)
 
+    def get_tenant_id(self):
+        return self.__conn.keystone.session.get_project_id()
+
     def get_disk_by_id(self, diskid):
         if not self.__conn.cinder:
             raise BaadalException('Not connected to openstack cinder service')
@@ -548,7 +550,9 @@ class Connection:
         if not self.__conn.nova:
             raise BaadalException('Not connected to openstack nova service')
         try:
-            templates = self.__conn.nova.flavors.list(sort_key='memory_mb')
+            templates = self.__conn.nova.flavors.list()
+            ram = lambda template: template.ram
+            templates.sort(key=ram, reverse=True)
             return templates
         except Exception as e:
             raise BaadalException(e.message or str(e.__class__))
@@ -564,11 +568,11 @@ class Connection:
             raise BaadalException(e.message or str(e.__class__))
         pass
 
-    def sgroups(self, ):
+    def sgroups(self, **kwargs):
         if not self.__conn.neutron:
             raise BaadalException('Not connected to openstack neutron service')
         try:
-            sgroups = self.__conn.neutron.list_security_groups()
+            sgroups = self.__conn.neutron.list_security_groups(**kwargs)
             return sgroups
         except Exception as e:
             raise BaadalException(e.message or str(e.__class__))
@@ -668,9 +672,11 @@ class Connection:
         except Exception as e:
             raise BaadalException(e.message or str(e.__class__))
 
-    def create_security_group(self, sg_name):
+    def create_security_group(self, sg_name, description=None):
         try:
             security_group = {'name': sg_name}
+            if description:
+                security_group['description'] = description
             sg = self.__conn.neutron.create_security_group({'security_group': security_group})
             return sg
         except Exception as e:
