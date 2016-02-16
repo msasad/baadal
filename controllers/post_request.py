@@ -83,7 +83,7 @@ def register_user():
 @auth.requires_login()
 def request_clone():
     try:
-        db.clone_requests.insert(user=request.vars.user,
+        db.clone_requests.insert(
                 vm_id=request.vars.vmid,
                 request_time=int(time.time()),
                 user=session.username,
