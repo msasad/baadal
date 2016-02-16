@@ -28,7 +28,9 @@ $ neutron router-interface-add ROUTER_NAME SUBNET_NAME
 
 Create one security group each for all internal networks with the same name as of the networks.
 Create rules to allow all traffic between VMs for each security group.
-$ neutron security-group-rule-create --direction egress --ethertype IPv4 --remote-group-id vlan2 vlan2
+neutron security-group-create demo-net --description "allow internal traffic of vlan2"
+
+neutron security-group-rule-create --direction ingress --ethertype IPv4 --protocol tcp --port-range-min 80 --port-range-max 80 --remote-ip-prefix 0.0.0.0/0 demo-net
 
 Create other security groups and respective rules as required.
 For example, to open web access from VMs, create group golbal_http, write appropriate rules and
