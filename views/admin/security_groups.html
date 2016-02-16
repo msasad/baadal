@@ -4,11 +4,9 @@
     <table id="sgroups-table" class="table table-hover table-stripped table-condensed table-bordered">
       <thead>
       <tr>
-        <th>Network Name</th>
-        <th>State</th>
-        <th>Shared</th>
-        <th>External</th>
-        <th>Subnets</th>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Rules</th>
       </tr>
       </thead>
     </table>
@@ -19,9 +17,19 @@
 </div>
 
 {{include 'default-scripts.html'}}
+<script src="/baadal/static/js/datatables.min.js"></script>
+<script src="/baadal/static/js/dataTables.bootstrap.min.js"></script>
 <script>
   (function($) {
-
+    $table = $('#sgroups-table');
+    $table.DataTable({
+      ajax : '/baadal/admin/security_groups.json',
+      columns: [
+      { data: 'name' },
+      { data: 'description' },
+      { data: 'security_group_rules.length' }
+      ]
+    });
   })(jQuery);
 </script>
 {{include 'wrap.html'}}
