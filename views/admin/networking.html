@@ -17,7 +17,7 @@
     </table>
   </div>
   <div class="panel-footer">
-    <button class="btn btn-default" id="btn-add-network">Create new network</button>
+    <button class="btn btn-default" id="btn-add-network">New network</button>
   </div>
 </div>
 {{include 'default-scripts.html'}}
@@ -45,15 +45,17 @@
           aTargets:[4],
           mData: null,
           mRender: function(data, type, full) {
-            if (type === 'filter' || type === 'display') {
+            if ( type === 'display') {
               var subnets = data.subnets;
               var i, arr = [];
               for (i = subnets.length - 1; i >=0; i--) {
-                var str = '<a class="subnet-link" href="#" data-subnet="' + subnets[i].id + '">' + subnets[i].name + '</a>';
+                var str = '<a class="subnet-link" href="#" data-subnet="' +
+                  subnets[i].id + '">' + subnets[i].name + '</a>';
                 arr.push(str)
               }
-              return arr.join(', ') + '<button title="Add Subnet" class="btn btn-sm btn-default pull-right btn-add-subnet"><span class="glyphicon glyphicon-plus">' +
-                  '</span></button>';
+              return arr.join(', ') + '<button title="Add Subnet" ' + 
+                'class="btn btn-sm btn-default pull-right btn-add-subnet">' + 
+                '<span class="glyphicon glyphicon-plus"></span></button>';
             } else {
               return data;
             }
