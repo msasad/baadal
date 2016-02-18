@@ -159,6 +159,13 @@ def index():
         return __restore_snapshot(vmid)
     elif action == 'migrate':
         return __migrate(vmid)
+    elif action == 'add-virtual-disk':
+        return __add_virtual_disk(vmid)
+
+
+def __add_virtual_disk(vmid):
+    return jsonify()
+    pass
 
 
 @auth.requires(user_is_project_admin)
@@ -310,7 +317,7 @@ def handle_account_request():
 @auth.requires(user_is_project_admin)
 def handle_resize_request():
     try:
-        conn = Baadal.Connection(_authurl, _tenant, session.username
+        conn = Baadal.Connection(_authurl, _tenant, session.username,
                                  session.password)
         row = db(db.resize_requests.id == request.vars.id).select()[0]
         vm = conn.find_baadal_vm(id=row.vm_id)
