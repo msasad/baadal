@@ -661,8 +661,8 @@ class Connection:
             request_body['ip_version'] = int(ip_version)
             request_body['host_routes'] = host_routes
             if allocation_pool_end is not None:
-                request_body['allocation_pools'] =
-                [{'start': allocation_pool_start, 'end': allocation_pool_end}]
+                request_body['allocation_pools'] = [{'start': allocation_pool_start,
+                    'end': allocation_pool_end}]
 
             subnet = self.__conn.neutron.\
                 create_subnet(body={'subnet': request_body})
