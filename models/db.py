@@ -60,6 +60,31 @@ db.define_table('clone_requests',
         Field('status', 'integer')
         )
 
+db.define_table('floating_ip_requests',
+        Field('id', 'integer'),
+        Field('user', 'string', required=True),
+        Field('vmid', 'string', required=True),
+        Field('request_time', 'integer', requires=IS_INT_IN_RANGE(0,1)),
+        Field('status', 'integer')
+        )
+
+db.define_table('virtual_disk_requests',
+        Field('id', 'integer'),
+        Field('user', 'string', required=True),
+        Field('vmid', 'string', required=True),
+        Field('request_time', 'integer', requires=IS_INT_IN_RANGE(0,1)),
+        Field('status', 'integer'),
+        Field('disk_size', 'integer')
+        )
+
+db.define_table('vm_activity_log',
+        Field('id', 'integer'),
+        Field('vmid', 'string'),
+        Field('user', 'string'),
+        Field('task', 'string'),
+        Field('time', 'datetime')
+        )
+
 auth = Auth(db)
 auth.define_tables(username=True)
 auth.settings.login_methods.append(ldap_auth(mode='custom', username_attrib='uid',
