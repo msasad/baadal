@@ -12,7 +12,6 @@ def login_callback(form):
                 logger.error('Unable To Update User Info!!!')
 
 def fetch_ldap_user(username):
-
     ldap_url = config.get('ldap', 'ldap_host')
     base_dn = config.get('ldap', 'ldap_dn')
 
@@ -71,7 +70,6 @@ def fetch_ldap_user(username):
 
 
 def update_user_info(user_info):
-
     user_name = user_info['user_name']
     user = db(db.auth_user.username == user_name).select().first()
     
