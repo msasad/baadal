@@ -1,6 +1,8 @@
 import Baadal
 import ConfigParser
-import BaadalLDAP
+from BaadalLDAP import BaadalLDAP
+from BaadalMailer import BaadalMailer
+
 config = ConfigParser.ConfigParser()
 config.read('/etc/baadal/baadal.conf')
 _authurl = config.get('auth', 'authurl')
