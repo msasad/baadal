@@ -24,8 +24,13 @@ def new_vm():
                               request_time=int(time.time()),
                               state=vm_state
                               )
-        db.commit()
-        return jsonify(flavor=request.vars.config)
+        user_email = ldap.fetch_user_info(session.username)['user_email']
+        if mailer.send(mailer.MailTypes.VMRequest, user_email):
+            db.commit()
+            return jsonify()
+        else:
+            db.rollback()
+            raise Exception('Email sending failed')
     except Exception as e:
         logger.exception(e.message or str(e.__class__))
         return jsonify(status='fail', message=e.message or str(e.__class__))
