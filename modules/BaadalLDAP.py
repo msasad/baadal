@@ -45,3 +45,17 @@ class BaadalLDAP(object):
 
     def grant_user_roles(self, user_dn, project_name, role_name):
         pass
+
+    def fetch_user_info(self, user_id):
+        result = self.l.search_s(self.base_dn, ldap.SCOPE_SUBTREE, 'uid='+user_id)
+        if not result:
+            return False
+        try:
+            user_info = dict()
+            user_info['user_dn'] = result[0][0]
+            user_info['user_name'] = result[0][1]['cn'][0]
+            user_info['user_email'] = result[0][1]['email'][0]
+            user_info['user_id'] = result[0][1]['uid'][0]
+            return user_info
+        except:
+            return False
