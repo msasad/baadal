@@ -13,7 +13,17 @@ dbname = config.get('database', 'database')
 ldap_host = config.get('ldap', 'ldap_host')
 ldap_dn = config.get('ldap', 'ldap_dn')
 
-db = DAL('mysql://' + username + ':' + password + '@' + dbhost + '/' + dbname, fake_migrate_all=True)
+ldap = BaadalLDAP(ldap_host, ldap_base_dn, ldap_admin_dn,
+                             ldap_admin_password)
+
+mail_server = config.get('mail', 'server')
+mail_sender = config.get('mail', 'sender')
+mail_login = config.get('mail', 'login')
+
+mailer = BaadalMailer(mail_server, mail_sender, mail_login)
+
+db = DAL('mysql://' + username + ':' + password + '@' + dbhost + '/' + dbname,
+         fake_migrate_all=True)
 db.define_table('vm_requests',
                 Field('id', 'integer'),
                 Field('vm_name', 'string'),
@@ -92,8 +102,6 @@ auth.settings.login_methods.append(ldap_auth(mode='custom', username_attrib='uid
 auth.settings.create_user_groups = False
 auth.settings.login_onaccept = [login_callback]
 
-#auth.settings.login_url = '/baadal/user/login.html'
 auth.settings.remember_me_form = False
 auth.settings.logout_next = '/baadal/default/user/login'
 auth.settings.login_next = '/baadal/user/index'
-#auth.settings.on_failed_authorization = '/baadal/default/404.html'
