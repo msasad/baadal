@@ -1,5 +1,5 @@
 import time
-
+from gluon.tools import Storage
 
 @auth.requires_login()
 def new_vm():
@@ -25,7 +25,13 @@ def new_vm():
                               state=vm_state
                               )
         user_email = ldap.fetch_user_info(session.username)['user_email']
-        if mailer.send(mailer.MailTypes.VMRequest, user_email):
+        context = Storage()
+        context.username = session.username
+        context.user_email = user_email
+        context.vm_name = request.vars.vm_name
+        context.support_email = mail_support
+
+        if mailer.send(mailer.MailTypes.VMRequest, user_email, context):
             db.commit()
             return jsonify()
         else:
