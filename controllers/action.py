@@ -248,7 +248,14 @@ def __create():
                 thread = FuncThread(__finalize_vm, vm, extra_storage_size,
                                     public_ip_required)
                 thread.start()
-                pass
+            context = gluon.tools.Storage()
+            context.username = session.username
+            context.vm_name = row.vm_name
+            context.mail_support = mail_support
+            context.user_email = ldap.fetch_user_info(session.username)['user_email']
+            context.gateway_server = gateway_server
+            context.request_time = seconds_to_localtime(row.request_time)
+            mailer.send(mailer.MailTypes.VMCreated, context.user_email, context)
             return jsonify()
     except Baadal.BaadalException as e:
         logger.exception(e.message)
