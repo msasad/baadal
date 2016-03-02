@@ -1,4 +1,7 @@
-﻿def __do(action, vmid):
+﻿import gluon
+
+
+def __do(action, vmid):
     try:
         conn = Baadal.Connection(_authurl, _tenant, session.username,
                                  session.password)
@@ -252,10 +255,14 @@ def __create():
             context.username = session.username
             context.vm_name = row.vm_name
             context.mail_support = mail_support
-            context.user_email = ldap.fetch_user_info(session.username)['user_email']
+            context.user_email = ldap.\
+                    fetch_user_info(session.username)['user_email']
             context.gateway_server = gateway_server
             context.request_time = seconds_to_localtime(row.request_time)
             mailer.send(mailer.MailTypes.VMCreated, context.user_email, context)
+            db.vm_activity_log.insert(vmid=vm.id, user=session.username,
+                                      task='create')
+            db.commit()
             return jsonify()
     except Baadal.BaadalException as e:
         logger.exception(e.message)
