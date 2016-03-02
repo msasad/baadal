@@ -37,7 +37,7 @@ class BaadalMailer(object):
                     " Password:baadal\n\n To access VM using assigned private" \
                     " IP; SSH to baadal gateway machine using your GCL" \
                     " credential .\n username@{0[gateway_server]}\n For other"\
-                    " details, Please login to baadal WEB interface."
+                    " details, Please login to Baadal web interface."
 
 
         class TaskComplete(object):
@@ -61,7 +61,7 @@ class BaadalMailer(object):
                     "Kindly use the VM/delete the VM if not required. \n\ If no"\
                     "action is taken on the VM, the VM will be automatically"\
                     "deleted on {0[vmActionDate]}. \n\n For other details,"\
-                    "Please login to baadal WEB interface."
+                    "Please login to Baadal web interface."
 
         class ShutdownBaadal(object):
             subject = 'Baadal Shutdown notice'
