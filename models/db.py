@@ -95,7 +95,8 @@ db.define_table('vm_activity_log',
         Field('vmid', 'string'),
         Field('user', 'string'),
         Field('task', 'string'),
-        Field('time', 'datetime')
+        Field('time', 'datetime'),
+        Field('remarks', 'string')
         )
 
 auth = Auth(db)
