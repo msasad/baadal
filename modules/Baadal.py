@@ -50,7 +50,7 @@ class BaadalVM(object):
                 self.__conn = conn
 
         self.name = self.server.name
-        self.id = None
+        self.id = self.server.id
         self.identity = None
         self.hostid = None
         self.vnc_port = None
