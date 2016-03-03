@@ -65,7 +65,6 @@ class BaadalVM(object):
 
     def attach_disk(self, disk, device_path):
         """
-
         :param disk: instance of disk to be attached
         :param device_path: path in the system where the disk is to be attached
         :return:
