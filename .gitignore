@@ -4,10 +4,12 @@ databases
 errors
 sessions
 log
+cron
 
 # inherit https://github.com/github/gitignore/blob/master/Python.gitignore
 
 *.py[co]
+*.pythonhistory
 
 # Packages
 *.egg
