@@ -22,6 +22,7 @@ mail_login = config.get('mail', 'login')
 mail_support = config.get('mail', 'support')
 
 gateway_server = config.get('misc', 'gateway_server')
+default_keypair = config.get('misc', 'default_keypair')
 
 mailer = BaadalMailer(mail_server, mail_sender, mail_login)
 
