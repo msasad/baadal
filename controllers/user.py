@@ -66,6 +66,8 @@ def my_requests():
         i['request_time'] = seconds_to_localtime(i['request_time'])
         i['public_ip_required'] = 'Required' if i['public_ip_required'] == 1 \
             else 'Not Required'
+        STATES = ['Pending', 'Pending Admin Approval', 'Approved']
+        i['state'] = STATES[i['state']]
     return jsonify(data=l)
 
 
