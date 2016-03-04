@@ -11,11 +11,11 @@ class BaadalLDAP(object):
     def fetch_all_users(self, enabled_users_only=True):
         pass
 
-    def add_user(self, username, userid, password, email, user_is_faculty=False, email=None,sn=None, user_is_enabled=True):
+    def add_user(self, username, userid, password, email, user_is_faculty=False,
+                 sn=None, user_is_enabled=True):
         # TODO: Hash password before storing
         ou = 'People'
         enabled_user_group = 'cn=enabled_users,ou=Groups,%s' % self.base_dn
-        faculty_group = 'cn=faculties,ou=Groups,%s' % self.base_dn
         user_dn = 'uid=%s,ou=%s,%s' % (userid, ou, self.base_dn)
         user_attributes = [('email', [email]), ('cn', [username]), ('userPassword', [password]),('objectClass',['top','account','extensibleObject'])]
         self.l.add_s(user_dn, user_attributes)
@@ -63,4 +63,9 @@ class BaadalLDAP(object):
     def user_is_faculty(self, user_id):
         # check if user is a member of faculty group
         # return true or false accordingly
-        pass
+        faculty_group = 'cn=faculties,ou=Groups,%s' % self.base_dn
+        query = '(member=uid=%s,ou=People,%s)' % (user_id, self.base_dn)
+        result = self.l.search_s(self.base_dn, ldap.SCOPE_SUBTREE, query,
+                                 attrlist=['dn'])
+        group_list = [i[0] for i in result]
+        return group_list.__contains__(faculty_group)
