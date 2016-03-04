@@ -71,6 +71,14 @@ Configure keystone to use LDAP for identity
 To implement custom access control
     - configure /etc/nova/policy.json file to allow all users to list, start, shutdown VM owned by any user
 
+The following metadata needs to be attached to each image
+  1         os-name,
+  2         os-version,
+  3         os-arch,
+  4         disk-size,
+  5         os-edition, (desktop/server)
+Use the glance image-update command to attach metadata
+
 Client Packages:
     - The following versions of client packages are verified to work together
         python-barbicanclient (3.0.2)
