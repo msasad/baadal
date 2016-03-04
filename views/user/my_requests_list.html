@@ -99,6 +99,7 @@
                 <th>Security Domain</th>
                 <th>Request Time</th>
                 <th>Collaborators</th>
+                <th>State</th>
                 <th>Actions</th>
                 <!--<th>Purpose</th> -->
             </tr>
@@ -128,11 +129,12 @@
       { "data": "public_ip_required" },
       { "data": "sec_domain" },
       { "data": "request_time" },
-      { "data": "collaborators" }
+      { "data": "collaborators" },
+      { "data": "state" }
     ],
     "aoColumnDefs": [
       {
-        "aTargets": [7],
+        "aTargets": [8],
         "mData": null,
         "mRender": function (data, type, full) {
           return '<div class="btn-group" role="group" aria-label="..."> \
