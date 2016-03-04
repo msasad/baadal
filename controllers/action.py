@@ -302,15 +302,13 @@ def __faculty_approve():
 @auth.requires(user_is_project_admin)
 def handle_account_request():
     try:
-        l = BaadalLDAP.BaadalLDAP(ldap_host, ldap_base_dn, ldap_admin_dn,
-                                  ldap_admin_password)
         row = db(db.account_requests.id == request.vars.id).select()[0]
         username = row.username
         user_is_faculty = bool(row.faculty_privileges)
         password = row.password
         email = row.email
         userid = row.userid
-        l.add_user(username, userid, password, user_is_faculty=user_is_faculty,
+        ldap.add_user(username, userid, password, user_is_faculty=user_is_faculty,
                    email=email)
         conn = Baadal.Connection(_authurl, _tenant, session.username,
                                  session.password)
