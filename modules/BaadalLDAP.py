@@ -17,7 +17,9 @@ class BaadalLDAP(object):
         ou = 'People'
         enabled_user_group = 'cn=enabled_users,ou=Groups,%s' % self.base_dn
         user_dn = 'uid=%s,ou=%s,%s' % (userid, ou, self.base_dn)
-        user_attributes = [('email', [email]), ('cn', [username]), ('userPassword', [password]),('objectClass',['top','account','extensibleObject'])]
+        user_attributes = [('email', [email]), ('cn', [username]),
+                ('userPassword', [password]),
+                ('objectClass',['top','account','extensibleObject'])]
         self.l.add_s(user_dn, user_attributes)
         if user_is_enabled:
             # TODO: add user to enabled users group
@@ -61,8 +63,6 @@ class BaadalLDAP(object):
             return False
 
     def user_is_faculty(self, user_id):
-        # check if user is a member of faculty group
-        # return true or false accordingly
         faculty_group = 'cn=faculties,ou=Groups,%s' % self.base_dn
         query = '(member=uid=%s,ou=People,%s)' % (user_id, self.base_dn)
         result = self.l.search_s(self.base_dn, ldap.SCOPE_SUBTREE, query,
