@@ -473,8 +473,8 @@ class Connection:
             raise BaadalException('Not connected to openstack nova service')
         try:
             sec_group = self._network_name_from_id(nics[0]['net-id'])
-            server = self.__conn.nova.servers.create(name, image, template, nics=nics, security_groups=[sec_group],
-                                                     **kwargs)
+            server = self.__conn.nova.servers.create(name, image, template,
+                    nics=nics, security_groups=[sec_group], **kwargs)
             return BaadalVM(server=server, conn=self.__conn)
         # except AttributeError as e:
         #    if e.message == "'SessionClient' object has no attribute 'last_request_id'":
