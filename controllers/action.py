@@ -238,7 +238,7 @@ def __create():
         public_ip_required = row.public_ip_required
         extra_storage_size = row.extra_storage
         vm = conn.create_baadal_vm(row.vm_name, row.image, row.flavor,
-                                   [{'net-id': row.sec_domain}])
+                                   [{'net-id': row.sec_domain}], key_name=default_keypair)
         """create port
                 attach floating IP to port
                 attach floating IP to VM
