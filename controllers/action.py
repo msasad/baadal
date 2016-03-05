@@ -238,7 +238,8 @@ def __create():
         public_ip_required = row.public_ip_required
         extra_storage_size = row.extra_storage
         vm = conn.create_baadal_vm(row.vm_name, row.image, row.flavor,
-                                   [{'net-id': row.sec_domain}], key_name=default_keypair)
+                                   [{'net-id': row.sec_domain}],
+                                   key_name=default_keypair)
         """create port
                 attach floating IP to port
                 attach floating IP to VM
@@ -255,11 +256,12 @@ def __create():
             context.username = session.username
             context.vm_name = row.vm_name
             context.mail_support = mail_support
-            context.user_email = ldap.\
-                    fetch_user_info(session.username)['user_email']
+            user_info = ldap.fetch_user_info(session.username)
+            context.user_email = user_info['user_email']
             context.gateway_server = gateway_server
             context.request_time = seconds_to_localtime(row.request_time)
-            mailer.send(mailer.MailTypes.VMCreated, context.user_email, context)
+            mailer.send(mailer.MailTypes.VMCreated, context.user_email,
+                        context)
             db.vm_activity_log.insert(vmid=vm.id, user=session.username,
                                       task='create')
             db.commit()
@@ -308,8 +310,8 @@ def handle_account_request():
         password = row.password
         email = row.email
         userid = row.userid
-        ldap.add_user(username, userid, password, user_is_faculty=user_is_faculty,
-                   email=email)
+        ldap.add_user(username, userid, password,
+                      user_is_faculty=user_is_faculty, email=email)
         conn = Baadal.Connection(_authurl, _tenant, session.username,
                                  session.password)
         conn.add_user_role(userid, _tenant, 'user')
