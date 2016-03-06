@@ -6,11 +6,12 @@ import gluon
 def pending_requests():
     rows = db(db.vm_requests.state < 2).select()
     l = rows.as_list()
+    pub_ip = 'public_ip_required'
     for i in l:
         i['flavor'] = flavor_info(i['flavor'])
         i['sec_domain'] = network_name_from_id(i['sec_domain'])
         i['request_time'] = seconds_to_localtime(i['request_time'])
-        i['public_ip_required'] = 'Required' if i['public_ip_required'] == 1 else 'Not Required'
+        i[pub_ip] = 'Required' if i[pub_ip] == 1 else 'Not Required'
     return json.dumps({'data': l})
     pass
 
@@ -18,7 +19,8 @@ def pending_requests():
 @auth.requires(user_is_project_admin)
 def networks():
     try:
-        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
+        conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                 session.password)
         networklist = conn.networks()['networks']
         for network in networklist:
             network['subnets'] = conn.subnets(network['id'])['subnets']
@@ -36,7 +38,8 @@ def networks():
 @auth.requires(user_is_project_admin)
 def subnets():
     try:
-        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
+        conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                 session.password)
         subnet_list = conn.subnets(request.vars.netid)
         return jsonify(data=subnet_list)
     except Exception as e:
@@ -55,10 +58,11 @@ def security_groups():
         return dict()
     elif request.extension == 'json':
         try:
-            conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
+            conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                     session.password)
             tenant_id = conn.get_tenant_id()
-            secgroupslist = conn.sgroups(tenant_id=tenant_id)['security_groups']
-            return jsonify(data=secgroupslist)
+            sgroupslist = conn.sgroups(tenant_id=tenant_id)['security_groups']
+            return jsonify(data=sgroupslist)
         except Exception as e:
             logger.error(e.message)
             return jsonify(status='fail')
@@ -72,7 +76,8 @@ def security_groups():
 @auth.requires(user_is_project_admin)
 def hostinfo():
     try:
-        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
+        conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                 session.password)
         hostid = request.vars.id
         hypervisors = conn.hypervisors(id=hostid)
         return jsonify(data=[h.to_dict() for h in hypervisors])
@@ -89,7 +94,8 @@ def hostinfo():
 @auth.requires(user_is_project_admin)
 def hostaction():
     try:
-        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
+        conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                 session.password)
         hostname = request.vars.hostname
         action = request.vars.action
         conn.nova.hosts.host_action(hostname, action)
@@ -106,14 +112,16 @@ def hostaction():
 @auth.requires(user_is_project_admin)
 def all_vms():
     try:
-        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
+        conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                 session.password)
         vms = conn.baadal_vms(True)
         response = list()
         for vm in vms:
             vm_properties = vm.properties()
             snapshots = vm.properties()['snapshots']
+            STR = 'created'
             for i in range(0, len(snapshots)):
-                snapshots[i]['created'] = convert_timezone(snapshots[i]['created'])
+                snapshots[i][STR] = convert_timezone(snapshots[i][STR])
             vm_properties['snapshots'] = snapshots
             response.append(vm_properties)
         return jsonify(data=response)
@@ -130,7 +138,8 @@ def all_vms():
 @auth.requires(user_is_project_admin)
 def create_subnet():
     try:
-        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
+        conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                 session.password)
         logger.info(request.vars)
 
         gateway_ip = None
@@ -138,7 +147,7 @@ def create_subnet():
             if IS_IPV4()(request.vars.gateway_ip):
                 gateway_ip = request.vars.gateway_ip
             else:
-                # TODO add each erroneous value to a list and return it to client
+                # TODO add each erroneous value to a list and return it
                 pass
 
         if request.vars.nameservers != '':
@@ -149,19 +158,25 @@ def create_subnet():
         else:
             nslist = None
 
-        routes_list = str_to_route_list(request.vars.static_routes) if request.vars.static_routes != '' else None
+        routes_list = str_to_route_list(request.vars.static_routes)\
+            if request.vars.static_routes != '' else None
 
         if request.vars.allocation_pool != '':
-            allocation_pool_start, allocation_pool_end = request.vars.allocation_pool.translate(None, ' ').split('-')
+            allocation_pool = request.vars.allocation_pool.\
+                    translate(None, ' ').split('-')
         else:
-            allocation_pool_end = allocation_pool_start = None
+            allocation_pool = [None, None]
 
-        subnet = conn.create_subnet(name=request.vars.subnet_name, network_id=request.vars.net_id,
-                                    cidr=request.vars.cidr, ip_version=request.vars.ip_version,
-                                    gateway_ip=gateway_ip, enable_dhcp=request.vars.dhcp_enabled,
-                                    dns_nameservers=nslist, host_routes=routes_list,
-                                    allocation_pool_start=allocation_pool_start,
-                                    allocation_pool_end=allocation_pool_end)
+        subnet = conn.create_subnet(name=request.vars.subnet_name,
+                                    network_id=request.vars.net_id,
+                                    cidr=request.vars.cidr,
+                                    ip_version=request.vars.ip_version,
+                                    gateway_ip=gateway_ip,
+                                    enable_dhcp=request.vars.dhcp_enabled,
+                                    dns_nameservers=nslist,
+                                    host_routes=routes_list,
+                                    allocation_pool_start=allocation_pool[0],
+                                    allocation_pool_end=allocation_pool[1])
         return jsonify(data=subnet)
     except Exception as e:
         logger.exception(e.message or str(e.__class__))
@@ -184,15 +199,21 @@ def __validate_ips(string, replace='\r\n', delim=':'):
 @auth.requires(user_is_project_admin)
 def create_network():
     try:
-        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
-        network = conn.create_network(request.vars.net_name, request.vars.segmentation_id,
-                                      shared=request.vars.shared, external=request.vars.external,
+        conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                 session.password)
+        network = conn.create_network(request.vars.net_name,
+                                      request.vars.segmentation_id,
+                                      shared=request.vars.shared,
+                                      external=request.vars.external,
                                       admin_state_up=request.vars.network_up)
 
         try:
-            sg_id = conn.create_security_group(request.vars.net_name)['security_group']['id']
-            conn.create_security_group_rule(sg_id=sg_id, direction='egress', remote_group=sg_id)
-            conn.create_security_group_rule(sg_id=sg_id, direction='ingress', remote_group=sg_id)
+            sg = conn.create_security_group(request.vars.net_name)
+            sg_id = sg['security_group']['id']
+            conn.create_security_group_rule(sg_id=sg_id, direction='egress',
+                                            remote_group=sg_id)
+            conn.create_security_group_rule(sg_id=sg_id, direction='ingress',
+                                            remote_group=sg_id)
         except Exception as e:
             logger.error('Failed to create Security group for new network')
             logger.exception(e.message or str(e.__class__))
@@ -239,11 +260,12 @@ def account_requests():
     if request.extension in ('', None, 'html'):
         return dict()
     elif request.extension == 'json':
-        rows = db(db.account_requests.approval_status==0).select()
+        rows = db(db.account_requests.approval_status == 0).select()
         l = rows.as_list()
         for i in l:
             i['request_time'] = seconds_to_localtime(i['request_time'])
-            i['faculty_privileges'] = 'Yes' if i['faculty_privileges'] else 'No'
+            FP = 'faculty_privileges'
+            i[FP] = 'Yes' if i[FP] else 'No'
         return jsonify(data=l)
 
 
@@ -262,19 +284,23 @@ def resize_requests():
             # request_time
             rows = db(db.resize_requests.status == 0).select()
             l = rows.as_list()
-            conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
+            conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                     session.password)
             for i in l:
                 i['request_time'] = seconds_to_localtime(i['request_time'])
                 vm = conn.find_baadal_vm(id=i['vm_id'])
                 i['vm_name'] = vm.name
-                template = conn.find_template(id=vm.server.flavor['id'])
-                i['current_config'] = 'RAM : %s, vCPUs: %s' % (template.ram, template.vcpus)
-                template = conn.find_template(id=i['new_flavor'])
-                i['requested_config'] = 'RAM : %s, vCPUs: %s' % (template.ram, template.vcpus)
+                templ = conn.find_template(id=vm.server.flavor['id'])
+                i['current_config'] = 'RAM : %s, vCPUs: %s' % (templ.ram,
+                                                               templ.vcpus)
+                templ = conn.find_template(id=i['new_flavor'])
+                i['requested_config'] = 'RAM : %s, vCPUs: %s' % (templ.ram,
+                                                                 templ.vcpus)
             return jsonify(data=l)
         except Exception as e:
             logger.error(e.message or str(e.__class__))
-            return jsonify(status='fail', message= e.message or str(e.__class__))
+            return jsonify(status='fail',
+                           message=e.message or str(e.__class__))
         finally:
             try:
                 conn.close()
@@ -290,7 +316,8 @@ def clone_requests():
         try:
             rows = db(db.clone_requests.status == 0).select()
             l = rows.as_list()
-            conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
+            conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                     session.password)
             for i in l:
                 i['request_time'] = seconds_to_localtime(i['request_time'])
                 vm = conn.find_baadal_vm(id=i['vm_id'])
@@ -299,7 +326,8 @@ def clone_requests():
             return jsonify(data=l)
         except Exception as e:
             logger.error(e.message or str(e.__class__))
-            return jsonify(status='fail', message= e.message or str(e.__class__))
+            return jsonify(status='fail',
+                           message=e.message or str(e.__class__))
         finally:
             try:
                 conn.close()

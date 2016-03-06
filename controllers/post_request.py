@@ -1,24 +1,27 @@
 import time
 from gluon.tools import Storage
 
+
 @auth.requires_login()
 def new_vm():
     try:
-        if ('faculty' in auth.user_groups.values()) or ('admin' in auth.user_groups.values()):
+        if ('faculty' in auth.user_groups.values()) or
+        ('admin' in auth.user_groups.values()):
             owner_id = session.username
             vm_state = 1
         else:
             owner_id = request.vars.faculty
             vm_state = 0
 
-        db.vm_requests.insert(vm_name=request.vars.vm_name, 
+        public_ip_required = 1 if request.vars.public_ip == 'yes' else 0
+        db.vm_requests.insert(vm_name=request.vars.vm_name,
                               flavor=request.vars.config,
-                              sec_domain=request.vars.sec_domain, 
+                              sec_domain=request.vars.sec_domain,
                               image=request.vars.template,
-                              owner=owner_id, 
-                              requester=session.username, 
+                              owner=owner_id,
+                              requester=session.username,
                               purpose=request.vars.purpose,
-                              public_ip_required=1 if request.vars.public_ip == 'yes' else 0,
+                              public_ip_required=public_ip_required,
                               extra_storage=request.vars.storage,
                               collaborators=request.vars.collaborators,
                               request_time=int(time.time()),
@@ -60,10 +63,10 @@ def modify_request():
 def request_resize():
     try:
         db.resize_requests.insert(vm_name=request.vars.vm_name,
-                vm_id=request.vars.vmid,
-                new_flavor=request.vars.new_flavor,
-                request_time=int(time.time())
-                )
+                                  vm_id=request.vars.vmid,
+                                  new_flavor=request.vars.new_flavor,
+                                  request_time=int(time.time())
+                                  )
         db.commit()
         return jsonify()
     except Exception as e:
@@ -79,17 +82,18 @@ def register_user():
         except Exception:
             pass
         db.account_requests.insert(username=request.vars.username,
-                userid=request.vars.userid,
-                password=request.vars.password,
-                email=request.vars.email,
-                faculty_privileges=faculty_privileges,
-                request_time=int(time.time()),
-                approval_status=0
-                )
+                                   userid=request.vars.userid,
+                                   password=request.vars.password,
+                                   email=request.vars.email,
+                                   faculty_privileges=faculty_privileges,
+                                   request_time=int(time.time()),
+                                   approval_status=0
+                                   )
         return jsonify()
     except Exception as e:
         logger.exception(e.message or str(e.__class__))
         return jsonify(status='fail', message=e.message or str(e.__class__))
+
 
 @auth.requires_login()
 def request_clone():
