@@ -16,4 +16,3 @@ ldap_admin_password = config.get('ldap', 'ldap_admin_password')
 
 # FIXME Remove this line
 EXTERNAL_NETWORK = config.get('misc', 'external_network_name')
-
