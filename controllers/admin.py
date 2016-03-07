@@ -163,7 +163,7 @@ def create_subnet():
 
         if request.vars.allocation_pool != '':
             allocation_pool = request.vars.allocation_pool.\
-                    translate(None, ' ').split('-')
+                translate(None, ' ').split('-')
         else:
             allocation_pool = [None, None]
 

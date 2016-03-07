@@ -13,7 +13,7 @@ def configs():
                     'id': d['id'],
                     'ram': d['ram'],
                     'vcpus': d['vcpus']
-                    })
+                })
             return json.dumps(values)
     except Exception as e:
         logger.error(e.message)

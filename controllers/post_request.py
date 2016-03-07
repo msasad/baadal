@@ -99,12 +99,12 @@ def register_user():
 def request_clone():
     try:
         db.clone_requests.insert(
-                vm_id=request.vars.vmid,
-                request_time=int(time.time()),
-                user=session.username,
-                full_clone=1,
-                status=0
-                )
+            vm_id=request.vars.vmid,
+            request_time=int(time.time()),
+            user=session.username,
+            full_clone=1,
+            status=0
+        )
         db.commit()
         return jsonify()
     except Exception as e:
