@@ -2,7 +2,9 @@
 
 import ldap
 
+
 class BaadalLDAP(object):
+
     def __init__(self, ldap_host, base_dn, admin_dn, admin_passwd):
         self.l = ldap.open(ldap_host)
         self.l.simple_bind(admin_dn, admin_passwd)
@@ -18,14 +20,14 @@ class BaadalLDAP(object):
         enabled_user_group = 'cn=enabled_users,ou=Groups,%s' % self.base_dn
         user_dn = 'uid=%s,ou=%s,%s' % (userid, ou, self.base_dn)
         user_attributes = [('email', [email]), ('cn', [username]),
-                ('userPassword', [password]),
-                ('objectClass',['top','account','extensibleObject'])]
+                           ('userPassword', [password]),
+                           ('objectClass', ['top', 'account', 'extensibleObject'])]
         self.l.add_s(user_dn, user_attributes)
         if user_is_enabled:
             # TODO: add user to enabled users group
             attributes = [(ldap.MOD_ADD, 'member', user_dn)]
             self.l.modify(enabled_user_group, attributes)
-        
+
         if user_is_faculty:
             self.grant_faculty_role(user_dn)
 
@@ -49,7 +51,8 @@ class BaadalLDAP(object):
         pass
 
     def fetch_user_info(self, user_id):
-        result = self.l.search_s(self.base_dn, ldap.SCOPE_SUBTREE, 'uid='+user_id)
+        result = self.l.search_s(
+            self.base_dn, ldap.SCOPE_SUBTREE, 'uid=' + user_id)
         if not result:
             return False
         try:

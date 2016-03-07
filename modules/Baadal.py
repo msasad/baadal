@@ -5,45 +5,48 @@ _EXTERNAL_NETWORK = 'ext-net'
 _UNKNOWN_ERROR_MSG = 'Unknown Error'
 TIMEZONE = 'Asia/Kolkata'
 USAGE_PARAMS = {
-                'free_storage': 'free_disk_gb',
-                'used_storage': 'local_gb_used',
-                'total_storage': 'local_gb',
-                'free_memory': 'free_ram_mb',
-                'used_memory': 'memory_mb_used',
-                'total_memory': 'memory_mb',
-                'total_vms': 'running_vms',
-                'load_avg': 'current_workload',
+    'free_storage': 'free_disk_gb',
+    'used_storage': 'local_gb_used',
+    'total_storage': 'local_gb',
+    'free_memory': 'free_ram_mb',
+    'used_memory': 'memory_mb_used',
+    'total_memory': 'memory_mb',
+    'total_vms': 'running_vms',
+    'load_avg': 'current_workload',
                 'vcpus': 'vcpus',
                 'vcpus_used': 'vcpus_used'
-        }
+}
 
 STATUS = {
-                'ACTIVE': 'Running',
-                'SHUTOFF': 'Shutdown',
-                'PAUSED': 'Paused',
-                'BUILD': 'Building',
-                'ERROR': 'Error',
-                'VERIFY_RESIZE': 'Resizing'
-        }
+    'ACTIVE': 'Running',
+    'SHUTOFF': 'Shutdown',
+    'PAUSED': 'Paused',
+    'BUILD': 'Building',
+    'ERROR': 'Error',
+    'VERIFY_RESIZE': 'Resizing'
+}
 
 
 class Machine:
+
     def __init__(self, ):
         self.hostname = ""
         self.config = {
-                'memory': None,
-                'storage': None,
-                'extra_storage': None,
-                'cpu': None,
-                'private_ip': None,
-                'public_ip': None
+            'memory': None,
+            'storage': None,
+            'extra_storage': None,
+            'cpu': None,
+            'private_ip': None,
+            'public_ip': None
         }
 
 
 class BaadalVM(object):
+
     def __init__(self, vmid=None, server=None, conn=None):
         if vmid is not None and server is not None:
-            raise BaadalException('Cannot initialise server, please specify either server or id')
+            raise BaadalException(
+                'Cannot initialise server, please specify either server or id')
         else:
             if str(type(server)).endswith("novaclient.v2.servers.Server'>"):
                 self.server = server
@@ -70,15 +73,18 @@ class BaadalVM(object):
         :return:
         """
         try:
-            self.__conn.nova.volumes.create_server_volume(self.server.id, disk.id, device_path)
+            self.__conn.nova.volumes.create_server_volume(
+                self.server.id, disk.id, device_path)
             return True
         except Exception as e:
             raise BaadalException(e.message or _UNKNOWN_ERROR_MSG)
 
     def attach_floating_ip(self, floatingip=None, fixed_address=None):
         if floatingip is None:
-            netid = self.__conn.neutron.list_networks(name=_EXTERNAL_NETWORK)['networks'][0]['id']
-            floatingip = self.__conn.neutron.create_floatingip(body={'floatingip': {'floating_network_id': netid}})
+            netid = self.__conn.neutron.list_networks(name=_EXTERNAL_NETWORK)[
+                'networks'][0]['id']
+            floatingip = self.__conn.neutron.create_floatingip(
+                body={'floatingip': {'floating_network_id': netid}})
         floatingipaddress = floatingip['floatingip']['floating_ip_address']
         self.server.add_floating_ip(floatingipaddress, fixed_address)
         pass
@@ -90,7 +96,7 @@ class BaadalVM(object):
         except Exception as e:
             raise BaadalException(e.message or _UNKNOWN_ERROR_MSG)
         pass
-    
+
     def clone(self, clone_name=None, full=False):
         """
         :param clone_name: name of the newly created clone instance (optional)
@@ -124,24 +130,28 @@ class BaadalVM(object):
                     for i in attached_disks:
                         volid = i['id']
                         if full:
-                            volume_clone = self.__conn.cinder.volumes.create(i['size'], source_volid=i['id'])
+                            volume_clone = self.__conn.cinder.volumes.create(
+                                i['size'], source_volid=i['id'])
                             volid = volume_clone.id
                             while volume_clone.status != 'available':
-                                volume_clone = self.__conn.cinder.volumes.get(volume_clone.id)
-                        self.__conn.nova.volumes.create_server_volume(clone.id, volid, i['path'])
+                                volume_clone = self.__conn.cinder.volumes.get(
+                                    volume_clone.id)
+                        self.__conn.nova.volumes.create_server_volume(
+                            clone.id, volid, i['path'])
             return clone
         except Exception as e:
             raise BaadalException(e.message)
 
     def create_snapshot(self, snapshot_name=None):
         try:
-            snapshot_name = snapshot_name or self.server.name + "snapshot" + datetime.datetime.now().isoformat()
+            snapshot_name = snapshot_name or self.server.name + \
+                "snapshot" + datetime.datetime.now().isoformat()
             snapshot_id = self.server.create_image(snapshot_name)
             return snapshot_id
         except Exception as e:
             raise BaadalException(e)
         pass
-    
+
     def delete(self, ):
         try:
             res = self.server.delete()
@@ -151,7 +161,8 @@ class BaadalVM(object):
         pass
 
     def get_attached_disks(self, ):
-        volume_ids = self.server.__getattr__('os-extended-volumes:volumes_attached')
+        volume_ids = self.server.__getattr__(
+            'os-extended-volumes:volumes_attached')
         disk_list = []
         for i in volume_ids:
             volume = self.__conn.cinder.volumes.find(id=i['id'])
@@ -163,7 +174,7 @@ class BaadalVM(object):
                         'size': volume.size,
                         'id': i['id'],
                         'path': devicepath
-                        })
+                    })
                     pass
             pass
         return disk_list
@@ -240,7 +251,7 @@ class BaadalVM(object):
         properties['name'] = self.server.name
         properties['status'] = self.get_status()
         properties['ip-addresses'] = []
-        for (network, addresses) in server_properties['addresses'].iteritems():            
+        for (network, addresses) in server_properties['addresses'].iteritems():
             for address in addresses:
                 properties['ip-addresses'].append({
                     'network': network, 'address': address['addr'], 'MAC': address['OS-EXT-IPS-MAC:mac_addr']})
@@ -254,11 +265,13 @@ class BaadalVM(object):
         snapshots = self.get_snapshots()
         l = []
         for snapshot in snapshots:
-            l.append({'id': snapshot.id, 'created': snapshot.created, 'name': snapshot.name})
+            l.append({'id': snapshot.id, 'created': snapshot.created,
+                      'name': snapshot.name})
         properties['snapshots'] = l
 
         if self.__conn.user_is_project_admin:
-            properties['hostname'] = self.server.__getattr__('OS-EXT-SRV-ATTR:hypervisor_hostname')
+            properties['hostname'] = self.server.__getattr__(
+                'OS-EXT-SRV-ATTR:hypervisor_hostname')
             userid = self.server.user_id
             username = self.__conn.keystone.users.get(userid)
             if username:
@@ -303,7 +316,8 @@ class BaadalVM(object):
 
     def restore_snapshot(self, snapshot_id, password=None, preserve_ephemeral=False, **kwargs):
         try:
-            self.server.rebuild(snapshot_id, password=password, preserve_ephemeral=preserve_ephemeral, **kwargs)
+            self.server.rebuild(snapshot_id, password=password,
+                                preserve_ephemeral=preserve_ephemeral, **kwargs)
         except Exception as e:
             raise BaadalException(e.message or str(e.__class__))
 
@@ -318,7 +332,7 @@ class BaadalVM(object):
         except Exception as e:
             raise BaadalException(e)
         pass
-        
+
     def start(self, ):
         """
         starts the virtual machine,
@@ -345,18 +359,20 @@ class Connection:
     """
     A wrapper class for objects of novaclient, neutronclient, cinderclient and keystoneclient
     """
+
     def __init__(self, authurl, tenant_name, username, password):
         from keystoneclient.auth.identity import v2
         from keystoneclient import session
         from keystoneclient.v2_0 import client as ksclient
         from novaclient import client
         from neutronclient.neutron import client as nclient
-        from cinderclient import client as cclient 
+        from cinderclient import client as cclient
         auth = v2.Password(auth_url=authurl, user_id=username,
                            password=password, tenant_name=tenant_name)
         sess = session.Session(auth=auth)
 
         class ConnectionWrapper:
+
             def __init__(self, nova, cinder, neutron, keystone):
                 self.nova = nova
                 self.neutron = neutron
@@ -371,7 +387,8 @@ class Connection:
         del ConnectionWrapper
 
         self.userid = self.__conn.nova.client.get_user_id()
-        self.user_is_project_admin = self.__conn.user_is_project_admin = bool(self.get_user_roles().count('admin'))
+        self.user_is_project_admin = self.__conn.user_is_project_admin = bool(
+            self.get_user_roles().count('admin'))
 
         # FIXME Retain these lines during testing only
         self.nova = self.__conn.nova
@@ -383,10 +400,12 @@ class Connection:
         pass
 
     def add_user_role(self, user_id, tenant_name, role):
-        tenant_id = self.__conn.keystone.tenants.find(name=tenant_name).to_dict()['id']
+        tenant_id = self.__conn.keystone.tenants.find(
+            name=tenant_name).to_dict()['id']
         # user_id = self.__conn.keystone.users.find(name=username).to_dict()['id']
         role_id = self.__conn.keystone.roles.find(name=role).to_dict()['id']
-        self.__conn.keystone.users.role_manager.add_user_role(user_id, role_id, tenant_id)
+        self.__conn.keystone.users.role_manager.add_user_role(
+            user_id, role_id, tenant_id)
 
     def get_user_roles(self):
         roles = []
@@ -425,13 +444,16 @@ class Connection:
         try:
             if all_users:
                 if not self.user_is_project_admin:
-                    raise BaadalException('Access denied! User must be project admin to list all VMs')
+                    raise BaadalException(
+                        'Access denied! User must be project admin to list all VMs')
                 else:
                     serverlist = self.__conn.nova.servers.list()
             else:
-                serverlist = self.__conn.nova.servers.findall(user_id=self.userid)
+                serverlist = self.__conn.nova.servers.findall(
+                    user_id=self.userid)
             if serverlist:
-                serverlist = [BaadalVM(server=i, conn=self.__conn) for i in serverlist]
+                serverlist = [BaadalVM(server=i, conn=self.__conn)
+                              for i in serverlist]
             return serverlist or []
         except Exception as e:
             raise BaadalException(e.message or str(e.__class__))
@@ -474,7 +496,7 @@ class Connection:
         try:
             sec_group = self._network_name_from_id(nics[0]['net-id'])
             server = self.__conn.nova.servers.create(name, image, template,
-                    nics=nics, security_groups=[sec_group], **kwargs)
+                                                     nics=nics, security_groups=[sec_group], **kwargs)
             return BaadalVM(server=server, conn=self.__conn)
         # except AttributeError as e:
         #    if e.message == "'SessionClient' object has no attribute 'last_request_id'":
@@ -485,7 +507,8 @@ class Connection:
     def create_volume(self, size, imageref=None, multiattach=False):
         if not self.__conn.cinder:
             raise BaadalException('Not connected to openstack cinder service')
-        volume = self.__conn.cinder.volumes.create(size, imageRef=imageref, multiattach=multiattach)
+        volume = self.__conn.cinder.volumes.create(
+            size, imageRef=imageref, multiattach=multiattach)
         return volume
 
     def create_template(self, name, ram, disk, vcpus):
@@ -533,12 +556,14 @@ class Connection:
         if not self.__conn.nova:
             raise BaadalException('Not connected to openstack nova service')
         if name and id:
-            raise BaadalException('Cannot find hypervisor! Please specify either name or Id')
+            raise BaadalException(
+                'Cannot find hypervisor! Please specify either name or Id')
         try:
             if not name and not id:
                 hypervisors = self.__conn.nova.hypervisors.list()
             elif name:
-                hypervisors = self.__conn.nova.hypervisors.find(hypervisor_hostname=name)
+                hypervisors = self.__conn.nova.hypervisors.find(
+                    hypervisor_hostname=name)
             else:
                 hypervisors = self.__conn.nova.hypervisors.find(id=id)
             return hypervisors
@@ -588,7 +613,8 @@ class Connection:
     def subnets(self, network_id=None):
         try:
             if network_id:
-                subnet_list = self.__conn.neutron.list_subnets(network_id=network_id)
+                subnet_list = self.__conn.neutron.list_subnets(
+                    network_id=network_id)
             else:
                 subnet_list = self.__conn.neutron.list_subnets()
             return subnet_list
@@ -617,7 +643,8 @@ class Connection:
             request_body['shared'] = shared
             request_body['router:external'] = external
 
-            network = self.__conn.neutron.create_network(body={'network': request_body})
+            network = self.__conn.neutron.create_network(
+                body={'network': request_body})
             return network
         except Exception as e:
             raise BaadalException(e.message or str(e.__class__))
@@ -661,7 +688,7 @@ class Connection:
             request_body['host_routes'] = host_routes
             if allocation_pool_end is not None:
                 request_body['allocation_pools'] = [{'start': allocation_pool_start,
-                    'end': allocation_pool_end}]
+                                                     'end': allocation_pool_end}]
 
             subnet = self.__conn.neutron.\
                 create_subnet(body={'subnet': request_body})
@@ -738,5 +765,6 @@ class Connection:
 
 
 class BaadalException(Exception):
+
     def __init__(self, msg):
         self.message = msg
