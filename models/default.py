@@ -15,6 +15,7 @@ finally:
     except NameError:
         pass
 
+
 def jsonify(status='success', **kwargs):
     d = dict()
     d['status'] = status
@@ -26,7 +27,7 @@ def jsonify(status='success', **kwargs):
 def seconds_to_localtime(seconds):
     import time
     t = time.localtime(seconds)
-    return "%i:%i:%i %i/%i/%i"%(t.tm_hour, t.tm_min, t.tm_sec, t.tm_mday, t.tm_mon, t.tm_year)
+    return "%i:%i:%i %i/%i/%i" % (t.tm_hour, t.tm_min, t.tm_sec, t.tm_mday, t.tm_mon, t.tm_year)
 
 
 def network_name_from_id(netid):
@@ -70,12 +71,12 @@ def convert_timezone(utctimestring, fmt="%Y-%m-%dT%H:%M:%SZ", timezone='Asia/Kol
     localtime = utc_time_withtz.astimezone(pytz.timezone(timezone))
     return localtime.strftime(fmt)
 
-    
+
 class FuncThread(threading.Thread):
     def __init__(self, target, *args):
         self._target = target
         self._args = args
         threading.Thread.__init__(self)
- 
+
     def run(self):
         self._target(*self._args)

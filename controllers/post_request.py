@@ -5,8 +5,8 @@ from gluon.tools import Storage
 @auth.requires_login()
 def new_vm():
     try:
-        if ('faculty' in auth.user_groups.values()) or
-        ('admin' in auth.user_groups.values()):
+        if ('faculty' in auth.user_groups.values()) or \
+                ('admin' in auth.user_groups.values()):
             owner_id = session.username
             vm_state = 1
         else:
