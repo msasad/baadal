@@ -2,7 +2,12 @@ import json
 import threading
 
 
+gateway_server = config.get('misc', 'gateway_server')
+default_keypair = config.get('misc', 'default_keypair')
+
+
 user_is_project_admin = False
+
 
 try:
     conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
