@@ -1,5 +1,6 @@
 import json
 import threading
+import Baadal
 
 _authurl = config.get('auth', 'authurl')
 _tenant = config.get('auth', 'tenant')
@@ -17,7 +18,8 @@ user_is_project_admin = False
 try:
     conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
     user_is_project_admin = conn.user_is_project_admin
-except Exception:
+except Exception as e:
+    logger.exception(e.message + str(e.__class__))
     logger.error('cannot determine if user in admin')
     pass
 finally:
