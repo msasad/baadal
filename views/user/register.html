@@ -92,7 +92,7 @@
         </div>
         <div class="panel-footer" style="display:none">
           <p class="text-success" style="display:none">Your request has been posted and is waiting for approval</p>
-          <p class="text-danger">There was some error while posting your request. Please try again later.</p>
+          <p class="text-danger">There was some error while posting your request. Please correct the values and try again.</p>
         </div>
       </div>
     </div>
@@ -102,28 +102,39 @@
   (function($) {
     $('#register-form').on('submit', function(e) {
       e.preventDefault();
-      console.log('clicked');
       var data = $('.form-horizontal').serializeArray();
-      console.log(data);
       $.ajax({
         url: '/baadal/post_request/register_user',
         type: 'post',
         data: data,
         success:function(response) {
+          console.log(response);
           if (response.status == 'success') {
             $('div.panel-footer').show(function(){
               $('div.panel-footer>.text-success').slideDown();
             });
-            console.log(response);
           } else {
+            if (response.fields) {
+              for (var field of response.fields) {
+                document.getElementById(field).parentElement.classList.add('has-error');
+              }
+            }
             $('div.panel-footer').show(function(){
               $('div.panel-footer>.text-danger').slideDown();
             });
-            console.log('request could not be posted');
           }
         },
-        error: function(error, code) {
-          console.log(error, code);
+        error: function(error, code, response) {
+          console.log(error.responseText, code, response);
+          response = JSON.parse(error.responseText);
+          if (response.fields) {
+            for (var field of response.fields) {
+              document.getElementById(field).parentElement.classList.add('has-error');
+            }
+          }
+          $('div.panel-footer').show(function(){
+            $('div.panel-footer>.text-danger').slideDown();
+          });
         }
       });
     });
