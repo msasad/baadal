@@ -75,12 +75,26 @@ def request_resize():
 
 
 def register_user():
+    error_fields = set()
+    if userid_in_db(request.vars.userid):
+        error_fields.add('userid')
+    if email_in_db(request.vars.email):
+        error_fields.add('email')
+    if not username_is_valid(request.vars.username):
+        error_fields.add('username')
+    if not userid_is_valid(request.vars.userid):
+        error_fields.add('userid')
+    if not email_is_valid(request.vars.email):
+        error_fields.add('email')
+    if len(error_fields):
+        raise HTTP(400,body=jsonify(status='fail', fields=list(error_fields)))
     try:
         faculty_privileges = 0
         try:
             faculty_privileges = int(bool(request.vars.chk_faculty_privileges))
         except Exception:
             pass
+
         db.account_requests.insert(username=request.vars.username,
                                    userid=request.vars.userid,
                                    password=request.vars.password,
