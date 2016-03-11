@@ -91,7 +91,8 @@
           </form>
         </div>
         <div class="panel-footer" style="display:none">
-          <p class="text-success">Your request has been posted for approval</p>
+          <p class="text-success" style="display:none">Your request has been posted and is waiting for approval</p>
+          <p class="text-danger">There was some error while posting your request. Please try again later.</p>
         </div>
       </div>
     </div>
@@ -108,8 +109,18 @@
         url: '/baadal/post_request/register_user',
         type: 'post',
         data: data,
-        success:function(response){
-          console.log(response);
+        success:function(response) {
+          if (response.status == 'success') {
+            $('div.panel-footer').show(function(){
+              $('div.panel-footer>.text-success').slideDown();
+            });
+            console.log(response);
+          } else {
+            $('div.panel-footer').show(function(){
+              $('div.panel-footer>.text-danger').slideDown();
+            });
+            console.log('request could not be posted');
+          }
         },
         error: function(error, code) {
           console.log(error, code);
