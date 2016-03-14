@@ -4,6 +4,9 @@ from gluon.tools import Storage
 
 @auth.requires_login()
 def new_vm():
+    fields = validate_vm_request_form(request.vars)
+    if len(fields):
+        raise HTTP(400,body=jsonify(status='fail', fields=fields))
     try:
         if ('faculty' in auth.user_groups.values()) or \
                 ('admin' in auth.user_groups.values()):
@@ -75,17 +78,7 @@ def request_resize():
 
 
 def register_user():
-    error_fields = set()
-    if userid_in_db(request.vars.userid):
-        error_fields.add('userid')
-    if email_in_db(request.vars.email):
-        error_fields.add('email')
-    if not username_is_valid(request.vars.username):
-        error_fields.add('username')
-    if not userid_is_valid(request.vars.userid):
-        error_fields.add('userid')
-    if not email_is_valid(request.vars.email):
-        error_fields.add('email')
+    error_fields = validate_registration_form(request.vars)
     if len(error_fields):
         raise HTTP(400,body=jsonify(status='fail', fields=list(error_fields)))
     try:
