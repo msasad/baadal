@@ -137,6 +137,10 @@ def all_vms():
 
 @auth.requires(user_is_project_admin)
 def create_subnet():
+    fields = validate_subnet_form(request.vars)
+    if len(fields):
+        raise HTTP(400,body=jsonify(status='fail', fields=fields))
+
     try:
         conn = Baadal.Connection(_authurl, _tenant, session.username,
                                  session.password)
