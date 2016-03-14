@@ -106,11 +106,9 @@
     'type': 'GET',
     'url': '/baadal/ajax/configs.json',
     'success': function(response) {
-      console.log(response);
       var configSelect = document.getElementById('config');
       configSelect.options.length = 0;
       for (var i = response.length-1; i>=0; i--) {
-        console.log(response[i]);
         var curr_config = response[i];
         var text = curr_config['vcpus'] + 'CPU, ' + curr_config['ram'] + 'MB RAM';
         configSelect.options[configSelect.options.length] = new Option(text, curr_config['id']);
@@ -122,14 +120,12 @@
     'type': 'GET',
     'url': '/baadal/ajax/templates.json',
     'success': function(response) {
-      console.log(response);
       var templateSelect = document.getElementById('template');
       templateSelect.options.length = 0;
       for (var i = response.length-1; i>=0; i--) {
-        console.log(response[i]);
         var curr_template = response[i];
-        var text = curr_template['os_name'] + ' ' + curr_template['os_version'] + ' ' + curr_template['os_arch'] 
-          + ' ' +   curr_template['disk_size'];
+        var text = curr_template['os_name'] + ' ' + curr_template['os_version']
+          + ' ' + curr_template['os_arch'] + ' ' + curr_template['disk_size'];
         templateSelect.options[templateSelect.options.length] = new Option(text, curr_template['id']);
       }
     }
@@ -139,11 +135,9 @@
     'type': 'GET',
     'url': '/baadal/ajax/networks.json',
     'success': function(response) {
-      console.log(response);
       var secdomainselect = document.getElementById('sec_domain');
       secdomainselect.options.length = 0;
       for (var i = response.length-1; i>=0; i--) {
-        console.log(response[i]);
         var curr_domain = response[i];
         secdomainselect.options[secdomainselect.options.length] = new Option(curr_domain['name'], curr_domain['id']);
       }
@@ -154,26 +148,31 @@
     e.preventDefault();
     var data = $('#vm_request').serializeArray();
     data  = baadalApp.serialize(data);
-    console.log(data);
     $('#success-message').hide();
     $('#error-message').hide();
     $.ajax({
       'type' : 'POST',
       'data' : data,
       'url' : '/baadal/post_request/new_vm.json',
-      'error' : function(response) {
-        var error;
-        if (error = response.getResponseHeader('web2py_error')) {
-          baadalApp.generateTicketLink(error);
-        }
-      },
+      'dataType' : 'json',
       'success' : function(response){
         if(response.status == 'success') {
           $('#success-message').fadeIn();
         } else {
           $('#error-message').fadeIn();
         }
-        console.log(response);
+      },
+      'error' : function(response) {
+        var error;
+        if (error = response.getResponseHeader('web2py_error')) {
+          baadalApp.generateTicketLink(error);
+        }
+        response = JSON.parse(response.responseText)
+        if (response.fields) {
+          for ( var id of response.fields ) {
+            document.getElementById(id).parentElement.classList.add('has-error');
+          }
+        }
       }
     });
   });
