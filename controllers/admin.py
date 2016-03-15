@@ -144,22 +144,10 @@ def create_subnet():
     try:
         conn = Baadal.Connection(_authurl, _tenant, session.username,
                                  session.password)
-        logger.info(request.vars)
+        if request.vars.gateway_ip == '':
+            gateway_ip = None
 
-        gateway_ip = None
-        if request.vars.gateway_ip != '':
-            if IS_IPV4()(request.vars.gateway_ip):
-                gateway_ip = request.vars.gateway_ip
-            else:
-                # TODO add each erroneous value to a list and return it
-                pass
-
-        if request.vars.nameservers != '':
-            nslist = request.vars.nameservers.translate(None, ' ').split(',')
-            for ns in nslist:
-                if not IS_IPV4().regex.match(ns):
-                    pass
-        else:
+        if request.vars.nameservers == '':
             nslist = None
 
         routes_list = str_to_route_list(request.vars.static_routes)\
