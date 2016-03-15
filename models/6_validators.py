@@ -146,11 +146,13 @@ def validate_subnet_form(vars):
     if not nameservers_is_valid(vars.nameservers):
         fields.append('nameservers')
     if not allocation_pool_is_valid(vars.allocation_pool):
-        fields.append('allication-pool')
+        fields.append('allocation-pool')
     if not gateway_ip_is_valid(vars.gateway_ip):
         fields.append('gateway-ip')
     if not static_routes_is_valid(vars.static_routes):
         fields.append('static-routes')
+    if not ip_version_is_valid(vars.ip_version):
+        fields.append('ip-version')
     return fields
 
 
@@ -193,7 +195,10 @@ def allocation_pool_is_valid(allocation_pool):
 
 
 def gateway_ip_is_valid(gateway_ip):
-    return gateway_ip == '' or IS_IPV4(gateway_ip)[1] is None
+    try:
+        return gateway_ip == '' or IS_IPV4(gateway_ip)[1] is None
+    except:
+        return False
 
 
 def static_routes_is_valid(static_routes):
@@ -210,3 +215,7 @@ def static_routes_is_valid(static_routes):
     except:
         valid = False
     return valid
+
+
+def ip_version_is_valid(ip_version):
+    return ip_version in [4, 6, '4', '6']
