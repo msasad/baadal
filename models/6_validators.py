@@ -49,7 +49,7 @@ def password_is_valid(password, password_repeat):
     valid = True
     validator = validators.IS_STRONG(min=8, upper=2, lower=2)
     valid = valid and validator(password)[1] is None
-    valid = valid and ( password == password_repeat )
+    valid = valid and (password == password_repeat)
     return valid
 
 
@@ -83,10 +83,9 @@ def vmname_is_valid(vm_name):
 
 def template_is_valid(template):
     # templates in Baadal are called images in Openstack
-    valid = True
     conn = Baadal.Connection(_authurl, _tenant, session.username,
                              session.password)
-    templates = [ i.id for i in conn.images() ]
+    templates = [i.id for i in conn.images()]
     conn.close()
     return template in templates
 
@@ -95,7 +94,7 @@ def config_is_valid(config):
     # config in Baadal are called flavors/templates in Openstack
     conn = Baadal.Connection(_authurl, _tenant, session.username,
                              session.password)
-    configs = [ c.id for c in conn.templates() ]
+    configs = [c.id for c in conn.templates()]
     conn.close()
     return config in configs
 
@@ -113,7 +112,6 @@ def security_domain_is_valid(sec_domain):
 
 
 def storage_is_valid(storage):
-    valid = True
     validator = validators.IS_INT_IN_RANGE(0, None)
     return validator(storage)[1] is None
 
@@ -125,6 +123,7 @@ def purpose_is_valid(purpose):
 
 def public_ip_is_valid(public_ip):
     return public_ip in ('yes', 'No')
+
 
 def collaborators_is_valid(collaborators):
     valid = True
@@ -156,26 +155,58 @@ def validate_subnet_form(vars):
 
 
 def subnet_name_is_valid(subnet_name):
-    return True
+    return username_is_valid(subnet_name)
 
-
-def cidr_name_is_valid(cidr):
-    return True
+def cidr_is_valid(cidr):
+    re = r'^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|'\
+            '[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|'\
+            '3[0-2]))$'
+    return validators.re.match(re, cidr) is not None
 
 
 def nameservers_is_valid(nameservers):
-    return True
+    if nameservers == '':
+        return True
+    valid = True
+    nslist = nameservers.translate(None, ' ').split(',')
+    validator = IS_IPV4()
+    for ns in nslist:
+        if validator(ns)[1] is not None:
+            valid = False
+            break
+    return valid
 
 
 def allocation_pool_is_valid(allocation_pool):
-    return True
+    if allocation_pool == '':
+        return True
+    valid = True
+    try:
+        allocation_pool = request.vars.allocation_pool.\
+            translate(None, ' ').split('-')
+        if IS_IPV4(allocation_pool[0])[1] is not None or \
+        IS_IPV4(allocation_pool[1])[1] is not None:
+            valid = False
+    except:
+        valid = False
+    return valid
 
 
 def gateway_ip_is_valid(gateway_ip):
-    return True
+    return gateway_ip == '' or IS_IPV4(gateway_ip)[1] is None
 
 
 def static_routes_is_valid(static_routes):
-    return True
-
-
+    if static_routes == '':
+        return True
+    valid = True
+    try:
+        static_routes = str_to_route_list(static_routes)
+        for route in static_routes:
+            if IS_IPV4(route['destination'])[1] is not None or \
+            IS_IPV4(route['nexthop'])[1] is not None:
+                valid = False
+                break
+    except:
+        valid = False
+    return valid
