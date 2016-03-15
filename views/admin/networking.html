@@ -112,11 +112,21 @@
                 type: 'post',
                 data: data,
                 dataType: 'json',
+                error: function(error, code, response) {
+                  var response = JSON.parse(error.responseText);
+                  if (response.fields) {
+                    for (var id of response.fields) {
+                      document.getElementById(id).parentElement.classList.add('has-error');
+                      $('#modal-error-message').fadeIn();
+                    }
+                  }
+                },
                 success: function(response) {
-                  if(response.hasErrors) {
-                    $('#modal-error-message').fadeIn();
-                    for(var elem in response.errorfields) {
-                      document.getElementById(elem).classList.add('has-error');
+                  if(response.status == 'fail') {
+                    if (response.message) {
+                      $('#modal-error-message').html(response.message).fadeIn();
+                    } else {
+                      $('#modal-error-message').fadeIn();
                     }
                   } else {
                     if(response.status == 'success') {
@@ -124,7 +134,7 @@
                     }
                   }
                 }
-              })
+              });
             });
           });
           $modal.on('hidden.bs.modal', function() {
