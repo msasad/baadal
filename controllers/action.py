@@ -54,6 +54,7 @@ def __do(action, vmid):
             return jsonify(status='failure')
     except Exception as e:
         logger.exception(e.message or str(e.__class__))
+        return jsonify(status='fail', message=str(e.message) or str(e.__class__))
     finally:
         try:
             conn.close()
