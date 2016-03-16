@@ -151,13 +151,21 @@
                   }
                 },
                 success: function (response) {
+                  if (response.status == 'fail') {
+                    $modal.find('.panel-footer').show();
+                    $modal.find('#modal-error-message')
+                      .html(response.message)
+                      .fadeIn();
+                  }
                   switch (response.action) {
                     case 'get-vnc-console':
-                      $modal.find('#modal-info-message').html('<a target="_blank" href="' + response.consoleurl + '">' + response.consoleurl+ '</a>').fadeIn();
+                      $modal.find('#modal-info-message')
+                        .html('<a target="_blank" href="' + response.consoleurl + '">' + response.consoleurl+ '</a>').fadeIn();
                       break;
                     case 'get-spice-console':
                       $modal.find('.panel-footer').show();
-                      $modal.find('#modal-info-message').html('<a target="_blank" href="' + response.consoleurl + '">' + response.consoleurl+ '</a>').slideDown();
+                      $modal.find('#modal-info-message')
+                        .html('<a target="_blank" href="' + response.consoleurl + '">' + response.consoleurl+ '</a>').slideDown();
                       break;
 
                   }
