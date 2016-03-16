@@ -146,6 +146,7 @@
 
   $('#submit_request').on('click', function(e) {
     e.preventDefault();
+    $('#vm_request').find('.has-error').removeClass('has-error');
     var data = $('#vm_request').serializeArray();
     data  = baadalApp.serialize(data);
     $('#success-message').hide();
