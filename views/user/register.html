@@ -103,6 +103,7 @@
     $('#register-form').on('submit', function(e) {
       e.preventDefault();
       var data = $('.form-horizontal').serializeArray();
+      $('#register-form').find('.has-error').removeClass('has-error');
       $.ajax({
         url: '/baadal/post_request/register_user',
         type: 'post',
