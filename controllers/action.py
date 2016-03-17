@@ -1,4 +1,5 @@
 ﻿import gluon
+import time
 
 
 def __do(action, vmid):
@@ -164,12 +165,17 @@ def index():
     elif action == 'migrate':
         return __migrate(vmid)
     elif action == 'add-virtual-disk':
-        return __add_virtual_disk(vmid)
+        return __add_virtual_disk(vmid, request.vars.disksize)
 
 
-def __add_virtual_disk(vmid):
-    return jsonify()
-    pass
+def __add_virtual_disk(vmid, size):
+    try:
+        db.virtual_disk_requests.insert(user=session.username, vmid=vmid,
+                                        disk_size=int(size), status=0)
+        return jsonify()
+    except Exception as e:
+        logger.exception(e.message or str(e.__class__))
+        return jsonify(status='fail', message=e.message or str(e.__class__))
 
 
 @auth.requires(user_is_project_admin)
