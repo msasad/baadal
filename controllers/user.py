@@ -29,7 +29,7 @@ def my_vms():
             response.append(vm_properties)
         return jsonify(data=response)
     except Exception as e:
-        logger.error(e.message or str(e.__class__))
+        logger.exception(e.message or str(e.__class__))
         return jsonify(status='fail')
     finally:
         try:
@@ -48,7 +48,7 @@ def vm_status():
         if vm:
             return jsonify(vm_status=vm.get_status())
     except Exception as e:
-        logger.error(e.message() or str(e.__class__))
+        logger.exception(e.message() or str(e.__class__))
     finally:
         try:
             conn.close()
