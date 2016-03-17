@@ -25,8 +25,8 @@ def validate_registration_form(vars):
 def userid_is_valid(userid):
     valid = True
     validator = validators.IS_IN_DB(db, db.account_requests.userid)
-    valid = valid and validator(userid)[1] is None and len(userid) >= 4
-    validator = validators.IS_ALPHANUMERIC(userid)
+    valid = valid and validator(userid)[1] is not None and len(userid) >= 4
+    validator = validators.IS_ALPHANUMERIC()
     valid = valid and validator(userid)[1] is None
     return valid
 
@@ -41,7 +41,7 @@ def email_is_valid(email):
     validator = validators.IS_EMAIL(email)
     valid = valid and validator(email)[1] is None
     validator = validators.IS_IN_DB(db, db.account_requests.email)
-    valid = valid and validator(email)[1] is None
+    valid = valid and validator(email)[1] is not None
     return valid
 
 
