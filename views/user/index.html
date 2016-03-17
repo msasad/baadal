@@ -145,13 +145,37 @@
                 });
               });
 
-            } else if (action == 'resize') {
+            } else if (action === 'add-virtual-disk') {
+              var html = '<form class="form-inline" action="#">'
+                + '<label for="disksize" class="control-label">'
+                + 'Disk size</label>'
+                + '<input type="number" class="form-control" name="disksize" id="disksize" value="1" max="1024" min="1" />'
+                + '<button class="btn btn-primary btn-sm" id="btn-disk-request">Submit Request</button>';
+                + '</form>'
+              var $footer = $modal.find('.panel-footer').html(html);
+              $('#btn-disk-request').on('click', function(e) {
+                e.preventDefault();
+                $.ajax({
+                  url: '/baadal/action/index.json',
+                  data: {
+                    'vmid': vmid,
+                    action: 'add-virtual-disk',
+                    disksize: document.getElementById('disksize').value
+                  },
+                  success: function (response) {
+                    console.log(response);
+                  }
+                });
+              });
+              $footer.slideDown();
+            } else if (action === 'resize') {
               var html = '<form class="form-inline" action="#">'
                 + '<label for="new_flavor" class="control-label">'
                 + 'Select new configuration</label>'
                 + '<select class="form-control" name="new_flavor" id="new_flavor"></select>'
                 + '<button class="btn btn-primary btn-sm" id="btn-resize-request">Submit Request</button>'
-              var $footer = $modal.find('.panel-footer').html('').append(html);
+                + '</form>'
+              var $footer = $modal.find('.panel-footer').html(html);
               var flavor_selector = document.getElementById('new_flavor');
               $.ajax({
                 url: '/baadal/ajax/configs.json',
@@ -172,6 +196,12 @@
                       },
                       success: function(response) {
                         console.log(response);
+                      },
+                      'error' : function(response) {
+                        var error = response.getResponseHeader('web2py_error');
+                        if (error) {
+                          baadalApp.generateTicketLink(error);
+                        }
                       }
                     });
                     console.log(vmid, flavor_selector.value)
