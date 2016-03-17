@@ -15,18 +15,20 @@ default_keypair = config.get('misc', 'default_keypair')
 user_is_project_admin = False
 
 
-try:
-    conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
-    user_is_project_admin = conn.user_is_project_admin
-except Exception as e:
-    logger.exception(e.message + str(e.__class__))
-    logger.error('cannot determine if user in admin')
-    pass
-finally:
+if auth.is_logged_in():
     try:
-        conn.close()
-    except NameError:
+        conn = Baadal.Connection(_authurl, _tenant, session.username, session.password)
+        user_is_project_admin = conn.user_is_project_admin
+    except Exception as e:
+        logger.exception(e.message + str(e.__class__))
+        logger.error('cannot determine if user in admin')
+        raise HTTP(500)
         pass
+    finally:
+        try:
+            conn.close()
+        except NameError:
+            pass
 
 
 def jsonify(status='success', **kwargs):
