@@ -279,8 +279,15 @@ def resize_requests():
             conn = Baadal.Connection(_authurl, _tenant, session.username,
                                      session.password)
             for i in l:
+                try:
+                    vm = conn.find_baadal_vm(id=i['vm_id'])
+                except Exception as e:
+                    if e.message.startswith('No Server'):
+                        logger.info('Stray resize_request entry for' 
+                                    + ' vm id ' + i['vm_id'])
+                        del l[l.index(i)]
+                        continue
                 i['request_time'] = seconds_to_localtime(i['request_time'])
-                vm = conn.find_baadal_vm(id=i['vm_id'])
                 i['vm_name'] = vm.name
                 templ = conn.find_template(id=vm.server.flavor['id'])
                 i['current_config'] = 'RAM : %s, vCPUs: %s' % (templ.ram,
@@ -290,7 +297,7 @@ def resize_requests():
                                                                  templ.vcpus)
             return jsonify(data=l)
         except Exception as e:
-            logger.error(e.message or str(e.__class__))
+            logger.exception(e.message or str(e.__class__))
             return jsonify(status='fail',
                            message=e.message or str(e.__class__))
         finally:
