@@ -20,6 +20,7 @@
                 <th>IP Address(es)</th>
                 <th>VCPUs</th>
                 <th>Memory</th>
+                <th>Disk</th>
                 <th>Users</th>
               </tr>
               </thead>
@@ -27,9 +28,10 @@
               <tr>
                 <td>{{name}}</td>
                 <td>{{status}}</td>
-                <td>{{ip-addresses}}</td>
+                <td style="white-space:nowrap">{{{ip-addresses}}}</td>
                 <td>{{vcpus}}</td>
                 <td>{{memory}}</td>
+                <td>{{disk}}</td>
                 <td>{{owner.id}}</td>
               </tr>
               </tbody>
