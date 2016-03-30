@@ -248,13 +248,17 @@ class BaadalVM(object):
         server_properties = self.server.to_dict()
         properties = dict()
         properties['id'] = self.server.id
+        image = self.__conn.nova.images.find(id=self.server.image['id'])
+        properties['disk'] = image.metadata['disk_size'] 
         properties['name'] = self.server.name
         properties['status'] = self.get_status()
         properties['ip-addresses'] = []
         for (network, addresses) in server_properties['addresses'].iteritems():
             for address in addresses:
                 properties['ip-addresses'].append({
-                    'network': network, 'address': address['addr'], 'MAC': address['OS-EXT-IPS-MAC:mac_addr']})
+                    'network': network,
+                    'address': address['addr'],
+                    'MAC': address['OS-EXT-IPS-MAC:mac_addr']})
             pass
         flavor = self.__conn.nova.flavors.find(id=self.server.flavor['id'])
         # properties['flavor'] = flavor
