@@ -95,7 +95,8 @@
   $myvms.on('click', '.btn-settings', function (e) {
     var tr = this.closest('tr');
     var context = $table.row(tr).data();
-    context['ip-addresses'] = baadalApp.ipArrayToString(context['ip-addresses']);
+    context['ip-addresses'] = baadalApp.ipArrayToString(context['ip-addresses'],
+      true);
     $.ajax( {
       url : '/baadal/static/templates/vm-settings-template.html',
       success : function(response) {
