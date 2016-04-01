@@ -77,8 +77,7 @@ db.define_table('virtual_disk_requests',
                 Field('id', 'integer'),
                 Field('user', 'string', required=True),
                 Field('vmid', 'string', required=True),
-                Field('request_time', 'integer',
-                      requires=IS_INT_IN_RANGE(0, 1)),
+                Field('request_time', 'datetime'),
                 Field('status', 'integer'),
                 Field('disk_size', 'integer')
                 )
