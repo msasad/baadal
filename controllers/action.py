@@ -179,6 +179,23 @@ def __add_virtual_disk(vmid, size):
 
 
 @auth.requires(user_is_project_admin)
+def handle_disk_request():
+    try:
+        req = db.virtual_disk_requests(id=request.id).select()
+        size = req[0]['disk_size']
+        conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                 session.password)
+        vm = conn.find_baadal_vm(id=req[0]['vmid'])
+        vm.attach_disk(size)
+        req[0]['status'] = 1
+        db.commit()
+        return jsonify()
+    except Exception as e:
+        logger.exception(e)
+        return jsonify(status='fail', message=e.message or str(e.__class__))
+
+
+@auth.requires(user_is_project_admin)
 def handle_request():
     action = request.vars.action
     if action == 'approve':
