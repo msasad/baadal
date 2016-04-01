@@ -262,6 +262,18 @@ def account_requests():
 
 
 @auth.requires(user_is_project_admin)
+def disk_requests():
+    if request.extension in ('', None, 'html'):
+        return dict()
+    elif request.extension == 'json':
+        rows = db(db.virtual_disk_requests.status == 0).select()
+        l = rows.as_list()
+        for i in l:
+            i['request_time'] = str(i['request_time'])
+        return jsonify(data=l)
+
+
+@auth.requires(user_is_project_admin)
 def resize_requests():
     if request.extension in ('', None, 'html'):
         return dict()
