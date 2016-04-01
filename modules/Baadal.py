@@ -386,8 +386,12 @@ class Connection:
 
         self.__auth = auth
         self.__sess = sess
-        self.__conn = ConnectionWrapper(client.Client('2', session=sess), cclient.Client('2', session=sess),
-                                        nclient.Client('2.0', session=sess), ksclient.Client(session=sess))
+        __nova = client.Client('2', session=sess)
+        __cinder = cclient.Client('2', session=sess) 
+        __neutron = nclient.Client('2.0', session=sess)
+        __keystone = ksclient.Client(session=sess)
+        self.__conn = ConnectionWrapper(__nova, __cinder, __neutron, __keystone)
+        self.conn = ConnectionWrapper(__nova, __cinder, __neutron, __keystone)
         del ConnectionWrapper
 
         self.userid = self.__conn.nova.client.get_user_id()
@@ -421,7 +425,7 @@ class Connection:
     def close(self, ):
         try:
             del self.__conn
-        except NameError:
+        except Exception:
             pass
 
     def usage(self, attribute_list=None):
@@ -440,7 +444,8 @@ class Connection:
 
     def baadal_vms(self, all_users=False):
         """
-        :param all_users: optional; list VMs belonging to all users in the project, requires admin role
+        :param all_users: optional; list VMs belonging to all users in
+        the project, requires admin role
         :return:
         """
         if not self.__conn.nova:
@@ -469,11 +474,11 @@ class Connection:
         :param kwargs:
         :return:
         """
-        if not self.__conn.nova:
+        if not self.conn.nova:
             raise BaadalException('Not connected to openstack nova service')
         try:
-            baadalvm = self.__conn.nova.servers.find(**kwargs)
-            return BaadalVM(server=baadalvm, conn=self.__conn)
+            baadalvm = self.nova.servers.find(**kwargs)
+            return BaadalVM(server=baadalvm, conn=self.conn)
         except Exception as e:
             raise BaadalException(e.message or str(e.__class__))
         pass
