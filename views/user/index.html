@@ -166,6 +166,10 @@
                     disksize: document.getElementById('disksize').value
                   },
                   success: function (response) {
+                    response.status === 'success' && $footer.html(
+                    '<p class="text-info"> Request posted successfully. '
+                    + 'Extra disk will be added to the VM when the request '
+                    + 'will be approved by admin </p>');
                     console.log(response);
                   }
                 });
@@ -235,6 +239,11 @@
                 },
                 success: function (response) {
                   switch (response.action) {
+                    case 'snapshot':
+                      $modal.find('.panel-footer').show();
+                      $modal.find('#modal-info-message').html('<p> Snapshot ' +
+                        'successfully created.</p>').slideDown();
+                      break;
                     case 'get-spice-console':
                       $modal.find('.panel-footer').show();
                       $modal.find('#modal-info-message').html('<a target="_blank" href="' + response.consoleurl + '">' + response.consoleurl+ '</a>').slideDown();
