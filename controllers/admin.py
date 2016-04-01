@@ -266,11 +266,20 @@ def disk_requests():
     if request.extension in ('', None, 'html'):
         return dict()
     elif request.extension == 'json':
-        rows = db(db.virtual_disk_requests.status == 0).select()
-        l = rows.as_list()
-        for i in l:
-            i['request_time'] = str(i['request_time'])
-        return jsonify(data=l)
+        try:
+            rows = db(db.virtual_disk_requests.status == 0).select()
+            l = rows.as_list()
+            conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                     session.password)
+            for i in l:
+                i['request_time'] = str(i['request_time'])
+                vm = conn.find_baadal_vm(id=i['vmid'])
+                i['vm_name'] = vm.name
+                conn.close()
+            return jsonify(data=l)
+        except Exception as e:
+            logger.exception(e.message or str(e.__class__))
+            return jsonify(status='fail', message=e.message or str(e.__class__))
 
 
 @auth.requires(user_is_project_admin)
