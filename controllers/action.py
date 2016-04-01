@@ -28,7 +28,7 @@ def __do(action, vmid):
                 elif action == 'snapshot':
                     try:
                         snapshotid = vm.create_snapshot()
-                        return jsonify(snapshotid=snapshotid)
+                        return jsonify(snapshotid=snapshotid, action=action)
                     except Exception as e:
                         return jsonify(status='fail', message=e.message,
                                        action=action)
