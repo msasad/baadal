@@ -87,12 +87,13 @@ class BaadalVM(object):
         :return:
         """
         if not device_path:
-            device_path = self.__next_disk_letter(self.get_attached_disks())
-            if not device_path:
+            disk_letter = self.__next_disk_letter(self.get_attached_disks())
+            if not disk_letter:
                 raise BaadalException('No free letter for new disk')
+            devicepath =  '/dev/vd' + disk_letter
         try:
             self.__conn.nova.volumes.create_server_volume(
-                self.server.id, disk.id, device_path)
+                self.server.id, disk.id, devicepath)
             return True
         except Exception as e:
             raise BaadalException(e.message or _UNKNOWN_ERROR_MSG)
@@ -211,7 +212,8 @@ class BaadalVM(object):
             snapshots = []
             all_images = self.__conn.nova.images.list()
             for img in all_images:
-                if hasattr(img, 'server') and img.server['id'] == self.server.id:
+                if hasattr(img, 'server') and \
+                   img.server['id'] == self.server.id:
                     snapshots.append(img)
             return snapshots
         except Exception as e:
@@ -534,11 +536,11 @@ class Connection:
         except Exception as e:
             raise BaadalException(e.message or str(e.__class__))
 
-    def create_volume(self, size, imageref=None, multiattach=False):
+    def create_volume(self, size, imageref=None):
         if not self.__conn.cinder:
             raise BaadalException('Not connected to openstack cinder service')
         volume = self.__conn.cinder.volumes.create(
-            size, imageRef=imageref, multiattach=multiattach)
+            size, imageRef=imageref)
         return volume
 
     def create_template(self, name, ram, disk, vcpus):
