@@ -66,12 +66,30 @@ class BaadalVM(object):
         self.snapshots = []
         pass
 
-    def attach_disk(self, disk, device_path):
+    @staticmethod
+    def __next_disk_letter(disks, prefix='/dev/vd'):
+        alphabet = 'bcdefghijklmnopqrstuvwxyz'
+        for letter in alphabet:
+            free = True
+            for disk in disks:
+                if disk['path'] == prefix + letter:
+                    free = False
+                    break
+            if free:
+                return letter
+        else:
+            return False
+
+    def attach_disk(self, disk, device_path=None):
         """
         :param disk: instance of disk to be attached
         :param device_path: path in the system where the disk is to be attached
         :return:
         """
+        if not device_path:
+            device_path = self.__next_disk_letter(self.get_attached_disks())
+            if not device_path:
+                raise BaadalException('No free letter for new disk')
         try:
             self.__conn.nova.volumes.create_server_volume(
                 self.server.id, disk.id, device_path)
