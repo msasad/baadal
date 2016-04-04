@@ -118,7 +118,8 @@ class BaadalVM(object):
     def clone(self, clone_name=None, full=False):
         """
         :param clone_name: name of the newly created clone instance (optional)
-        :param clone_type: type of clone Full or Linked, defaults to Full (optional)
+        :param clone_type: type of clone Full or Linked,
+         defaults to Full (optional)
         :return:
         """
         # create a snapshot of the  machine
@@ -137,9 +138,11 @@ class BaadalVM(object):
                 image = self.__conn.nova.images.find(id=snapshot_id)
                 pass
             else:
+                flavor = self.__conn.nova.flavors.find(id=flavor_id)
                 clone = self.server.manager.create(clone_name, image,
-                                                   self.__conn.nova.flavors.find(id=flavor_id), nics=nics,
-                                                   security_groups=networks, meta=self.server.metadata)
+                                                   flavor, nics=nics,
+                                                   security_groups=networks,
+                                                   meta=self.server.metadata)
                 while clone.status != 'ACTIVE':
                     clone = clone.manager.find(id=clone.id)
                 else:
