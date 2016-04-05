@@ -18,9 +18,9 @@ class BaadalMailer(object):
 
         class VMRequest(object):
             subject = 'VM request successful'
-            mailbody = "Dear {0[username]},\n\nYour VM request has been" \
-                " registered successfully and is waiting for approval. You" \
-                " will be notified with a separate email after the VM is created."
+            mailbody = "Dear {0[username]},\n\nYour VM request has been regi" \
+                "stered successfully and is waiting for approval. You will" \
+                " be notified with a separate email after the VM is created."
 
         class ApprovalReminder(object):
             subject = 'Request waiting for your approval'
@@ -30,8 +30,8 @@ class BaadalMailer(object):
 
         class VMCreated(object):
             subject = 'Your BaadalVM has been created'
-            mailbody = "Dear {0[username]},\n\n The VM {0[vm_name]}" \
-                " {0[request_time]} is successfully created and is now" \
+            mailbody = "Dear {0[username]},\n\nThe VM {0[vm_name]}, requested"\
+                " at {0[request_time]} is successfully created and is now" \
                 " available for use. Following operations are allowed on" \
                 " VM:\n 1. Start\n2. Stop\n3. Pause\n4. Resume\n5. Destroy" \
                 " \n6. Delete\n\n Default credentials for VM is as follows:" \
