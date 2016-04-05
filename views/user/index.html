@@ -67,10 +67,10 @@
           };
           return '<div class="btn-group" role="group" aria-label="..."> \
             <button title="'+ actions[data.status] + '" type="button" data-action="' + actions[data.status]+ '" class="btn btn-success btn-action" aria-label="Start">\
-            <span class="glyphicon glyphicon-'+ glyphicons[data.status]+'" aria-hidden="true"></span>\
+            <span class="fa fa-'+ glyphicons[data.status]+'" aria-hidden="true"></span>\
             </button> \
             <button title="Settings" type="button" data-action="settings" class="btn btn-primary btn-settings" aria-label="Settings">\
-            <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>\
+            <span class="fa fa-cog" aria-hidden="true"></span>\
             </button>\
             </div>';
         }
@@ -276,6 +276,16 @@
   $myvms.on('click','.btn-action', function(e) {
     var id = this.closest('tr').getAttribute('data-vmid');
     var action = this.getAttribute('data-action');
+    var tooltip;
+    if (action === 'start') {
+      tooltip = 'Starting...';
+    } else {
+      tooltip = 'Stopping...'
+    }
+    var span = this.children[0]
+    span.title = tooltip;
+    span.classList.remove('fa-play', 'fa-stop');
+    span.classList.add('fa-refresh', 'fa-spin');
     $.ajax({
       'url': '/baadal/action/index.json',
       'type': 'post',
