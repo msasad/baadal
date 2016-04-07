@@ -283,7 +283,7 @@
       tooltip = 'Stopping...'
     }
     var span = this.children[0]
-    span.title = tooltip;
+    this.title = tooltip;
     span.classList.remove('fa-play', 'fa-stop');
     span.classList.add('fa-refresh', 'fa-spin');
     $.ajax({
