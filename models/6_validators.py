@@ -16,7 +16,7 @@ def validate_registration_form(vars):
         fields.append('username')
     if not email_is_valid(vars.email):
         fields.append('email')
-    if not password_is_valid(vars.password, vars.password_repeat):
+    if not password_is_valid(vars.password, vars['password_repeat']):
         fields.append('password')
         fields.append('password-repeat')
     return fields

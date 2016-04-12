@@ -80,7 +80,7 @@ def request_resize():
 def register_user():
     error_fields = validate_registration_form(request.vars)
     if len(error_fields):
-        raise HTTP(400,body=jsonify(status='fail', fields=list(error_fields)))
+        raise HTTP(400, body=jsonify(status='fail', fields=list(error_fields)))
     try:
         faculty_privileges = 0
         try:
