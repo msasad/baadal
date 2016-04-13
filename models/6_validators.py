@@ -77,7 +77,7 @@ def validate_vm_request_form(vars):
 
 
 def vmname_is_valid(vm_name):
-    return validators.re.match(r'^[A-Za-z][A-Za-z_\-0-9]{2,}[A-Za-z]$',
+    return validators.re.match(r'^[A-Za-z][A-Za-z_\-0-9]{2,}[A-Za-z0-9]$',
                                vm_name) is not None
 
 
