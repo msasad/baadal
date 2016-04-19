@@ -104,6 +104,7 @@
       e.preventDefault();
       var data = $('.form-horizontal').serializeArray();
       $('#register-form').find('.has-error').removeClass('has-error');
+      $('div.panel-footer').hide();
       $.ajax({
         url: '/baadal/post_request/register_user',
         type: 'post',
