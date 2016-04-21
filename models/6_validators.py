@@ -47,7 +47,7 @@ def email_is_valid(email):
 
 def password_is_valid(password, password_repeat):
     valid = True
-    validator = validators.IS_STRONG(min=8, upper=2, lower=2)
+    validator = validators.IS_STRONG(min=8)
     valid = valid and validator(password)[1] is None
     valid = valid and (password == password_repeat)
     return valid
@@ -158,6 +158,7 @@ def validate_subnet_form(vars):
 
 def subnet_name_is_valid(subnet_name):
     return username_is_valid(subnet_name)
+
 
 def cidr_is_valid(cidr):
     re = r'^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|'\
