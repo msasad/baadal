@@ -9,11 +9,16 @@
         <tr>
           <th>Name</th>
           <th>State</th>
+          <th>Owner</th>
+          <th>Config</th>
+          <th>Image</th>
           <th>IP Address(es)</th>
+          <th>Settings</th>
+          <!-- <th>IP Address(es)</th> 
           <th>VCPUs</th>
           <th>Memory (MB)</th>
           <th>Disk</th>
-          <th>Settings</th>
+          <th>Settings</th> -->
         </tr>
       </thead>
     </table>
@@ -41,56 +46,45 @@
     },
     "aoColumnDefs": [
       {
-        "aTargets": [2],
+        "aTargets": [5],
         "mData": null,
-        "mRender": function (data, type, full) {
-          if (type === 'display' || type === 'filter') {
-            return baadalApp.ipArrayToString(data, true);
+        "mRender": function(data, type, full) {
+          if (type == 'display' || type == 'filter') {
+            var addresses = data.addresses;
+            if (typeof addresses == "object") {
+              return baadalApp.ipObjectToString(addresses);
+            }
           }
           return data;
         }
       },
-      {
-        "aTargets": [6],
-        "mData": null,
-        "mRender": function (data, type, full) {
-          var actions = {
-            'Running' : 'shutdown',
-            'Shutdown' : 'start',
-            'Error' : 'start'
-          };
-
-          var glyphicons = {
-            'Running' : 'stop',
-            'Shutdown' : 'play',
-            'Error' : 'play'
-          };
-          return '<div class="btn-group" role="group" aria-label="..."> \
-            <button title="'+ actions[data.status] + '" type="button" data-action="' + actions[data.status]+ '" class="btn btn-success btn-action" aria-label="Start">\
-            <span class="fa fa-'+ glyphicons[data.status]+'" aria-hidden="true"></span>\
-            </button> \
-            <button title="Settings" type="button" data-action="settings" class="btn btn-primary btn-settings" aria-label="Settings">\
-            <span class="fa fa-cog" aria-hidden="true"></span>\
-            </button>\
-            </div>';
-        }
+       {
+         "aTargets": [6],
+         "mData": null,
+         "mRender": function (data, type, full) {
+           if (type === 'display' ) {
+             return baadalApp.getSettingsButtonsMarkup(data.status);
+           }
+           return data;
+         }
       }
     ],
     "columns": [
       { "data": "name" },
       { "data": "status" },
-      { "data": "ip-addresses"},
-      { "data": "vcpus" },
-      { "data": "memory"  },
-      { "data": "disk"  }
+      { "data": "user_id" },
+      { "data": "flavor.id" },
+      { "data": "image.id" },
+      { "data": null },
+      { "data": null },
     ],
     "fnCreatedRow": function( nRow, aData, iDataIndex ) {
       nRow.setAttribute('data-vmid', aData.id);
     }
   });
-//  var reloadTable = setInterval(function(){
-//    $table.ajax.reload();
-//  }, 30*1000);
+  var reloadTable = setInterval(function(){
+    $table.ajax.reload();
+  }, 30*1000);
 
   $myvms.on('click', '.btn-settings', function (e) {
     var tr = this.closest('tr');

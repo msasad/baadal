@@ -269,41 +269,41 @@ class BaadalVM(object):
 
     def properties(self):
         server_properties = self.server.to_dict()
-        properties = dict()
-        properties['id'] = self.server.id
-        image = self.__conn.nova.images.find(id=self.server.image['id'])
-        properties['disk'] = image.metadata['disk_size'] 
-        properties['name'] = self.server.name
-        properties['status'] = self.get_status()
-        properties['ip-addresses'] = []
-        for (network, addresses) in server_properties['addresses'].iteritems():
-            for address in addresses:
-                properties['ip-addresses'].append({
-                    'network': network,
-                    'address': address['addr'],
-                    'MAC': address['OS-EXT-IPS-MAC:mac_addr']})
-            pass
-        flavor = self.__conn.nova.flavors.find(id=self.server.flavor['id'])
-        # properties['flavor'] = flavor
-        properties['status'] = self.get_status()
-        properties['memory'] = flavor.__getattr__('ram')
-        properties['vcpus'] = flavor.__getattr__('vcpus')
-        properties['hostid'] = self.server.hostId
-        snapshots = self.get_snapshots()
-        l = []
-        for snapshot in snapshots:
-            l.append({'id': snapshot.id, 'created': snapshot.created,
-                      'name': snapshot.name})
-        properties['snapshots'] = l
+        # properties = dict()
+        # properties['id'] = self.server.id
+        # image = self.__conn.nova.images.find(id=self.server.image['id'])
+        # properties['disk'] = image.metadata['disk_size']
+        # properties['name'] = self.server.name
+        # properties['status'] = self.get_status()
+        # properties['ip-addresses'] = []
+        # for (network, addresses) in server_properties['addresses'].iteritems():
+        #     for address in addresses:
+        #         properties['ip-addresses'].append({
+        #             'network': network,
+        #             'address': address['addr'],
+        #             'MAC': address['OS-EXT-IPS-MAC:mac_addr']})
+        #     pass
+        # flavor = self.__conn.nova.flavors.find(id=self.server.flavor['id'])
+        # # properties['flavor'] = flavor
+        # properties['status'] = self.get_status()
+        # properties['memory'] = flavor.__getattr__('ram')
+        # properties['vcpus'] = flavor.__getattr__('vcpus')
+        # properties['hostid'] = self.server.hostId
+        # snapshots = self.get_snapshots()
+        # l = []
+        # for snapshot in snapshots:
+        #     l.append({'id': snapshot.id, 'created': snapshot.created,
+        #               'name': snapshot.name})
+        # properties['snapshots'] = l
 
-        if self.__conn.user_is_project_admin:
-            properties['hostname'] = self.server.__getattr__(
-                'OS-EXT-SRV-ATTR:hypervisor_hostname')
-            userid = self.server.user_id
-            username = self.__conn.keystone.users.get(userid)
-            if username:
-                properties['owner'] = username.to_dict()
-        return properties
+        # if self.__conn.user_is_project_admin:
+        #     properties['hostname'] = self.server.__getattr__(
+        #         'OS-EXT-SRV-ATTR:hypervisor_hostname')
+        #     userid = self.server.user_id
+        #     username = self.__conn.keystone.users.get(userid)
+        #     if username:
+        #         properties['owner'] = username.to_dict()
+        return server_properties
         pass
 
     def reboot(self, soft=True):
@@ -488,8 +488,8 @@ class Connection:
                               for i in serverlist]
             return serverlist or []
         except Exception as e:
-            raise BaadalException(e.message or str(e.__class__))
-        pass
+            raise e
+            # raise BaadalException(e.message or str(e.__class__))
 
     def find_baadal_vm(self, **kwargs):
         """
