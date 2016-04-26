@@ -3,19 +3,31 @@
 
 # TODO: Rewrite this file in more readable and self-explainatory manner.
 
-Install refering to the official openstack installation guide for ubuntu 14.04 Kilo (located at http://docs.openstack.org/kilo/install-guide/install/apt/content/index.html)
+Install refering to the official openstack installation guide for ubuntu 14.04
+Kilo (located at
+http://docs.openstack.org/kilo/install-guide/install/apt/content/index.html)
+
+While creating flavor give the id of the flavor as
+xCyRzD, where x is the number of CPUs, y is the RAM in MB and D is disk in GB.
+For example for a flavor with 2 CPUs, 1GB RAM and 160 disk flavor id would be:
+2C1024R160G.
+This is done to make the id of the flavor convey information about the flavor
+as opposed to automatically generated UUID which conveys no information at all.
 
 For networing, use neutron networking (not nova-networking)
 
 Follow the guide for rest of the process, till network creation.
 
-edit /etc/neutron/dhcp_agent.ini file in the neutron node to contain the following value
+edit /etc/neutron/dhcp_agent.ini file in the neutron node to contain the
+following value
 dhcp_domain = iitd.ac.in
 
-Create a router by following the guide. (Do not change the name of the external network, keep it 'ext-net')
+Create a router by following the guide. (Do not change the name of the external
+network, keep it 'ext-net')
 
 Create internal network using the below command
-$ neutron net-create --tenant-id $tenant NETWORK_NAME --provider:network_type gre --provider:segmentation_id SEGMENTATION_ID
+$ neutron net-create --tenant-id $tenant NETWORK_NAME --provider:network_type \\
+gre --provider:segmentation_id SEGMENTATION_ID
 
 create subnet in each network using the below command
 $ neutron subnet-create --tenant-id $tenant --name SUBNET_NAME NETWORK_NAME CIDR
