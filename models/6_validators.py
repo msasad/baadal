@@ -16,7 +16,7 @@ def validate_registration_form(vars):
         fields.append('username')
     if not email_is_valid(vars.email):
         fields.append('email')
-    if not password_is_valid(vars.password, vars['password_repeat']):
+    if not password_is_valid(vars.password, vars['password-repeat']):
         fields.append('password')
         fields.append('password-repeat')
     return fields
@@ -46,11 +46,7 @@ def email_is_valid(email):
 
 
 def password_is_valid(password, password_repeat):
-    valid = True
-    validator = validators.IS_STRONG(min=8)
-    valid = valid and validator(password)[1] is None
-    valid = valid and (password == password_repeat)
-    return valid
+    return len(password) > 6 and (password == password_repeat)
 
 
 def validate_vm_request_form(vars):
