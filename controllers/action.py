@@ -36,11 +36,9 @@ def __do(action, vmid):
                     vm.clone()
                 elif action == 'poweroff':
                     vm.shutdown(force=True)
-                elif action == 'get-vnc-console':
-                    consoleurl = vm.get_console_url()
-                    return jsonify(consoleurl=consoleurl, action=action)
-                elif action == 'get-spice-console':
-                    consoleurl = vm.get_console_url(console_type='spice')
+                elif action == 'get-console-url':
+                    console_type = config.get('misc', 'console_type')
+                    consoleurl = vm.get_console_url(console_type=console_type)
                     return jsonify(consoleurl=consoleurl, action=action)
                 elif action == 'start-resume':
                     status = vm.get_status()
@@ -120,12 +118,8 @@ def __restore_snapshot(vmid):
     return __do('restore-snapshot', vmid)
 
 
-def __get_vnc_console(vmid):
-    return __do('get-vnc-console', vmid)
-
-
-def __get_spice_console(vmid):
-    return __do('get-spice-console', vmid)
+def __get_console_url(vmid):
+    return __do('get-console-url', vmid)
 
 
 def __migrate(vmid):
@@ -152,10 +146,8 @@ def index():
         return __start_resume(vmid)
     elif action == 'snapshot':
         return __snapshot(vmid)
-    elif action == 'get-vnc-console':
-        return __get_vnc_console(vmid)
-    elif action == 'get-spice-console':
-        return __get_spice_console(vmid)
+    elif action == 'get-console-url':
+        return __get_console_url(vmid)
     elif action == 'clone':
         return __clone_vm(vmid)
     elif action == 'poweroff':

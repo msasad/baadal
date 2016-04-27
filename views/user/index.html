@@ -89,7 +89,7 @@
   $myvms.on('click', '.btn-settings', function (e) {
     var tr = this.closest('tr');
     var context = $table.row(tr).data();
-    context['ip-addresses'] = baadalApp.ipArrayToString(context['ip-addresses'],
+    context['ip-addresses'] = baadalApp.ipObjectToString(context['addresses'],
       true);
     $.ajax( {
       url : '/baadal/static/templates/vm-settings-template.html',
@@ -131,7 +131,8 @@
                     },
                     success: function (response) {
                       switch (response.action) {
-                        case 'get-spice-console':
+                        case 'get-console-url':
+                          console.log('here');
                           $modal.find('#modal-info-message').html(response.consoleurl).slideDown();
                           break;
                       }
@@ -238,7 +239,7 @@
                       $modal.find('#modal-info-message').html('<p> Snapshot ' +
                         'successfully created.</p>').slideDown();
                       break;
-                    case 'get-spice-console':
+                    case 'get-console-url':
                       $modal.find('.panel-footer').show();
                       $modal.find('#modal-info-message').html('<a target="_blank" href="' + response.consoleurl + '">' + response.consoleurl+ '</a>').slideDown();
                       break;
