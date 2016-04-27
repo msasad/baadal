@@ -118,11 +118,11 @@ def all_vms():
         response = list()
         for vm in vms:
             vm_properties = vm.properties()
-            snapshots = vm.properties()['snapshots']
-            STR = 'created'
-            for i in range(0, len(snapshots)):
-                snapshots[i][STR] = convert_timezone(snapshots[i][STR])
-            vm_properties['snapshots'] = snapshots
+            #   snapshots = vm.properties()['snapshots']
+            #   STR = 'created'
+            #   for i in range(0, len(snapshots)):
+            #       snapshots[i][STR] = convert_timezone(snapshots[i][STR])
+            #   vm_properties['snapshots'] = snapshots
             response.append(vm_properties)
         return jsonify(data=response)
     except Exception as e:

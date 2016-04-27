@@ -92,7 +92,7 @@
         </div>
         <div class="panel-footer" style="display:none">
           <p class="text-success" style="display:none">Your request has been posted and is waiting for approval</p>
-          <p class="text-danger">There was some error while posting your request. Please correct the values and try again.</p>
+          <p class="text-danger" style="display:none">There was some error while posting your request. Please correct the values and try again.</p>
         </div>
       </div>
     </div>
@@ -106,14 +106,14 @@
       $('#register-form').find('.has-error').removeClass('has-error');
       $('div.panel-footer').hide();
       $.ajax({
-        url: '/baadal/post_request/register_user',
+        url: '/baadal/post_request/register_user.json',
         type: 'post',
         data: data,
         success:function(response) {
           console.log(response);
           if (response.status == 'success') {
             $('div.panel-footer').show(function(){
-              $('#register-form').replaceWith('<h1>Success!</h1>');
+              $('#register-form').replaceWith('<h1>Successfull!</h1>');
               $('div.panel-footer>.text-success').slideDown();
             });
           } else {

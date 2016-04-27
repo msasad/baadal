@@ -16,7 +16,7 @@ def validate_registration_form(vars):
         fields.append('username')
     if not email_is_valid(vars.email):
         fields.append('email')
-    if not password_is_valid(vars.password, vars['password_repeat']):
+    if not password_is_valid(vars.password, vars['password-repeat']):
         fields.append('password')
         fields.append('password-repeat')
     return fields
@@ -24,15 +24,16 @@ def validate_registration_form(vars):
 
 def userid_is_valid(userid):
     valid = True
+    length = len(userid)
     validator = validators.IS_IN_DB(db, db.account_requests.userid)
-    valid = valid and validator(userid)[1] is not None and len(userid) >= 4
+    valid = valid and validator(userid)[1] is not None and (4 <= length <= 12)
     validator = validators.IS_ALPHANUMERIC()
     valid = valid and validator(userid)[1] is None
     return valid
 
 
 def username_is_valid(username):
-    return validators.re.match(r'^[A-Za-z][A-Za-z ]{2,}[A-Za-z]$',
+    return validators.re.match(r'^[A-Za-z][A-Za-z ]{2,10}[A-Za-z]$',
                                username) is not None
 
 
@@ -46,11 +47,7 @@ def email_is_valid(email):
 
 
 def password_is_valid(password, password_repeat):
-    valid = True
-    validator = validators.IS_STRONG(min=8, upper=2, lower=2)
-    valid = valid and validator(password)[1] is None
-    valid = valid and (password == password_repeat)
-    return valid
+    return len(password) > 6 and (password == password_repeat)
 
 
 def validate_vm_request_form(vars):
@@ -77,7 +74,7 @@ def validate_vm_request_form(vars):
 
 
 def vmname_is_valid(vm_name):
-    return validators.re.match(r'^[A-Za-z][A-Za-z_\-0-9]{2,}[A-Za-z0-9]$',
+    return validators.re.match(r'^[A-Za-z][A-Za-z_\-0-9]{2,10}[A-Za-z0-9]$',
                                vm_name) is not None
 
 
@@ -158,6 +155,7 @@ def validate_subnet_form(vars):
 
 def subnet_name_is_valid(subnet_name):
     return username_is_valid(subnet_name)
+
 
 def cidr_is_valid(cidr):
     re = r'^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|'\

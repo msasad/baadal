@@ -18,9 +18,7 @@
                 <th>VM Name</th>
                 <th>State</th>
                 <th>IP Address(es)</th>
-                <th>VCPUs</th>
-                <th>Memory</th>
-                <th>Disk</th>
+                <th>Config</th>
                 <th>Users</th>
               </tr>
               </thead>
@@ -29,10 +27,8 @@
                 <td>{{name}}</td>
                 <td>{{status}}</td>
                 <td style="white-space:nowrap">{{{ip-addresses}}}</td>
-                <td>{{vcpus}}</td>
-                <td>{{memory}}</td>
-                <td>{{disk}}</td>
-                <td>{{owner.id}}</td>
+                <td>{{flavor.id}}</td>
+                <td>{{user_id}}</td>
               </tr>
               </tbody>
             </table>
@@ -47,11 +43,11 @@
                 <span class="fa fa-hdd-o" aria-hidden="true"></span>
               </button>
 
-              <button type="button" data-action="get-spice-console"
-                class="btn btn-lg btn-default btn-action" title="Get VNC Console URL">
+              <button type="button" data-action="get-console-url"
+                class="btn btn-lg btn-default btn-action" title="Get Console URL">
                 <span class="fa fa-terminal" aria-hidden="true"></span>
               </button>
-              {{#ifCond status '==' 'Running'}}
+              {{#ifCond status '==' 'ACTIVE'}}
               <button type="button" data-action="shutdown" class="btn btn-lg btn-default btn-action" 
                 title="Shutdown">
                 <span class="fa fa-stop" aria-hidden="true"></span>
@@ -74,6 +70,7 @@
                  title="Request Resize">
                 <span class="fa fa-expand" aria-hidden="true"></span>
               </button>
+              {{#ifCond status '==' 'ACTIVE'}}
               <button type="button" data-action="soft-reboot" class="btn btn-lg btn-default btn-action"
                 title="Soft Reboot">
                 <span class="fa fa-refresh" aria-hidden="true"></span>
@@ -86,6 +83,7 @@
                 class="btn btn-lg btn-warning btn-action" title="Force Reboot">
                 <span class="fa fa-refresh" aria-hidden="true"></span>
               </button>
+              {{/ifCond}}
               <button type="button" data-action="delete" class="btn btn-lg btn-danger btn-action" 
                 title="Delete VM">
                 <span class="fa fa-remove" aria-hidden="true"></span>
