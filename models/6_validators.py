@@ -24,15 +24,16 @@ def validate_registration_form(vars):
 
 def userid_is_valid(userid):
     valid = True
+    length = len(userid)
     validator = validators.IS_IN_DB(db, db.account_requests.userid)
-    valid = valid and validator(userid)[1] is not None and len(userid) >= 4
+    valid = valid and validator(userid)[1] is not None and (4 <= length <= 12)
     validator = validators.IS_ALPHANUMERIC()
     valid = valid and validator(userid)[1] is None
     return valid
 
 
 def username_is_valid(username):
-    return validators.re.match(r'^[A-Za-z][A-Za-z ]{2,}[A-Za-z]$',
+    return validators.re.match(r'^[A-Za-z][A-Za-z ]{2,10}[A-Za-z]$',
                                username) is not None
 
 
@@ -73,7 +74,7 @@ def validate_vm_request_form(vars):
 
 
 def vmname_is_valid(vm_name):
-    return validators.re.match(r'^[A-Za-z][A-Za-z_\-0-9]{2,}[A-Za-z0-9]$',
+    return validators.re.match(r'^[A-Za-z][A-Za-z_\-0-9]{2,10}[A-Za-z0-9]$',
                                vm_name) is not None
 
 
