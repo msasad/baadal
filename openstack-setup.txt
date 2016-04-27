@@ -8,9 +8,9 @@ Kilo (located at
 http://docs.openstack.org/kilo/install-guide/install/apt/content/index.html)
 
 While creating flavor give the id of the flavor as
-xCyRzD, where x is the number of CPUs, y is the RAM in MB and D is disk in GB.
+xCPU-yM-zG, where x is the number of CPUs, y is the RAM in MB and D is disk in GB.
 For example for a flavor with 2 CPUs, 1GB RAM and 160 disk flavor id would be:
-2C1024R160G.
+2CPU-1024M-160G.
 This is done to make the id of the flavor convey information about the flavor
 as opposed to automatically generated UUID which conveys no information at all.
 
