@@ -4,94 +4,112 @@
     <h3 class="panel-title">New VM Request Form</h3>
   </div>
   <div class="panel-body">
-    <form role="form" id="vm_request" name="vm_request" action="/baadal/user/post_request" method="post" class="form-horizontal">
-      <div class="form-group">
-        <label for="vm_name" class="col-sm-3 control-label">VM Name*</label>
-        <div class="col-sm-9">
-          <input type="text" class="form-control" id="vm_name" name="vm_name" placeholder="Name of the requested VM" required="required">
-        </div>
-      </div>
-      <div class="form-group">
-        <label for="template" class="col-sm-3 control-label">Template*</label>
-        <div class="col-sm-9">
-          <select id="template" name="template" class="form-control select" required="required">
-            <option value=""></option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group">
-        <label for="config" class="col-sm-3 control-label">Configuration*</label>
-        <div class="col-sm-9">
-          <select id="config" name="config" class="form-control select" required="required">
-            <option value=""></option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="sec_domain" class="col-sm-3 control-label">Security Domain*</label>
-        <div class="col-sm-9">
-          <select id="sec_domain" name="sec_domain" class="form-control select" required="required">
-            <option value=""></option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="storage" class="col-sm-3 control-label">Extra Storage (GB)</label>
-        <div class="col-sm-9">
-          <input type="number" id="storage" name="storage" min=0 value="0" 
-            class="form-control">
-        </div>
-      </div>
-  
-      <div class="form-group">
-        <label for="purpose" class="col-sm-3 control-label">Purpose</label>
-        <div class="col-sm-9">
-          <textarea id="purpose" name="purpose" class="form-control textarea"></textarea>
-        </div>
-      </div>
-  
-      <div class="form-group">
-        <label class="col-sm-3 control-label">Public IP Required</label>
-        <div class="col-sm-9">
-          <div class="radio radio-inline">
-            <label>
-              <input type="radio" name="public_ip" id="public_ip" value="yes">Yes
-            </label>
+    <div class="row">
+      <div class="col-sm-7">
+        <form role="form" id="vm_request" name="vm_request" action="/baadal/user/post_request" method="post" class="form-horizontal">
+          <div class="form-group">
+            <label for="vm_name" class="col-sm-6 control-label">VM Name*</label>
+            <div class="col-sm-6">
+              <input type="text" class="form-control" id="vm_name" name="vm_name" placeholder="Name of the requested VM" required="required">
+            </div>
           </div>
-          <div class="radio radio-inline">
-            <label>
-              <input type="radio" name="public_ip" id="public_ip" value="No" checked>No
-            </label>
+          <div class="form-group">
+            <label for="template" class="col-sm-6 control-label">Template*</label>
+            <div class="col-sm-6">
+              <select id="template" name="template" class="form-control select" required="required">
+                <option value=""></option>
+              </select>
+            </div>
           </div>
-        </div>
-      </div>
-  
-      <div class="form-group">
-        <label for="collaborators" class="col-sm-3 control-label">Collaborators</label>
-        <div class="col-sm-9">
-          <input type="text" id="collaborators" name="collaborators" class="form-control">
-        </div>
-      </div>
+          <div class="form-group">
+            <label for="config" class="col-sm-6 control-label">Configuration*</label>
+            <div class="col-sm-6">
+              <select id="config" name="config" class="form-control select" required="required">
+                <option value=""></option>
+              </select>
+            </div>
+          </div>
 
-      {{if ('faculty' not in auth.user_groups.values()) and ('admin' not in auth.user_groups.values()):}}
-      <div class="form-group">
-        <label for="faculty" class="col-sm-3 control-label">Faculty Approver*</label>
-        <div class="col-sm-9">
-          <input type="text" id="faculty" name="faculty" class="form-control" required="required">
-        </div>
-      </div>
+          <div class="form-group">
+            <label for="sec_domain" class="col-sm-6 control-label">Security Domain*</label>
+            <div class="col-sm-6">
+              <select id="sec_domain" name="sec_domain" class="form-control select" required="required">
+                <option value=""></option>
+              </select>
+            </div>
+          </div>
 
-      {{pass}}
+          <div class="form-group">
+            <label for="storage" class="col-sm-6 control-label">Extra Storage (GB)</label>
+            <div class="col-sm-6">
+              <input type="number" id="storage" name="storage" min=0 value="0"
+                class="form-control">
+            </div>
+          </div>
 
-      <div class="form-group">
-        <div class="col-sm-9 col-sm-offset-3">
-          <button class="btn btn-primary" type="submit" id="submit_request">Submit</button>
-          <button class="btn btn-default" type="reset">Reset</button>
-        </div>
+          <div class="form-group">
+            <label for="purpose" class="col-sm-6 control-label">Purpose</label>
+            <div class="col-sm-6">
+              <textarea id="purpose" name="purpose" class="form-control textarea"></textarea>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="col-sm-6 control-label">Public IP Required</label>
+            <div class="col-sm-6">
+              <div class="radio radio-inline">
+                <label>
+                  <input type="radio" name="public_ip" id="public_ip" value="yes">Yes
+                </label>
+              </div>
+              <div class="radio radio-inline">
+                <label>
+                  <input type="radio" name="public_ip" id="public_ip" value="No" checked>No
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="collaborators" class="col-sm-6 control-label">Collaborators</label>
+            <div class="col-sm-6">
+              <input type="text" id="collaborators" name="collaborators" class="form-control">
+            </div>
+          </div>
+
+          {{if ('faculty' not in auth.user_groups.values()) and ('admin' not in auth.user_groups.values()):}}
+          <div class="form-group">
+            <label for="faculty" class="col-sm-6 control-label">Faculty Approver*</label>
+            <div class="col-sm-6">
+              <input type="text" id="faculty" name="faculty" class="form-control" required="required">
+            </div>
+          </div>
+
+          {{pass}}
+
+          <div class="form-group">
+            <div class="col-sm-6 col-sm-offset-6">
+              <button class="btn btn-primary" type="submit" id="submit_request">Submit</button>
+              <button class="btn btn-default" type="reset">Reset</button>
+            </div>
+          </div>
+        </form>
       </div>
-    </form>
+      <div class=" panel panel-info col-sm-4" id="info-panel">
+         <div class="panel-body">
+            <p class="text-info" data-for="template" style="display:none">Please select a suitable template for your new virtual machine.</p>
+            <p class="text-info" data-for="vm_name" style="display:none">The name to be given to the newly created virtual machine. <br>
+              The name must be unique, alphanumeric, 2 to 12 characters long, must not contain any special characters other than _ or - </p>
+            <p class="text-info" data-for="config" style="display:none">Please select and appropriate configuration for the virtual machine.</p>
+            <p class="text-info" data-for="sec_domain" style="display:none">The security or the network in which your virtual machine should belong.</p>
+            <p class="text-info" data-for="storage" style="display:none">Size of extra disk, if required.</p>
+            <p class="text-info" data-for="purpose" style="display:none">(Optional) The purpose for which this virtual machine will be used.</p>
+            <p class="text-info" data-for="collaborators" style="display:none">(Optional) UserIDs of the users with whom you want to share this virtual machine.
+              Separate multiple IDs with comma.</p>
+            <p class="text-info" data-for="faculty" style="display:none">The UserID of the faculty who will approve this virtual machine.</p>
+         </div>
+      </div>
+    </div>
   </div>
 
   <div class="panel-footer">
@@ -177,6 +195,17 @@
       }
     });
   });
+  
+  $('#vm_request').on('focusin', '.form-control', function(e) {
+    var $info = $('#info-panel p[data-for=' + this.id + ']')
+    $info.fadeIn();
+  });
+  $('#vm_request').on('focusout', '.form-control', function(e) {
+    var $info = $('#info-panel p[data-for=' + this.id + ']')
+    $info.hide();
+  });
+  
+  document.getElementById('vm_name').focus();  
 })();
 </script>
 {{include 'wrap.html'}}
