@@ -16,17 +16,17 @@
   <link href="/baadal/static/css/baadal-custom.css" rel="stylesheet" type="text/css">
   <style type="text/css">
     body {
-      margin-top:60px;
+      margin-top: 60px;
       margin-left: auto;
       margin-right: auto;
       background-color: #eee;
     }
   </style>
-    
 
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
+
+  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
         <script src="/baadal/static/js/html5shiv.js"></script>
         <script src="/baadal/static/js/respond.min.js"></script>
     <![endif]-->
@@ -43,52 +43,66 @@
           </h3>
         </div>
         <div class="panel-body">
-          <form action="#" role="form" class="form-horizontal" id="register-form">
-            <div class="form-group">
-              <label for="username" class="control-label col-sm-offset-2 col-sm-2">Username</label>
-              <div class="col-sm-6">
-                <input type="text" class="form-control" id="username" name="username" placeholder="Your full name">
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="userid" class="control-label col-sm-offset-2 col-sm-2">UserID</label>
-              <div class="col-sm-6">
-                <input type="text" class="form-control" id="userid" name="userid" placeholder="Desired userid">
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="email" class="control-label col-sm-offset-2 col-sm-2">E-Mail</label>
-              <div class="col-sm-6">
-                <input type="text" class="form-control" id="email" name="email" placeholder="E-mail address provided by your institution">
-              </div>
-            </div>
-            <div class="form-group">
-              <div class="col-sm-offset-4 col-sm-6">
-                <div class="checkbox">
-                  <label>
-                    <input type="checkbox" name="chk_faculty_privileges" value="true"> Request faculty privileges
-                  </label>
+          <div class="row">
+            <div class="col-sm-7">
+              <form action="#" role="form" class="form-horizontal" id="register-form">
+                <div class="form-group">
+                  <label for="username" class="control-label col-sm-offset-1 col-sm-2">Username</label>
+                  <div class="col-sm-6">
+                    <input type="text" class="form-control" id="username" name="username" placeholder="Your full name">
+                  </div>
                 </div>
+                <div class="form-group">
+                  <label for="userid" class="control-label col-sm-offset-1 col-sm-2">UserID</label>
+                  <div class="col-sm-6">
+                    <input type="text" class="form-control" id="userid" name="userid" placeholder="Desired userid">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="email" class="control-label col-sm-offset-1 col-sm-2">E-Mail</label>
+                  <div class="col-sm-6">
+                    <input type="text" class="form-control" id="email" name="email" placeholder="E-mail address provided by your institution">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <div class="col-sm-offset-3 col-sm-6">
+                    <div class="checkbox">
+                      <label>
+                        <input type="checkbox" name="chk_faculty_privileges" value="true" id="faculty_privileges"> Request faculty privileges
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="password" class="control-label col-sm-offset-1 col-sm-2">Password</label>
+                  <div class="col-sm-6">
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Choose a password">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="password-repeat" class="control-label col-sm-offset-1 col-sm-2">Repeat Password</label>
+                  <div class="col-sm-6">
+                    <input type="password" class="form-control" id="password-repeat" name="password-repeat" placeholder="Repeat password">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <div class="col-sm-offset-3 col-sm-10">
+                    <button class="btn btn-default">Register</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class=" panel panel-info col-sm-4" id="info-panel">
+              <div class="panel-body">
+                <p class="text-info" data-for="username" style="display:none">Full name of the user. No digits or special characters allowed. 4 to 16 characters long.</p>
+                <p class="text-info" data-for="userid" style="display:none">The desired userid. Alphanumeric string 4 to 12 characters in length. Must be unique.</p>
+                <p class="text-info" data-for="email" style="display:none">Email address provided by the organization.</p>
+                <p class="text-info" data-for="faculty_privileges" style="display:none">Check this box only if you are a faculty in this organization.</p>
+                <p class="text-info" data-for="password" style="display:none">Any password, minimum 6 characters in length. </p>
+                <p class="text-info" data-for="password-repeat" style="display:none">Repeat the same password again.</p>
               </div>
             </div>
-            <div class="form-group">
-              <label for="password" class="control-label col-sm-offset-2 col-sm-2">Password</label>
-              <div class="col-sm-6">
-                <input type="password" class="form-control" id="password" name="password" placeholder="Choose a password">
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="password-repeat" class="control-label col-sm-offset-2 col-sm-2">Repeat Password</label>
-              <div class="col-sm-6">
-                <input type="password" class="form-control" id="password-repeat" name="password-repeat" placeholder="Repeat password">
-              </div>
-            </div>
-            <div class="form-group">
-              <div class="col-sm-offset-4 col-sm-10">
-                <button class="btn btn-default">Register</button>
-              </div>
-            </div>
-          </form>
+          </div>
         </div>
         <div class="panel-footer" style="display:none">
           <p class="text-success" style="display:none">Your request has been posted and is waiting for approval</p>
@@ -99,50 +113,59 @@
   </div>
   {{include 'default-scripts.html'}}
   <script>
-  (function($) {
-    $('#register-form').on('submit', function(e) {
-      e.preventDefault();
-      var data = $('.form-horizontal').serializeArray();
-      $('#register-form').find('.has-error').removeClass('has-error');
-      $('div.panel-footer').hide();
-      $.ajax({
-        url: '/baadal/post_request/register_user.json',
-        type: 'post',
-        data: data,
-        success:function(response) {
-          console.log(response);
-          if (response.status == 'success') {
-            $('div.panel-footer').show(function(){
-              $('#register-form').replaceWith('<h1>Successfull!</h1>');
-              $('div.panel-footer>.text-success').slideDown();
-            });
-          } else {
+    (function($) {
+      $('#register-form').on('submit', function(e) {
+        e.preventDefault();
+        var data = $('.form-horizontal').serializeArray();
+        $('#register-form').find('.has-error').removeClass('has-error');
+        $('div.panel-footer').hide();
+        $.ajax({
+          url: '/baadal/post_request/register_user.json',
+          type: 'post',
+          data: data,
+          success: function(response) {
+            console.log(response);
+            if (response.status == 'success') {
+              $('div.panel-footer').show(function() {
+                $('#register-form').replaceWith('<h1>Successfull!</h1>');
+                $('div.panel-footer>.text-success').slideDown();
+              });
+            } else {
+              if (response.fields) {
+                for (var field of response.fields) {
+                  document.getElementById(field).parentElement.classList.add('has-error');
+                }
+              }
+              $('div.panel-footer').show(function() {
+                $('div.panel-footer>.text-danger').slideDown();
+              });
+            }
+          },
+          error: function(error, code, response) {
+            console.log(error.responseText, code, response);
+            response = JSON.parse(error.responseText);
             if (response.fields) {
               for (var field of response.fields) {
                 document.getElementById(field).parentElement.classList.add('has-error');
               }
             }
-            $('div.panel-footer').show(function(){
+            $('div.panel-footer').show(function() {
               $('div.panel-footer>.text-danger').slideDown();
             });
           }
-        },
-        error: function(error, code, response) {
-          console.log(error.responseText, code, response);
-          response = JSON.parse(error.responseText);
-          if (response.fields) {
-            for (var field of response.fields) {
-              document.getElementById(field).parentElement.classList.add('has-error');
-            }
-          }
-          $('div.panel-footer').show(function(){
-            $('div.panel-footer>.text-danger').slideDown();
-          });
-        }
+        });
       });
-    });
-  })(jQuery);
+      $('#register-form').on('focusin', 'input', function(e) {
+        var $info = $('#info-panel p[data-for=' + this.id + ']')
+        $info.fadeIn();
+      });
+      $('#register-form').on('focusout', 'input', function(e) {
+        var $info = $('#info-panel p[data-for=' + this.id + ']')
+        $info.hide();
+      });
+      document.getElementById('username').focus();
+    })(jQuery);
   </script>
 </body>
-</html>
 
+</html>

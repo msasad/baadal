@@ -33,7 +33,7 @@ def userid_is_valid(userid):
 
 
 def username_is_valid(username):
-    return validators.re.match(r'^[A-Za-z][A-Za-z ]{2,10}[A-Za-z]$',
+    return validators.re.match(r'^[A-Za-z][A-Za-z ]{2,16}[A-Za-z]$',
                                username) is not None
 
 
