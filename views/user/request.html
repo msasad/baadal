@@ -178,17 +178,17 @@
       'success' : function(response){
         if(response.status == 'success') {
           $('#success-message').fadeIn();
-        } else {
-          $('#error-message').fadeIn();
         }
       },
       'error' : function(response) {
         var error;
+        $('#error-message').fadeIn();
         if (error = response.getResponseHeader('web2py_error')) {
           baadalApp.generateTicketLink(error);
         }
         response = JSON.parse(response.responseText)
         if (response.fields) {
+          document.getElementById(response.fields[0]).focus();
           for ( var id of response.fields ) {
             document.getElementById(id).parentElement.classList.add('has-error');
           }
@@ -196,7 +196,7 @@
       }
     });
   });
-  
+
   $('#vm_request').on('focusin', '.form-control, #public_ip', function(e) {
     var $info = $('#info-panel p[data-for=' + this.id + ']')
     $info.fadeIn();
@@ -205,8 +205,12 @@
     var $info = $('#info-panel p[data-for=' + this.id + ']')
     $info.hide();
   });
-  
-  document.getElementById('vm_name').focus();  
+
+  document.getElementById('vm_name').focus();
+  document.addEventListener('readystatechange', function(e,s ) {
+    console.log(e,s);
+    document.getElementById('vm_name').focus();
+  }, false);
 })();
 </script>
 {{include 'wrap.html'}}
