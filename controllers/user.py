@@ -59,10 +59,10 @@ def vm_status():
 
 @auth.requires_login()
 def my_requests():
-    rows = db(db.vm_requests.requester == session.username).select()
+    rows = db(db.vm_requests.requester == session.username and db.vm_requests.state < 2).select()
     l = rows.as_list()
     for i in l:
-        i['flavor'] = flavor_info(i['flavor'])
+        # i['flavor'] = flavor_info(i['flavor'])
         i['sec_domain'] = network_name_from_id(i['sec_domain'])
         i['request_time'] = seconds_to_localtime(i['request_time'])
         i['public_ip_required'] = 'Required' if i['public_ip_required'] == 1 \
