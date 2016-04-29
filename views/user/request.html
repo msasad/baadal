@@ -206,10 +206,8 @@
     $info.hide();
   });
 
-  document.getElementById('vm_name').focus();
-  document.addEventListener('readystatechange', function(e,s ) {
-    console.log(e,s);
-    document.getElementById('vm_name').focus();
+  document.addEventListener('readystatechange', function() {
+    setTimeout( function () { document.getElementById('vm_name').focus(); }, 500);
   }, false);
 })();
 </script>
