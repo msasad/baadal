@@ -17,10 +17,19 @@ def my_vms():
     try:
         conn = Baadal.Connection(_authurl, _tenant, session.username,
                                  session.password)
+        images = dict()
         vms = conn.baadal_vms()
         response = list()
         for vm in vms:
             vm_properties = vm.properties()
+            image_id = vm_properties['image']['id']
+            if not images.has_key(image_id):
+                image = conn.find_image(id=image_id)
+                meta = image.metadata
+                images[image_id] = ' '.join([meta['os_name'],
+                    meta['os_version'], meta['os_arch'],
+                    meta['os_edition'], meta['disk_size']])
+            vm_properties['image']['info'] = images[image_id]
             response.append(vm_properties)
         #     snapshots = vm.properties()['snapshots']
         #     for index in range(0, len(snapshots)):
