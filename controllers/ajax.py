@@ -80,6 +80,29 @@ def networks():
 
 
 @auth.requires_login()
+def snapshots():
+    try:
+        conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                 session.password)
+        if conn:
+            vm = conn.find_baadal_vm(id=request.vars.vmid)
+            snapshots = vm.get_snapshots()
+            l = []
+            for snapshot in snapshots:
+                l.append({'id': snapshot.id, 'created': snapshot.created,
+                          'name': snapshot.name})
+            return jsonify(data={'snapshots':l})
+    except Exception as e:
+        logger.exception(e)
+        return jsonify(status='fail', message=e.message)
+    finally:
+        try:
+            conn.close()
+        except:
+            pass
+
+
+@auth.requires_login()
 def sgroups():
     try:
         conn = Baadal.Connection(_authurl, _tenant, session.username,
