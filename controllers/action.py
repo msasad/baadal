@@ -287,8 +287,8 @@ def __create():
             db.commit()
             return jsonify()
     except Baadal.BaadalException as e:
-        logger.exception(e.message)
-        return jsonify(status='fail')
+        logger.exception(e)
+        return jsonify(status='fail', message=e.message)
     finally:
         try:
             conn.close()
