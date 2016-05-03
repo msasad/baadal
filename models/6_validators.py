@@ -47,7 +47,7 @@ def email_is_valid(email):
 
 
 def password_is_valid(password, password_repeat):
-    return len(password) > 6 and (password == password_repeat)
+    return len(password) >= 6 and (password == password_repeat)
 
 
 def validate_vm_request_form(vars):
