@@ -43,7 +43,7 @@
           </h3>
         </div>
         <div class="panel-body">
-          <div class="row">
+          <div class="row" id="mainrow">
             <div class="col-sm-7">
               <form action="#" role="form" class="form-horizontal" id="register-form">
                 <div class="form-group">
@@ -127,7 +127,7 @@
             console.log(response);
             if (response.status == 'success') {
               $('div.panel-footer').show(function() {
-                $('#register-form').replaceWith('<h1>Successfull!</h1>');
+                $('#mainrow').replaceWith('<h1>Successfull!</h1>');
                 $('div.panel-footer>.text-success').slideDown();
               });
             } else {
