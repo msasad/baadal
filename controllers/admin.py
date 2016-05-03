@@ -275,20 +275,41 @@ def disk_requests():
     if request.extension in ('', None, 'html'):
         return dict()
     elif request.extension == 'json':
+        response = []
+        spurious_requests = []
         try:
             rows = db(db.virtual_disk_requests.status == 0).select()
-            l = rows.as_list()
             conn = Baadal.Connection(_authurl, _tenant, session.username,
                                      session.password)
-            for i in l:
-                i['request_time'] = str(i['request_time'])
-                vm = conn.find_baadal_vm(id=i['vmid'])
-                i['vm_name'] = vm.name
-                conn.close()
-            return jsonify(data=l)
+            for row in rows:
+                try:
+                    cr = {}
+                    from novaclient.exceptions import NotFound
+                    vm = conn.find_baadal_vm(id=row.vmid)
+                    cr['request_time'] = str(row.request_time)
+                    cr['vm_name'] = vm.name
+                    cr['user'] = row.user
+                    cr['disk_size'] = row.disk_size
+                    response.append(cr)
+                except NotFound:
+                    spurious_requests.append(str(row.id))
+                    continue
+            if len(spurious_requests):
+                query = 'delete from virtual_disk_requests where id in (%s)' % \
+                           (','.join(spurious_requests))
+                logger.info('query is ' + query)
+                db.executesql(query)
+                db.commit()
+
+            return jsonify(data=response)
         except Exception as e:
             logger.exception(e.message or str(e.__class__))
             return jsonify(status='fail', message=e.message or str(e.__class__))
+        finally:
+            try:
+                conn.close()
+            except:
+                pass
 
 
 @auth.requires(user_is_project_admin)
@@ -318,7 +339,7 @@ def resize_requests():
                     cr['request_time'] = seconds_to_localtime(row.request_time)
                     cr['vm_name'] = vm.name
                 except NotFound:
-                    spurious_requests.append(int(row.id))
+                    spurious_requests.append(str(row.id))
                     continue
                 flavor_id = vm.server.flavor['id']
                 if not templates.has_key(flavor_id):
@@ -333,9 +354,10 @@ def resize_requests():
                     templates[flavor_id] = 'RAM : %s, vCPUs: %s' % (temp.ram,
                                                                    temp.vcpus)
                 cr['requested_config'] = templates[flavor_id]
+                response.append(cr)
             if len(spurious_requests):
-                query = 'delete from resize_requests where id in %s' % \
-                           (str(tuple(spurious_requests)))
+                query = 'delete from resize_requests where id in (%s)' % \
+                           (','.join(spurious_requests))
                 db.executesql(query)
                 db.commit()
             return jsonify(data=response)
@@ -371,11 +393,11 @@ def clone_requests():
                     cr['full_clone'] = 'Yes' if i['full_clone'] == 1 else 'No'
                     response.append(cr)
                 except NotFound:
-                    spurious_requests.append(int(row.id))
+                    spurious_requests.append(str(row.id))
                     continue
             if len(spurious_requests):
-                query = 'delete from clone_requests where id in %s' % \
-                           (str(tuple(spurious_requests)))
+                query = 'delete from clone_requests where id in (%s)' % \
+                           (','.join(spurious_requests))
                 db.executesql(query)
                 db.commit()
             return jsonify(data=response)
