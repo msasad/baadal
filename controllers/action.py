@@ -324,19 +324,23 @@ def __faculty_approve():
 @auth.requires(user_is_project_admin)
 def handle_account_request():
     try:
-        row = db(db.account_requests.id == request.vars.id).select()[0]
-        username = row.username
-        user_is_faculty = bool(row.faculty_privileges)
-        password = row.password
-        email = row.email
-        userid = row.userid
-        ldap.add_user(username, userid, password,
-                      user_is_faculty=user_is_faculty, email=email)
-        conn = Baadal.Connection(_authurl, _tenant, session.username,
-                                 session.password)
-        conn.add_user_role(userid, _tenant, 'user')
-        row.update_record(approval_status=1)
-        db.commit()
+        if request.vars.action == 'approve':
+            row = db(db.account_requests.id == request.vars.id).select()[0]
+            username = row.username
+            user_is_faculty = bool(row.faculty_privileges)
+            password = row.password
+            email = row.email
+            userid = row.userid
+            ldap.add_user(username, userid, password,
+                          user_is_faculty=user_is_faculty, email=email)
+            conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                     session.password)
+            conn.add_user_role(userid, _tenant, 'user')
+            row.update_record(approval_status=1)
+            db.commit()
+        else:
+            db(db.account_requests.id == request.vars.id).delete()
+            db.commit()
         return jsonify()
     except Exception as e:
         logger.error(e.message or str(e.__class__))
