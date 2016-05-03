@@ -345,16 +345,30 @@ def clone_requests():
         try:
             rows = db(db.clone_requests.status == 0).select()
             l = rows.as_list()
+            response = []
             conn = Baadal.Connection(_authurl, _tenant, session.username,
                                      session.password)
-            for i in l:
-                i['request_time'] = seconds_to_localtime(i['request_time'])
-                vm = conn.find_baadal_vm(id=i['vm_id'])
-                i['vm_name'] = vm.name
-                i['full_clone'] = 'Yes' if i['full_clone'] == 1 else 'No'
-            return jsonify(data=l)
+            spurious_requests = []
+            for row in rows:
+                cr = dict()
+                cr['request_time'] = seconds_to_localtime(row.request_time)
+                try:
+                    from novaclient.exceptions import NotFound
+                    vm = conn.find_baadal_vm(id=row.vm_id)
+                    cr['vm_name'] = vm.name
+                    cr['full_clone'] = 'Yes' if i['full_clone'] == 1 else 'No'
+                    response.append(cr)
+                except NotFound:
+                    spurious_requests.append(int(row.id))
+                    continue
+            if len(spurious_requests):
+                query = 'delete from clone_requests where id in %s' % \
+                           (str(tuple(spurious_requests)))
+                db.executesql(query)
+                db.commit()
+            return jsonify(data=response)
         except Exception as e:
-            logger.error(e.message or str(e.__class__))
+            logger.exception(e)
             return jsonify(status='fail',
                            message=e.message or str(e.__class__))
         finally:
