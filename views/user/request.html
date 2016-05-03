@@ -77,7 +77,7 @@
             </div>
           </div>
 
-          {{if ('faculty' not in auth.user_groups.values()) and ('admin' not in auth.user_groups.values()):}}
+          {{if not (ldap.user_is_faculty(auth.user.username) or user_is_project_admin):}}
           <div class="form-group">
             <label for="faculty" class="col-sm-6 control-label">Faculty Approver*</label>
             <div class="col-sm-6">
