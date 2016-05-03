@@ -305,27 +305,40 @@ def resize_requests():
             # requested_config,
             # request_time
             rows = db(db.resize_requests.status == 0).select()
-            l = rows.as_list()
+            response = []
+            spurious_requests = []
             conn = Baadal.Connection(_authurl, _tenant, session.username,
                                      session.password)
-            for i in l:
+            templates = {}
+            for row in rows:
+                cr = {}
                 try:
-                    vm = conn.find_baadal_vm(id=i['vm_id'])
-                except Exception as e:
-                    if e.message.startswith('No Server'):
-                        logger.info('Stray resize_request entry for' 
-                                    + ' vm id ' + i['vm_id'])
-                        del l[l.index(i)]
-                        continue
-                i['request_time'] = seconds_to_localtime(i['request_time'])
-                i['vm_name'] = vm.name
-                templ = conn.find_template(id=vm.server.flavor['id'])
-                i['current_config'] = 'RAM : %s, vCPUs: %s' % (templ.ram,
-                                                               templ.vcpus)
-                templ = conn.find_template(id=i['new_flavor'])
-                i['requested_config'] = 'RAM : %s, vCPUs: %s' % (templ.ram,
-                                                                 templ.vcpus)
-            return jsonify(data=l)
+                    from novaclient.exceptions import NotFound
+                    vm = conn.find_baadal_vm(id=row.vm_id)
+                    cr['request_time'] = seconds_to_localtime(row.request_time)
+                    cr['vm_name'] = vm.name
+                except NotFound:
+                    spurious_requests.append(int(row.id))
+                    continue
+                flavor_id = vm.server.flavor['id']
+                if not templates.has_key(flavor_id):
+                    temp = conn.find_template(id=flavor_id)
+                    templates[flavor_id] = 'RAM : %s, vCPUs: %s' % (temp.ram,
+                                                                   temp.vcpus)
+                cr['current_config'] = templates[flavor_id]
+
+                flavor_id = row.new_flavor
+                if not templates.has_key(flavor_id):
+                    temp = conn.find_template(id=flavor_id)
+                    templates[flavor_id] = 'RAM : %s, vCPUs: %s' % (temp.ram,
+                                                                   temp.vcpus)
+                cr['requested_config'] = templates[flavor_id]
+            if len(spurious_requests):
+                query = 'delete from resize_requests where id in %s' % \
+                           (str(tuple(spurious_requests)))
+                db.executesql(query)
+                db.commit()
+            return jsonify(data=response)
         except Exception as e:
             logger.exception(e.message or str(e.__class__))
             return jsonify(status='fail',
@@ -344,7 +357,6 @@ def clone_requests():
     elif request.extension == 'json':
         try:
             rows = db(db.clone_requests.status == 0).select()
-            l = rows.as_list()
             response = []
             conn = Baadal.Connection(_authurl, _tenant, session.username,
                                      session.password)
