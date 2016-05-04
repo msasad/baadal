@@ -16,14 +16,14 @@
                 <p class="form-control-static" id="edit-vm-name"></p>
               </div>
             </div>
-          
+
             <div class="form-group">
               <label for="template" class="col-sm-3 control-label">Template</label>
               <div class="col-sm-9">
                 <p class="form-control-static" id="edit-template"></p>
               </div>
             </div>
-            
+
             <div class="form-group">
               <label for="sec_domain" class="col-sm-3 control-label">Security Domain</label>
               <div class="col-sm-9">
@@ -46,14 +46,14 @@
                 </select>
               </div>
             </div>
-          
+
             <div class="form-group">
               <label for="edit-storage" class="col-sm-3 control-label">Extra Storage (GB)</label>
               <div class="col-sm-9">
                 <input type="number" max="2048" min="0" id="edit-storage" name="storage" class="form-control">
               </div>
             </div>
-          
+
             <div class="form-group">
               <label class="col-sm-3 control-label">Public IP Required</label>
               <div class="col-sm-9">
@@ -141,7 +141,7 @@
           if(data.state == 0){
               approve_class = 'btn-warning';
           }
-          
+
           return '<div class="btn-group" role="group" aria-label="..."> <button title="Approve" type="button" data-action="approve" class="btn '+approve_class+' btn-action" aria-label="Approve">\
             <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>\
             </button> \
