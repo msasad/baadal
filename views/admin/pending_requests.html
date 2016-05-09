@@ -73,12 +73,12 @@
         </div>
         <div class="panel-footer">
           <span style="display:none" class="text-danger" id="modal-error-message">There was some error in the form. Please check the values and submit the form again.</span>
-          <span style="display:none" class="text-success" id="modal-success-message">Request successfully posted.</span>
+          <span style="display:none" class="text-success" id="modal-success-message">Request successfully modified. You may now close this dialog.</span>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" id="btn-mod-approve">Modify and Approve</button>
+        <button type="button" class="btn btn-primary" id="btn-mod-approve">Modify</button>
       </div>
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
@@ -210,7 +210,7 @@
           configSelect.options[configSelect.options.length] = new Option(text, curr_config['id'], data.flavor == curr_config.id);
         }
       }
-    });      
+    });
     document.getElementById('edit-vm-name').innerHTML = data.vm_name;
     document.getElementById('edit-template').innerHTML = data.image;
     document.getElementById('edit-sec-domain').innerHTML = data.sec_domain;
@@ -226,10 +226,14 @@
       }
     }
     console.log(data);
-    $('#my-modal').modal('show');
+    $('#my-modal').modal('show').on('hidden.bs.modal', function() {
+      $table.ajax.reload();
+      $('#modal-success-message').hide();
+      $('#modal-error-message').hide();
+    });
   });
 
-  $('#btn-mod-approve').one('click', function (e){
+  $('#btn-mod-approve').on('click', function (e){
     //save the new request to db
     //send it to backend for processing
     var data = {
@@ -247,6 +251,9 @@
       'success' : function(response) {
         if (response.status == 'success') {
           $('#modal-success-message').fadeIn();
+          setTimeout(function() {
+            $('#my-modal').modal('hide');
+          }, 1000);
         } else {
           $('#modal-error-message').fadeIn();
         }

@@ -456,7 +456,9 @@ class Connection:
             raise BaadalException('Not connected to openstack nova service')
         sec_group = self._network_name_from_id(nics[0]['net-id'])
         server = self.__conn.nova.servers.create(name, image, template,
-                                                 nics=nics, security_groups=[sec_group], **kwargs)
+                                                 nics=nics,
+                                                 security_groups=[sec_group],
+                                                 **kwargs)
         return BaadalVM(server=server, conn=self.__conn)
 
     def create_volume(self, size, imageref=None):

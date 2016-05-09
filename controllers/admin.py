@@ -418,3 +418,8 @@ def clone_requests():
 def index():
     return dict()
     pass
+
+@auth.requires(user_is_project_admin)
+def test():
+    scheduler.queue_task(test)
+    return jsonify()

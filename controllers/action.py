@@ -197,16 +197,13 @@ def handle_request():
     if action == 'approve':
         return __create()
     elif action == 'edit':
-        __modify_request()
-        return __create()
-        pass
+        return __modify_request()
+        # return __create()
     elif action == 'reject':
         return __reject()
-        pass
     elif action == 'faculty_edit':
         __modify_request()
         return __faculty_approve()
-        pass
     elif action == 'faculty_approve':
         return __faculty_approve()
 
@@ -251,42 +248,18 @@ def __finalize_vm(vm, extra_storage_size, public_ip_required=False):
 
 
 def __create():
+    from base64 import b64encode
+    from json import dumps
     try:
-        conn = Baadal.Connection(_authurl, _tenant, session.username,
-                                 session.password)
         row = db(db.vm_requests.id == request.vars.id).select()[0]
-        public_ip_required = row.public_ip_required
-        extra_storage_size = row.extra_storage
-        vm = conn.create_baadal_vm(row.vm_name, row.image, row.flavor,
-                                   [{'net-id': row.sec_domain}],
-                                   key_name=default_keypair)
-        """create port
-                attach floating IP to port
-                attach floating IP to VM
-        """
-        if vm:
-            row.update_record(state=2)
-            db.commit()
-            if public_ip_required == 1 or extra_storage_size:
-                # __finalize_vm(vm, extra_storage_size, public_ip_required)
-                thread = FuncThread(__finalize_vm, vm, extra_storage_size,
-                                    public_ip_required)
-                thread.start()
-            context = gluon.tools.Storage()
-            context.username = session.username
-            context.vm_name = row.vm_name
-            context.mail_support = mail_support
-            user_info = ldap.fetch_user_info(session.username)
-            context.user_email = user_info['user_email']
-            context.gateway_server = gateway_server
-            context.request_time = seconds_to_localtime(row.request_time)
-            mailer.send(mailer.MailTypes.VMCreated, context.user_email,
-                        context)
-            db.vm_activity_log.insert(vmid=vm.id, user=session.username,
-                                      task='create')
-            db.commit()
-            return jsonify()
+        row.update_record(state=REQUEST_STATUS_PROCESSING)
+        logger.info('Queuing task')
+        auth = b64encode(dumps(dict(u=session.username, p=session.password)))
+        scheduler.queue_task(task_create_vm, pvars={'reqid': row.id, 'auth': auth})
+        db.commit()
+        return jsonify()
     except Baadal.BaadalException as e:
+        row.update_record(state=REQUEST_STATUS_POSTED)
         logger.exception(e)
         return jsonify(status='fail', message=e.message)
     finally:
@@ -312,6 +285,7 @@ def __modify_request():
             public_ip_required=1 if request.vars.public_ip == 'yes' else 0,
             flavor=request.vars.flavor)
         db.commit()
+        return jsonify();
     except Exception as e:
         return jsonify(status='fail', message=str(e.__class__))
 
