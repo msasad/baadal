@@ -274,6 +274,7 @@ def account_requests():
 
 @auth.requires(user_is_project_admin)
 def disk_requests():
+    from novaclient.exceptions import NotFound
     if request.extension in ('', None, 'html'):
         return dict()
     elif request.extension == 'json':
@@ -286,8 +287,8 @@ def disk_requests():
             for row in rows:
                 try:
                     cr = {}
-                    from novaclient.exceptions import NotFound
                     vm = conn.find_baadal_vm(id=row.vmid)
+                    cr['id'] = row.id
                     cr['request_time'] = str(row.request_time)
                     cr['vm_name'] = vm.name
                     cr['user'] = row.user
