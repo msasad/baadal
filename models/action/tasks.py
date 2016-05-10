@@ -1,9 +1,10 @@
-def task_create_vm(reqid, auth):
-    from base64 import b64decode
-    from json import loads
-    from gluon.tools import Storage
-    from time import sleep
+from base64 import b64decode
+from json import loads
+from gluon.tools import Storage
+from time import sleep
 
+
+def task_create_vm(reqid, auth):
     logger.debug('inside scheduler')
     try:
         auth = Storage(loads(b64decode(auth)))
@@ -62,4 +63,49 @@ def task_create_vm(reqid, auth):
         logger.exception(e)
     finally:
         db.commit()
+
+
+def task_migrate_vm(auth, vmid, live=False, destination=None):
+    auth = Storage(loads(b64decode(auth)))
+    conn = Baadal.Connection(_authurl, _tenant, auth.u, auth.p)
+    if live:
+        pass
+    else:
+        pass
+
+
+def task_snapshot_vm(auth, vmid):
+    auth = Storage(loads(b64decode(auth)))
+    try:
+        conn = Baadal.Connection(_authurl, _tenant, auth.u, auth.p)
+        vm = conn.find_baadal_vm(id=vmid)
+        snapshot_id = vm.create_snapshot()
+        logger.info('Snapshot created: VMID %s, snapshot_id %s' % \
+                (vmid, snapshot_id))
+    except Exception as e:
+        logger.exception(e)
+
+
+def task_restore_snapshot(auth, vmid, snapshot_id):
+    auth = Storage(loads(b64decode(auth)))
+    try:
+        conn = Baadal.Connection(_authurl, _tenant, auth.u, auth.p)
+        vm = conn.find_baadal_vm(id=vmid)
+        vm.restore_snapshot(snapshot_id)
+        logger.info('Snapshot restored: VMID %s, snapshot_id %s' % \
+                (vmid, snapshot_id))
+    except Exception as e:
+        logger.exception(e)
+
+
+def task_clone_vm(auth, vmid):
+    auth = Storage(loads(b64decode(auth)))
+    try:
+        conn = Baadal.Connection(_authurl, _tenant, auth.u, auth.p)
+        vm = conn.find_baadal_vm(id=vmid)
+        clone = vm.clone()
+        logger.info('VM Cloned: VMID %s, clone_id %s' % \
+                (vmid, clone))
+    except Exception as e:
+        logger.exception(e)
 
