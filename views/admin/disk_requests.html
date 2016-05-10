@@ -17,7 +17,8 @@
     </table>
   </div>
   <div class="panel-footer">
-    <span style="display:none" class="text-success" id="success-message">Request approved.</span>
+    <span style="display:none" class="text-success" id="success-message-approve">Request approved.</span>
+    <span style="display:none" class="text-success" id="success-message-reject">Request rejected.</span>
     <span style="display:none" class="text-danger" id="error-message">Request cannot be approved.</span>
   </div>
 </div>
@@ -78,7 +79,7 @@
       },
       'success': function(response) {
         if(response.status == 'success') {
-          $('#success-message').fadeIn(1000, function () {
+          $('#success-message-' + response.action).fadeIn(1000, function () {
             $table.ajax.reload();
             $(this).fadeOut();
           });

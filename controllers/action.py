@@ -173,16 +173,19 @@ def __add_virtual_disk(vmid, size):
 def handle_disk_request():
     try:
         req = db(db.virtual_disk_requests.id==request.vars.id).select().first()
-        size = req.disk_size
-        conn = Baadal.Connection(_authurl, _tenant, session.username,
-                                 session.password)
-        vm = conn.find_baadal_vm(id=req.vmid)
-        disk = conn.create_volume(size)
-        while disk.status != 'available':
-            time.sleep(1)
-            disk = conn.get_disk_by_id(disk.id)
-        vm.attach_disk(disk)
-        req.update_record(status=1)
+        if request.vars.action == 'approve':
+            size = req.disk_size
+            conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                     session.password)
+            vm = conn.find_baadal_vm(id=req.vmid)
+            disk = conn.create_volume(size)
+            while disk.status != 'available':
+                time.sleep(5)
+                disk = conn.get_disk_by_id(disk.id)
+            vm.attach_disk(disk)
+            req.update_record(status=1)
+        elif request.vars.action == 'reject':
+            req.delete_record()
         db.commit()
         return jsonify()
     except Exception as e:
