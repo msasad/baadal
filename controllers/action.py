@@ -4,7 +4,7 @@ import time
 
 def __do(action, vmid):
     try:
-        auth = b64encode(dumps(dict(u=auth.user, p=session.password)))
+        auth = b64encode(dumps(dict(u=session.username, p=session.password)))
         if action == 'migrate':
             pvars = dict(auth=auth, vmid=vmid)
             scheduler.queue_task(task_migrate_vm, pvars=pvars)
