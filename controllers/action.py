@@ -187,10 +187,11 @@ def handle_disk_request():
         elif request.vars.action == 'reject':
             req.delete_record()
         db.commit()
-        return jsonify()
+        return jsonify(action=request.vars.action)
     except Exception as e:
         logger.exception(e)
-        return jsonify(status='fail', message=e.message or str(e.__class__))
+        return jsonify(status='fail', message=e.message or str(e.__class__),
+                       action=request.vars.action)
 
 
 @auth.requires(user_is_project_admin)
@@ -201,7 +202,7 @@ def handle_request():
     elif action == 'edit':
         return __modify_request()
         # return __create()
-    elif action == 'reject':
+    elif action in ('reject', 'delete'):
         return __reject()
     elif action == 'faculty_edit':
         __modify_request()
@@ -257,9 +258,10 @@ def __create():
         row.update_record(state=REQUEST_STATUS_PROCESSING)
         logger.info('Queuing task')
         auth = b64encode(dumps(dict(u=session.username, p=session.password)))
-        scheduler.queue_task(task_create_vm, pvars={'reqid': row.id, 'auth': auth})
+        scheduler.queue_task(task_create_vm,
+                             pvars={'reqid': row.id, 'auth': auth})
         db.commit()
-        return jsonify()
+        return jsonify(action='approve')
     except Baadal.BaadalException as e:
         row.update_record(state=REQUEST_STATUS_POSTED)
         logger.exception(e)
@@ -273,7 +275,7 @@ def __create():
 
 def __reject():
     db(db.vm_requests.id == request.vars.id).delete()
-    return jsonify()
+    return jsonify(action='delete')
 
 
 def __edit():
