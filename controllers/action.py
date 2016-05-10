@@ -4,56 +4,55 @@ import time
 
 def __do(action, vmid):
     try:
+        auth = b64encode(dumps(dict(u=auth.user, p=session.password)))
+        if action == 'migrate':
+            pvars = dict(auth=auth, vmid=vmid)
+            scheduler.queue_task(task_migrate_vm, pvars=pvars)
+            return jsonify()
+        elif action == 'snapshot':
+            pvars = dict(auth=auth, vmid=vmid)
+            scheduler.queue_task(task_snapshot_vm, pvars=pvars)
+            return jsonify()
+        elif action == 'restore-snapshot':
+            snapshot_id = request.vars.snapshot_id
+            pvars = dict(auth=auth, vmid=vmid, snapshot_id=snapshot_id)
+            scheduler.queue_task(task_restore_snapshot, pvars=pvars)
+            return jsonify()
+
         conn = Baadal.Connection(_authurl, _tenant, session.username,
                                  session.password)
-        if conn:
-            vm = conn.find_baadal_vm(id=vmid)
-            if vm:
-                if action == 'start':
-                    vm.start()
-                elif action == 'migrate':
-                    vm.migrate()
-                elif action == 'shutdown':
-                    vm.shutdown()
-                elif action == 'pause':
-                    vm.pause()
-                elif action == 'reboot':
-                    vm.reboot()
-                elif action == 'delete':
-                    vm.delete()
-                elif action == 'resume':
-                    vm.resume()
-                elif action == 'restore-snapshot':
-                    vm.restore_snapshot(request.vars.snapshot_id)
-                elif action == 'snapshot':
-                    try:
-                        snapshotid = vm.create_snapshot()
-                        return jsonify(snapshotid=snapshotid, action=action)
-                    except Exception as e:
-                        return jsonify(status='fail', message=e.message,
-                                       action=action)
-                elif action == 'clone':
-                    vm.clone()
-                elif action == 'poweroff':
-                    vm.shutdown(force=True)
-                elif action == 'get-console-url':
-                    console_type = config.get('misc', 'console_type')
-                    consoleurl = vm.get_console_url(console_type=console_type)
-                    return jsonify(consoleurl=consoleurl, action=action)
-                elif action == 'start-resume':
-                    status = vm.get_status()
-                    if status == 'Paused':
-                        vm.resume()
-                    elif status == 'Shutdown':
-                        vm.start()
-            conn.close()
-            return jsonify(status='success', action=action)
+        vm = conn.find_baadal_vm(id=vmid)
+        if action == 'start':
+            vm.start()
+        elif action == 'shutdown':
+            vm.shutdown()
+        elif action == 'pause':
+            vm.pause()
+        elif action == 'reboot':
+            vm.reboot()
+        elif action == 'delete':
+            vm.delete()
+        elif action == 'resume':
+            vm.resume()
+        elif action == 'poweroff':
+            vm.shutdown(force=True)
+        elif action == 'get-console-url':
+            console_type = config.get('misc', 'console_type')
+            consoleurl = vm.get_console_url(console_type=console_type)
+            return jsonify(consoleurl=consoleurl, action=action)
+        elif action == 'start-resume':
+            status = vm.get_status()
+            if status == 'Paused':
+                vm.resume()
+            elif status == 'Shutdown':
+                vm.start()
         else:
-            conn.close()
-            return jsonify(status='failure')
+            raise HTTP(400)
+        return jsonify(status='success', action=action)
     except Exception as e:
-        logger.exception(e.message or str(e.__class__))
-        return jsonify(status='fail', message=str(e.message) or str(e.__class__))
+        message = e.message or str(e.__class__)
+        logger.exception(message)
+        return jsonify(status='fail', message=message)
     finally:
         try:
             conn.close()
