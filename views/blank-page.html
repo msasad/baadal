@@ -105,7 +105,7 @@
             <li><a href="#">Mail Admin</a></li>
           </ul>
         </li>
-        {{if ('faculty' in auth.user_groups.values()) or (user_is_project_admin):}}
+        {{if (ldap.user_is_faculty(session.username)) or (user_is_project_admin):}}
         <li>
           <a href="javascript:;" data-toggle="collapse" data-target="#faculty-menu">
             <i class="fa fa-fw fa-arrows-v"></i> Faculty Menu <i class="fa fa-fw fa-caret-down"></i>
