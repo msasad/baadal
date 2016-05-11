@@ -90,11 +90,11 @@ Set unlimited quotas for all services and theirs resources including
     glance etc.
 
 The following metadata needs to be attached to each image
-  1         os-name,
-  2         os-version,
-  3         os-arch,
-  4         disk-size,
-  5         os-edition, (desktop/server)
+  1         os_name,
+  2         os_version,
+  3         os_arch,
+  4         disk_size,
+  5         os_edition, (desktop/server)
 Use the glance image-update command to attach metadata
 
 Client Packages:

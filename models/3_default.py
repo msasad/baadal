@@ -94,4 +94,4 @@ class FuncThread(threading.Thread):
         threading.Thread.__init__(self)
 
     def run(self):
-        self._target(*self._args)
+        self.retval = self._target(*self._args)

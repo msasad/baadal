@@ -33,7 +33,7 @@ def userid_is_valid(userid):
 
 
 def username_is_valid(username):
-    return validators.re.match(r'^[A-Za-z][A-Za-z ]{2,10}[A-Za-z]$',
+    return validators.re.match(r'^[A-Za-z][A-Za-z ]{2,16}[A-Za-z]$',
                                username) is not None
 
 
@@ -47,7 +47,7 @@ def email_is_valid(email):
 
 
 def password_is_valid(password, password_repeat):
-    return len(password) > 6 and (password == password_repeat)
+    return len(password) >= 6 and (password == password_repeat)
 
 
 def validate_vm_request_form(vars):
@@ -74,7 +74,7 @@ def validate_vm_request_form(vars):
 
 
 def vmname_is_valid(vm_name):
-    return validators.re.match(r'^[A-Za-z][A-Za-z_\-0-9]{2,10}[A-Za-z0-9]$',
+    return validators.re.match(r'^[A-Za-z][A-Za-z_\-0-9]{2,16}[A-Za-z0-9]$',
                                vm_name) is not None
 
 

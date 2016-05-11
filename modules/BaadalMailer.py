@@ -18,9 +18,10 @@ class BaadalMailer(object):
 
         class VMRequest(object):
             subject = 'VM request successful'
-            mailbody = "Dear {0[username]},\n\nYour VM request has been regi" \
-                "stered successfully and is waiting for approval. You will" \
-                " be notified with a separate email after the VM is created."
+            mailbody = ("Dear {0[username]},\n\nYour request for VM named"
+                " {0[vm_name]} has been regi"
+                "stered successfully and is waiting for approval. You will" 
+                " be notified with a separate email after the VM is created.")
 
         class ApprovalReminder(object):
             subject = 'Request waiting for your approval'

@@ -4,16 +4,18 @@ import gluon
 
 @auth.requires(user_is_project_admin)
 def pending_requests():
-    rows = db(db.vm_requests.state < 2).select()
-    l = rows.as_list()
-    pub_ip = 'public_ip_required'
-    for i in l:
-        i['flavor'] = flavor_info(i['flavor'])
-        i['sec_domain'] = network_name_from_id(i['sec_domain'])
-        i['request_time'] = seconds_to_localtime(i['request_time'])
-        i[pub_ip] = 'Required' if i[pub_ip] == 1 else 'Not Required'
-    return json.dumps({'data': l})
-    pass
+    if request.extension in ('', 'html', None):
+        return dict()
+    elif request.extension == 'json':
+        rows = db(db.vm_requests.state < 2).select()
+        l = rows.as_list()
+        pub_ip = 'public_ip_required'
+        for i in l:
+            i['flavor'] = flavor_info(i['flavor'])
+            i['sec_domain'] = network_name_from_id(i['sec_domain'])
+            i['request_time'] = seconds_to_localtime(i['request_time'])
+            i[pub_ip] = 'Required' if i[pub_ip] == 1 else 'Not Required'
+        return json.dumps({'data': l})
 
 
 @auth.requires(user_is_project_admin)
@@ -116,8 +118,17 @@ def all_vms():
                                  session.password)
         vms = conn.baadal_vms(True)
         response = list()
+        images = dict()
         for vm in vms:
             vm_properties = vm.properties()
+            image_id = vm_properties['image']['id']
+            if not images.has_key(image_id):
+                image = conn.find_image(id=image_id)
+                meta = image.metadata
+                images[image_id] = ' '.join([meta['os_name'],
+                    meta['os_version'], meta['os_arch'],
+                    meta['os_edition'], meta['disk_size']])
+            vm_properties['image']['info'] = images[image_id]
             #   snapshots = vm.properties()['snapshots']
             #   STR = 'created'
             #   for i in range(0, len(snapshots)):
@@ -263,23 +274,45 @@ def account_requests():
 
 @auth.requires(user_is_project_admin)
 def disk_requests():
+    from novaclient.exceptions import NotFound
     if request.extension in ('', None, 'html'):
         return dict()
     elif request.extension == 'json':
+        response = []
+        spurious_requests = []
         try:
             rows = db(db.virtual_disk_requests.status == 0).select()
-            l = rows.as_list()
             conn = Baadal.Connection(_authurl, _tenant, session.username,
                                      session.password)
-            for i in l:
-                i['request_time'] = str(i['request_time'])
-                vm = conn.find_baadal_vm(id=i['vmid'])
-                i['vm_name'] = vm.name
-                conn.close()
-            return jsonify(data=l)
+            for row in rows:
+                try:
+                    cr = {}
+                    vm = conn.find_baadal_vm(id=row.vmid)
+                    cr['id'] = row.id
+                    cr['request_time'] = str(row.request_time)
+                    cr['vm_name'] = vm.name
+                    cr['user'] = row.user
+                    cr['disk_size'] = row.disk_size
+                    response.append(cr)
+                except NotFound:
+                    spurious_requests.append(str(row.id))
+                    continue
+            if len(spurious_requests):
+                query = 'delete from virtual_disk_requests where id in (%s)' % \
+                           (','.join(spurious_requests))
+                logger.info('query is ' + query)
+                db.executesql(query)
+                db.commit()
+
+            return jsonify(data=response)
         except Exception as e:
             logger.exception(e.message or str(e.__class__))
             return jsonify(status='fail', message=e.message or str(e.__class__))
+        finally:
+            try:
+                conn.close()
+            except:
+                pass
 
 
 @auth.requires(user_is_project_admin)
@@ -296,27 +329,41 @@ def resize_requests():
             # requested_config,
             # request_time
             rows = db(db.resize_requests.status == 0).select()
-            l = rows.as_list()
+            response = []
+            spurious_requests = []
             conn = Baadal.Connection(_authurl, _tenant, session.username,
                                      session.password)
-            for i in l:
+            templates = {}
+            for row in rows:
+                cr = {}
                 try:
-                    vm = conn.find_baadal_vm(id=i['vm_id'])
-                except Exception as e:
-                    if e.message.startswith('No Server'):
-                        logger.info('Stray resize_request entry for' 
-                                    + ' vm id ' + i['vm_id'])
-                        del l[l.index(i)]
-                        continue
-                i['request_time'] = seconds_to_localtime(i['request_time'])
-                i['vm_name'] = vm.name
-                templ = conn.find_template(id=vm.server.flavor['id'])
-                i['current_config'] = 'RAM : %s, vCPUs: %s' % (templ.ram,
-                                                               templ.vcpus)
-                templ = conn.find_template(id=i['new_flavor'])
-                i['requested_config'] = 'RAM : %s, vCPUs: %s' % (templ.ram,
-                                                                 templ.vcpus)
-            return jsonify(data=l)
+                    from novaclient.exceptions import NotFound
+                    vm = conn.find_baadal_vm(id=row.vm_id)
+                    cr['request_time'] = seconds_to_localtime(row.request_time)
+                    cr['vm_name'] = vm.name
+                except NotFound:
+                    spurious_requests.append(str(row.id))
+                    continue
+                flavor_id = vm.server.flavor['id']
+                if not templates.has_key(flavor_id):
+                    temp = conn.find_template(id=flavor_id)
+                    templates[flavor_id] = 'RAM : %s, vCPUs: %s' % (temp.ram,
+                                                                   temp.vcpus)
+                cr['current_config'] = templates[flavor_id]
+
+                flavor_id = row.new_flavor
+                if not templates.has_key(flavor_id):
+                    temp = conn.find_template(id=flavor_id)
+                    templates[flavor_id] = 'RAM : %s, vCPUs: %s' % (temp.ram,
+                                                                   temp.vcpus)
+                cr['requested_config'] = templates[flavor_id]
+                response.append(cr)
+            if len(spurious_requests):
+                query = 'delete from resize_requests where id in (%s)' % \
+                           (','.join(spurious_requests))
+                db.executesql(query)
+                db.commit()
+            return jsonify(data=response)
         except Exception as e:
             logger.exception(e.message or str(e.__class__))
             return jsonify(status='fail',
@@ -335,17 +382,30 @@ def clone_requests():
     elif request.extension == 'json':
         try:
             rows = db(db.clone_requests.status == 0).select()
-            l = rows.as_list()
+            response = []
             conn = Baadal.Connection(_authurl, _tenant, session.username,
                                      session.password)
-            for i in l:
-                i['request_time'] = seconds_to_localtime(i['request_time'])
-                vm = conn.find_baadal_vm(id=i['vm_id'])
-                i['vm_name'] = vm.name
-                i['full_clone'] = 'Yes' if i['full_clone'] == 1 else 'No'
-            return jsonify(data=l)
+            spurious_requests = []
+            for row in rows:
+                cr = dict()
+                cr['request_time'] = seconds_to_localtime(row.request_time)
+                try:
+                    from novaclient.exceptions import NotFound
+                    vm = conn.find_baadal_vm(id=row.vm_id)
+                    cr['vm_name'] = vm.name
+                    cr['full_clone'] = 'Yes' if i['full_clone'] == 1 else 'No'
+                    response.append(cr)
+                except NotFound:
+                    spurious_requests.append(str(row.id))
+                    continue
+            if len(spurious_requests):
+                query = 'delete from clone_requests where id in (%s)' % \
+                           (','.join(spurious_requests))
+                db.executesql(query)
+                db.commit()
+            return jsonify(data=response)
         except Exception as e:
-            logger.error(e.message or str(e.__class__))
+            logger.exception(e)
             return jsonify(status='fail',
                            message=e.message or str(e.__class__))
         finally:
@@ -359,3 +419,8 @@ def clone_requests():
 def index():
     return dict()
     pass
+
+@auth.requires(user_is_project_admin)
+def test():
+    scheduler.queue_task(test)
+    return jsonify()

@@ -17,10 +17,19 @@ def my_vms():
     try:
         conn = Baadal.Connection(_authurl, _tenant, session.username,
                                  session.password)
+        images = dict()
         vms = conn.baadal_vms()
         response = list()
         for vm in vms:
             vm_properties = vm.properties()
+            image_id = vm_properties['image']['id']
+            if not images.has_key(image_id):
+                image = conn.find_image(id=image_id)
+                meta = image.metadata
+                images[image_id] = ' '.join([meta['os_name'],
+                    meta['os_version'], meta['os_arch'],
+                    meta['os_edition'], meta['disk_size']])
+            vm_properties['image']['info'] = images[image_id]
             response.append(vm_properties)
         #     snapshots = vm.properties()['snapshots']
         #     for index in range(0, len(snapshots)):
@@ -59,15 +68,19 @@ def vm_status():
 
 @auth.requires_login()
 def my_requests():
-    rows = db(db.vm_requests.requester == session.username).select()
+    rows = db((db.vm_requests.requester == session.username) & (db.vm_requests.state < 2)).select()
     l = rows.as_list()
+    net_names = dict()
+    STATES = ['Pending', 'Pending Admin Approval', 'Approved']
     for i in l:
-        i['flavor'] = flavor_info(i['flavor'])
-        i['sec_domain'] = network_name_from_id(i['sec_domain'])
+        # i['flavor'] = flavor_info(i['flavor'])
+        net_id = i['sec_domain']
+        if not net_names.has_key(net_id):
+            net_names[net_id] = network_name_from_id(net_id)
+        i['sec_domain'] = net_names[net_id]
         i['request_time'] = seconds_to_localtime(i['request_time'])
         i['public_ip_required'] = 'Required' if i['public_ip_required'] == 1 \
             else 'Not Required'
-        STATES = ['Pending', 'Pending Admin Approval', 'Approved']
         i['state'] = STATES[i['state']]
     return jsonify(data=l)
 

@@ -1,6 +1,13 @@
 from gluon.tools import Auth
 from gluon.contrib.login_methods.ldap_auth import ldap_auth
 import ConfigParser
+from gluon import current
+from gluon.scheduler import Scheduler
+
+REQUEST_STATUS_POSTED = 0
+REQUEST_STATUS_FACULTY_APPROVED = 1
+REQUEST_STATUS_PROCESSING = 3
+REQUEST_STATUS_APPROVED = 2
 
 config = ConfigParser.ConfigParser()
 config.read('/etc/baadal/baadal.conf')
@@ -14,7 +21,8 @@ password = config.get('database', 'password')
 dbname = config.get('database', 'database')
 
 db = DAL('mysql://' + username + ':' + password + '@' + dbhost + '/' + dbname,
-         fake_migrate_all=True)
+         migrate=True)
+#         fake_migrate_all=True)
 db.define_table('vm_requests',
                 Field('id', 'integer'),
                 Field('vm_name', 'string'),
@@ -103,3 +111,5 @@ auth.settings.login_onaccept = [login_callback]
 auth.settings.remember_me_form = False
 auth.settings.logout_next = '/baadal/default/user/login'
 auth.settings.login_next = '/baadal/user/index'
+
+scheduler = Scheduler(db)
