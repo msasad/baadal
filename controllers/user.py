@@ -70,13 +70,17 @@ def vm_status():
 def my_requests():
     rows = db((db.vm_requests.requester == session.username) & (db.vm_requests.state < 2)).select()
     l = rows.as_list()
+    net_names = dict()
+    STATES = ['Pending', 'Pending Admin Approval', 'Approved']
     for i in l:
         # i['flavor'] = flavor_info(i['flavor'])
-        i['sec_domain'] = network_name_from_id(i['sec_domain'])
+        net_id = i['sec_domain']
+        if not net_names.has_key(net_id):
+            net_names[net_id] = network_name_from_id(net_id)
+        i['sec_domain'] = net_names[net_id]
         i['request_time'] = seconds_to_localtime(i['request_time'])
         i['public_ip_required'] = 'Required' if i['public_ip_required'] == 1 \
             else 'Not Required'
-        STATES = ['Pending', 'Pending Admin Approval', 'Approved']
         i['state'] = STATES[i['state']]
     return jsonify(data=l)
 
