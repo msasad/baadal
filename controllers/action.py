@@ -335,14 +335,19 @@ def handle_account_request():
 @auth.requires(user_is_project_admin)
 def handle_resize_request():
     try:
-        conn = Baadal.Connection(_authurl, _tenant, session.username,
-                                 session.password)
-        row = db(db.resize_requests.id == request.vars.id).select()[0]
-        vm = conn.find_baadal_vm(id=row.vm_id)
-        vm.resize(row['new_flavor'])
-        row.update_record(status=1)
+        if request.vars.action == 'reject':
+            db(db.resize_requests.id == request.vars.id).delete()
+        elif request.vars.action == 'approve':
+            row = db(db.resize_requests.id == request.vars.id).select()[0]
+            row.update_record(status=REQUEST_STATUS_PROCESSING)
+            auth = b64encode(dumps(dict(u=session.username,
+                             p=session.password)))
+            scheduler.queue_task(task_resize_vm, timeout=600,
+                                 pvars={'reqid': row.id, 'auth': auth})
         db.commit()
+        return jsonify(action=request.vars.action)
     except Exception as e:
+        row.update_record(status=REQUEST_STATUS_POSTED)
         message = e.message or str(e.__class__)
         logger.error(message)
         return jsonify(status='fail', message=message)

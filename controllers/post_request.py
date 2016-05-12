@@ -65,9 +65,11 @@ def modify_request():
 @auth.requires_login()
 def request_resize():
     try:
-        db.resize_requests.insert(vm_name=request.vars.vm_name,
-                                  vm_id=request.vars.vmid,
+        db.resize_requests.insert(vm_id=request.vars.vmid,
+                                  vmname=request.vars.name,
                                   new_flavor=request.vars.new_flavor,
+                                  user=session.username,
+                                  status=0,
                                   request_time=int(time.time())
                                   )
         db.commit()

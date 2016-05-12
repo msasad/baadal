@@ -172,7 +172,12 @@
                 });
                 $footer.slideDown();
               } else if (action === 'resize') {
-                var html = '<form class="form-inline" action="#">' + '<label for="new_flavor" class="control-label">' + 'Select new configuration</label>' + '<select class="form-control" name="new_flavor" id="new_flavor"></select>' + '<button class="btn btn-primary btn-sm" id="btn-resize-request">Submit Request</button>' + '</form>'
+                var html = '<form class="form-inline" action="#"> ' +
+                  ' <label for="new_flavor" class="control-label"> ' + 
+                  'Select new configuration</label> ' +
+                  ' <select class="form-control" name="new_flavor" id="new_flavor"> </select> ' +
+                  ' <button class="btn btn-primary btn-sm" id="btn-resize-request"> Submit Request </button> ' +
+                  ' </form>'
                 var $footer = $modal.find('.panel-footer').html(html);
                 var flavor_selector = document.getElementById('new_flavor');
                 $.ajax({
@@ -189,10 +194,21 @@
                         type: 'post',
                         data: {
                           'vmid': vmid,
+                          name: context.name,
                           new_flavor: flavor_selector.value
                         },
                         success: function(response) {
-                          console.log(response);
+                          if(response.status == 'success') {
+                            var span = document.createElement('span');
+                            span.classList.add('text-success');
+                            span.innerHTML = 'Request posted successfully';
+                            $footer.html(span);
+                          } else {
+                            var span = document.createElement('span');
+                            span.classList.add('text-danger');
+                            span.innerHTML = 'There was some error in posting the request.';
+                            $footer.html(span);
+                          }
                         },
                         'error': function(response) {
                           var error = response.getResponseHeader('web2py_error');
