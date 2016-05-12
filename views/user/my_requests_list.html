@@ -160,7 +160,7 @@
     var id = this.closest('tr').getAttribute('data-reqid');
     var action = this.getAttribute('data-action');
     $.ajax({
-      'url': '/baadal/action/handle_request.json',
+      'url': '/baadal/user/requests.json',
       'type': 'post',
       'dataType' : 'json',
       'data': {
@@ -220,32 +220,31 @@
         break;
       }
     }
-    console.log(data);
     $('#my-modal').modal('show');
   });
 
   $('#btn-mod-approve').one('click', function (e){
     //save the new request to db
-    //send it to backend for processing
     var data = {
       'id' : document.getElementById('edit-id').value,
       'flavor': document.getElementById('edit-config').value,
       'storage': document.getElementById('edit-storage').value,
       'public_ip': document.forms['vm_request'].elements['public_ip'].value,
-      'action' : 'edit'
+      'action' : 'patch'
     };
-    console.log(data);
     $.ajax({
-      'type' : 'POST',
+      'type' : 'post',
       'data' : data,
-      'url' : '/baadal/action/handle_request.json',
+      'url' : '/baadal/user/requests.json',
       'success' : function(response) {
         if (response.status == 'success') {
-          $('#modal-success-message').fadeIn();
+          $('#modal-success-message').fadeIn(function(){
+            $('#my-modal').modal('hide');
+            $table.ajax.reload();
+          });
         } else {
           $('#modal-error-message').fadeIn();
         }
-        console.log(response);
       }
     });
   });

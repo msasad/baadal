@@ -4,7 +4,8 @@ def index():
 
 
 @auth.requires_login()
-def request():
+def form():
+    logger.info(request.env.REQUEST_METHOD)
     return dict()
 
 
@@ -64,6 +65,26 @@ def vm_status():
             conn.close()
         except NameError:
             pass
+
+
+@auth.requires_login()
+def requests():
+    try:
+        if request.vars.action == 'patch':
+            logger.info('patching request')
+            db(db.vm_requests.id == request.vars.id).update(
+                extra_storage=request.vars.storage,
+                public_ip_required=1 if request.vars.public_ip == 'yes' else 0,
+                flavor=request.vars.flavor)
+            db.commit()
+            return jsonify();
+        elif request.vars.action == 'delete':
+            db(db.vm_requests.id == request.vars.id).delete()
+            return jsonify(action='delete')
+    except Exception as e:
+        logger.exception(e)
+        return jsonify(status='fail', message=e.message or str(e.__class__))
+
 
 
 @auth.requires_login()
