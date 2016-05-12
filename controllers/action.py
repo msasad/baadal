@@ -9,16 +9,17 @@ def __do(action, vmid):
         auth = b64encode(dumps(dict(u=session.username, p=session.password)))
         if action == 'migrate':
             pvars = dict(auth=auth, vmid=vmid)
-            scheduler.queue_task(task_migrate_vm, pvars=pvars)
+            scheduler.queue_task(task_migrate_vm, timeout=600, pvars=pvars)
             return jsonify()
         elif action == 'snapshot':
             pvars = dict(auth=auth, vmid=vmid)
-            scheduler.queue_task(task_snapshot_vm, pvars=pvars)
+            scheduler.queue_task(task_snapshot_vm, timeout=600, pvars=pvars)
             return jsonify()
         elif action == 'restore-snapshot':
             snapshot_id = request.vars.snapshot_id
             pvars = dict(auth=auth, vmid=vmid, snapshot_id=snapshot_id)
-            scheduler.queue_task(task_restore_snapshot, pvars=pvars)
+            scheduler.queue_task(task_restore_snapshot, timeout=600,
+                                 pvars=pvars)
             return jsonify()
 
         conn = Baadal.Connection(_authurl, _tenant, session.username,
@@ -260,7 +261,7 @@ def __create():
         row.update_record(state=REQUEST_STATUS_PROCESSING)
         logger.info('Queuing task')
         auth = b64encode(dumps(dict(u=session.username, p=session.password)))
-        scheduler.queue_task(task_create_vm,
+        scheduler.queue_task(task_create_vm, timeout=600,
                              pvars={'reqid': row.id, 'auth': auth})
         db.commit()
         return jsonify(action='approve')
