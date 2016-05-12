@@ -45,10 +45,10 @@
               <button type="button" data-action="snapshot" class="btn btn-lg btn-default btn-action" title="Take Snapshot">
                 <span class="fa fa-camera" aria-hidden="true"></span>
               </button>
+              {{#ifCond status '==' 'ACTIVE'}}
               <button type="button" data-action="get-console-url" class="btn btn-lg btn-default btn-action" title="Get Console URL">
                 <span class="fa fa-terminal" aria-hidden="true"></span>
               </button>
-              {{#ifCond status '==' 'ACTIVE'}}
               <button type="button" data-action="shutdown" class="btn btn-lg btn-default btn-action" title="Shutdown">
                 <span class="fa fa-stop" aria-hidden="true"></span>
               </button>
