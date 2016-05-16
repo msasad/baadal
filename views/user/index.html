@@ -273,6 +273,7 @@
               })
             });
             $modal.on('click', '#fetch-snapshots', function(e) {
+              var $tr = $(this);
               var vmid = document.getElementById('vmid').value;
               $.ajax({
                 url: '/baadal/ajax/snapshots.json',
@@ -282,6 +283,10 @@
                 },
                 success: function(response) {
                   console.log(response);
+                  var html = baadalApp.populateSnapshots(response.data);
+                  console.log(this);
+                  console.log(html);
+                  $tr.closest('tbody').html(html);
                 },
                 error: function(error, response, code) {
                   console.log(error, response, code);

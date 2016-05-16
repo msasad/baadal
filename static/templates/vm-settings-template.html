@@ -90,7 +90,7 @@
               </button>
             </div>
 
-            <table class="table table-bordered table-stripped table-hover" style="margin-top:20px">
+            <table id="tbl-snapshots" class="table table-bordered table-stripped table-hover" style="margin-top:20px">
               <thead>
               <tr>
                 <th>Snapshot Name</th>
@@ -98,23 +98,7 @@
               </tr>
               </thead>
               <tbody>
-                {{#if snapshots}}
-                  {{#each snapshots}}
-                <tr data-snapshot-id="{{this.id}}">
-                  <td>{{this.name}}</td>
-                  <td>{{this.created}}</td>
-                  <td class="text-center">
-                    <a title="Restore this spanshot" href="#" class="snapshot-restore">
-                      <span class="badge">
-                        <span class="fa fa-reply"></span>
-                      </span>
-                    </a>
-                  </td>
-                </tr>
-                  {{/each}}
-              {{else}}
               <tr><td colspan="100%" class="text-center text-info"><a id="fetch-snapshots" href="#">Click here to fetch list of snapshots.</a></td></tr>
-              {{/if}}
               </tbody>
             </table>
 
