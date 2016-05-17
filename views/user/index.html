@@ -87,7 +87,7 @@
     });
     var reloadTable = setInterval(function() {
       $table.ajax.reload();
-    }, 30 * 1000);
+    }, 60 * 1000);
 
     $myvms.on('click', '.btn-settings', function(e) {
       var tr = this.closest('tr');
@@ -95,7 +95,7 @@
       context['ip-addresses'] = baadalApp.ipObjectToString(context['addresses'],
         true);
       $.ajax({
-        url: '/baadal/static/templates/vm-settings-template.html',
+        url: '/baadal/ajax/vm_settings_template.html',
         success: function(response) {
           var template = Handlebars.compile(response);
           var html = template(context);

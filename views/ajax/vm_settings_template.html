@@ -1,0 +1,125 @@
+<div class="modal fade" id="vm-settings-modal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">VM Settings</h4>
+      </div>
+      <div class="modal-body">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">{{name}}</h3>
+          </div>
+          <div class="panel-body">
+            <table class="table table-bordered" id="vm-info">
+              <thead>
+              <tr>
+                <th>VM Name</th>
+                <th>State</th>
+                <th>IP Address(es)</th>
+                <th>Config</th>
+                <th>Users</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td>{{name}}</td>
+                <td>{{status}}</td>
+                <td>{{{ip-addresses}}}</td>
+                <td>{{flavor.id}}</td>
+                <td>{{user_id}}</td>
+              </tr>
+              </tbody>
+            </table>
+            <? if user_is_project_admin: ?>
+            {{#if fault.message}}
+            <div class=" panel panel-danger">
+              <div class="panel-body">
+                <span class="text-danger">
+                  {{fault.message}}
+                </span>
+              </div>
+            </div>
+            {{/if}}
+            <? pass ?>
+            <input type="hidden" id="vmid" value="{{id}}">
+            <div class="btn-group" data-vmid="{{id}}" role="group" aria-label="...">
+              <button type="button" data-action="snapshot" class="btn btn-lg btn-default btn-action" title="Take Snapshot">
+                <span class="fa fa-camera" aria-hidden="true"></span>
+              </button>
+              <button type="button" data-action="add-virtual-disk"
+                class="btn btn-lg btn-default btn-action" title="Request virtual disk">
+                <span class="fa fa-hdd-o" aria-hidden="true"></span>
+              </button>
+              {{#ifCond status '==' 'ACTIVE'}}
+              <button type="button" data-action="get-console-url" class="btn btn-lg btn-default btn-action" title="Get Console URL">
+                <span class="fa fa-terminal" aria-hidden="true"></span>
+              </button>
+              <button type="button" data-action="shutdown" class="btn btn-lg btn-default btn-action" title="Shutdown">
+                <span class="fa fa-stop" aria-hidden="true"></span>
+              </button>
+              {{else}}
+              <button type="button" data-action="start-resume" class="btn btn-lg btn-default btn-action" title="Start/Resume">
+                <span class="fa fa-play" aria-hidden="true"></span>
+              </button>
+              {{/ifCond}}
+              <button type="button" data-action="manage-users" class="btn btn-lg btn-default btn-action" title="Manage Users">
+                <span class="fa fa-users" aria-hidden="true"></span>
+              </button>
+              <button type="button" data-action="clone" class="btn btn-lg btn-default btn-action" title="Clone">
+                <span class="fa fa-copy" aria-hidden="true"></span>
+              </button>
+              <? if user_is_project_admin and admin: ?>
+              <button type="button" data-action="migrate" class="btn btn-lg btn-default btn-action" title="Migrate">
+                <span class="fa fa-plane" aria-hidden="true"></span>
+              </button>
+              <? pass ?>
+               <button type="button" data-action="resize" class="btn btn-lg btn-default btn-action" 
+                 title="Request Resize">
+                <span class="fa fa-expand" aria-hidden="true"></span>
+              </button>
+              {{#ifCond status '==' 'ACTIVE'}}
+              <button type="button" data-action="soft-reboot" class="btn btn-lg btn-default btn-action" title="Soft Reboot">
+                <span class="fa fa-refresh" aria-hidden="true"></span>
+              </button>
+              <button type="button" data-action="poweroff" class="btn btn-lg btn-warning btn-action" title="Power Off">
+                <span class="fa fa-power-off" aria-hidden="true"></span>
+              </button>
+              <button type="button" data-action="force-reboot" class="btn btn-lg btn-warning btn-action" title="Force Reboot">
+                <span class="fa fa-refresh" aria-hidden="true"></span>
+              </button>
+              {{/ifCond}}
+              <button type="button" data-action="delete" class="btn btn-lg btn-danger btn-action" title="Delete VM">
+                <span class="fa fa-remove" aria-hidden="true"></span>
+              </button>
+            </div>
+
+            <table class="table table-bordered table-stripped table-hover" style="margin-top:20px">
+              <thead>
+              <tr>
+                <th>Snapshot Name</th>
+                <th colspan="2">Created at</th>
+              </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="100%" class="text-center text-info">
+                    <a id="fetch-snapshots" href="#">Click here to fetch list of snapshots.</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="panel-footer" style="display:none">
+            <span style="display:none" class="text-danger" id="modal-error-message">There was some error in the form. Please check the values and submit the form again.</span>
+            <span style="display:none" class="text-info" id="modal-info-message"></span>
+            <span style="display:none" class="text-success" id="modal-success-message">Request successfully posted.</span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div>

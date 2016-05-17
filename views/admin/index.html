@@ -73,9 +73,9 @@
       nRow.setAttribute('data-vmid', aData.id);
     }
   });
-  // var reloadTable = setInterval(function(){
-  //   $table.ajax.reload();
-  // }, 30*1000);
+  var reloadTable = setInterval(function(){
+    $table.ajax.reload();
+  }, 60*1000);
 
   var $modal;
   $allvms.on('click', '.btn-settings', function (e) {
@@ -83,7 +83,7 @@
     var context = $table.row(tr).data();
     context['ip-addresses'] = baadalApp.ipObjectToString(context['addresses'], true);
     $.ajax( {
-      url : '/baadal/static/templates/vm-admin-settings-template.html',
+      url : '/baadal/ajax/vm_settings_template.html',
       success : function(response) {
         var template = Handlebars.compile(response);
         var html = template(context);
@@ -163,6 +163,27 @@
                 }
               });
             }
+          });
+          $modal.on('click', '#fetch-snapshots', function(e) {
+            var $tr = $(this);
+            var vmid = document.getElementById('vmid').value;
+            $.ajax({
+              url: '/baadal/ajax/snapshots.json',
+              type: 'post',
+              data: {
+                vmid: vmid,
+              },
+              success: function(response) {
+                console.log(response);
+                var html = baadalApp.populateSnapshots(response.data);
+                console.log(this);
+                console.log(html);
+                $tr.closest('tbody').html(html);
+              },
+              error: function(error, response, code) {
+                console.log(error, response, code);
+              }
+            });
           });
           $modal.on('click', '.snapshot-restore', function(e){
             var vmid = document.getElementById('vmid').value;

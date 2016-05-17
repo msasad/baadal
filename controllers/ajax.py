@@ -121,3 +121,16 @@ def sgroups():
             conn.close()
         except NameError:
             pass
+
+
+def vm_settings_template():
+    response.delimiters = ('<?', '?>')
+    referer = request.env.http_referer
+    host = request.env.http_host
+    if referer is None:
+        raise HTTP(400)
+    path = referer[referer.find(host) + len(host):]
+    if path.startswith('/baadal/user/'):
+        return dict(admin=False)
+    elif path.startswith('/baadal/admin/'):
+        return dict(admin=True)
