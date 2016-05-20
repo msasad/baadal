@@ -295,6 +295,7 @@
             });
             $modal.on('hidden.bs.modal', function() {
               $modal.remove();
+              $table.ajax.reload();
             });
           });
         }

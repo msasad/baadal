@@ -118,7 +118,15 @@
 (function(){
   var $requests = $('#requests');
   var $table = $requests.DataTable( {
-    "ajax": "/baadal/admin/pending_requests.json",
+    "ajax": {
+      "url": "/baadal/admin/pending_requests.json",
+      "error": function(e, s) {
+        if (e.status == 401) {
+          document.location.reload();
+        }
+        console.log(e, s);
+      }
+    },
     "oLanguage": {
       "sEmptyTable": "No pending requests!"
     },
@@ -199,6 +207,11 @@
     $.ajax({
       'type': 'GET',
       'url': '/baadal/ajax/configs.json',
+      "error": function(e) {
+        if (e.status == 401) {
+          document.location.reload();
+        }
+      },
       'success': function(response) {
         console.log(response);
         var configSelect = document.getElementById('edit-config');

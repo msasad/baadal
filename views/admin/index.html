@@ -84,6 +84,11 @@
     context['ip-addresses'] = baadalApp.ipObjectToString(context['addresses'], true);
     $.ajax( {
       url : '/baadal/ajax/vm_settings_template.html',
+      "error" : function(e) {
+        if (e.status == 401) {
+          document.location.reload();
+        }
+      },
       success : function(response) {
         var template = Handlebars.compile(response);
         var html = template(context);
@@ -139,6 +144,9 @@
                   var error = response.getResponseHeader('web2py_error');
                   if (error) {
                     baadalApp.generateTicketLink(error);
+                  }
+                  if (response.status == 401) {
+                    document.location.reload();
                   }
                 },
                 success: function (response) {
@@ -199,6 +207,7 @@
           });
           $modal.on('hidden.bs.modal', function() {
             $modal.remove();
+            $table.ajax.reload();
           });
         });
       }
