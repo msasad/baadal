@@ -385,7 +385,7 @@ def clone_requests():
                 cr = dict()
                 cr['request_time'] = seconds_to_localtime(row.request_time)
                 try:
-                    vm = conn.find_baadal_vm(id=row.vmid)
+                    vm = conn.find_baadal_vm(id=row.vm_id)
                     cr['vm_name'] = vm.name
                     cr['full_clone'] = 'Yes' if row['full_clone'] == 1 else 'No'
                     cr['user'] = row['user']
