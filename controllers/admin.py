@@ -387,7 +387,9 @@ def clone_requests():
                 try:
                     vm = conn.find_baadal_vm(id=row.vm_id)
                     cr['vm_name'] = vm.name
-                    cr['full_clone'] = 'Yes' if i['full_clone'] == 1 else 'No'
+                    cr['full_clone'] = 'Yes' if row['full_clone'] == 1 else 'No'
+                    cr['user'] = row['user']
+                    cr['clone_name'] = row['clone_name']
                     response.append(cr)
                 except NotFound:
                     spurious_requests.append(str(row.id))
@@ -407,6 +409,47 @@ def clone_requests():
                 conn.close()
             except:
                 pass
+
+
+
+@auth.requires(user_is_project_admin)
+def public_ip_requests():
+    if request.extension in ('', None, 'html'):
+        return dict()
+    elif request.extension == 'json':
+        try:
+            rows = db(db.floating_ip_requests.status == 0).select()
+            response = []
+            conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                     session.password)
+            spurious_requests = []
+            for row in rows:
+                cr = {}
+                try:
+                    cr['request_time'] = str(row.request_time)
+                    cr['user'] = row.user
+                    cr['vmid'] = row.vmid
+                    response.append(cr)
+                except NotFound:
+                    spurious_requests.append(str(row.id))
+                    continue
+            if len(spurious_requests):
+                query = 'delete from public_ip_requests where id in (%s)' % \
+                           (','.join(spurious_requests))
+                db.executesql(query)
+                db.commit()
+            return jsonify(data=response)
+        except Exception as e:
+            logger.exception(e)
+            return jsonify(status='fail',
+                           message=e.message or str(e.__class__))
+        finally:
+            try:
+                conn.close()
+            except:
+                pass
+
+
 
 
 @auth.requires(user_is_project_admin)

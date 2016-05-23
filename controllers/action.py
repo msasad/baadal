@@ -160,12 +160,28 @@ def index():
         return __migrate(vmid)
     elif action == 'add-virtual-disk':
         return __add_virtual_disk(vmid, request.vars.disksize)
-
+    elif action == 'attach-public-ip':
+        return __attach_public_ip(vmid)
 
 def __add_virtual_disk(vmid, size):
     try:
         db.virtual_disk_requests.insert(user=session.username, vmid=vmid,
                                         disk_size=int(size), status=0)
+        return jsonify()
+    except Exception as e:
+        logger.exception(e.message or str(e.__class__))
+        return jsonify(status='fail', message=e.message or str(e.__class__))
+
+
+def __attach_public_ip(vmid):
+    import tkMessageBox
+    try:
+        db.floating_ip_requests.insert(vmid=request.vars.vmid,
+                                 user=session.username,
+                                 status=0
+                                 )
+        db.commit()
+        tkMessageBox.showinfo(title="Request_info", message="Your request is completed successfully")
         return jsonify()
     except Exception as e:
         logger.exception(e.message or str(e.__class__))

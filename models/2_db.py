@@ -21,8 +21,8 @@ password = config.get('database', 'password')
 dbname = config.get('database', 'database')
 
 db = DAL('mysql://' + username + ':' + password + '@' + dbhost + '/' + dbname,
-         migrate=True)
-#         fake_migrate_all=True)
+#         migrate=True)
+         fake_migrate_all=True)
 db.define_table('vm_requests',
                 Field('id', 'integer'),
                 Field('vm_name', 'string'),
@@ -77,8 +77,7 @@ db.define_table('floating_ip_requests',
                 Field('id', 'integer'),
                 Field('user', 'string', required=True),
                 Field('vmid', 'string', required=True),
-                Field('request_time', 'integer',
-                      requires=IS_INT_IN_RANGE(0, 1)),
+                Field('request_time', 'datetime'),
                 Field('status', 'integer')
                 )
 
