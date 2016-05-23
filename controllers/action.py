@@ -173,16 +173,30 @@ def __add_virtual_disk(vmid, size):
         return jsonify(status='fail', message=e.message or str(e.__class__))
 
 
+def __check_public_ip_entry(vmid):
+        try:
+            rows = db(db.floating_ip_requests.status == 0).select()
+            for row in rows:
+                   if row.vmid==vmid :
+                        return False
+            return True
+        except Exception as e:
+            logger.exception(e)
+
+
 def __attach_public_ip(vmid):
     import tkMessageBox
     try:
-        db.floating_ip_requests.insert(vmid=request.vars.vmid,
-                                 user=session.username,
-                                 status=0
-                                 )
-        db.commit()
-        tkMessageBox.showinfo(title="Request_info", message="Your request is completed successfully")
-        return jsonify()
+       if __check_public_ip_entry(vmid):
+            db.floating_ip_requests.insert(vmid=request.vars.vmid,
+                                            user=session.username,
+                                            status=0
+                                           )
+            db.commit()
+            tkMessageBox.showinfo(title="Request_info", message="Your request is completed successfully")
+            return jsonify()
+       else:
+            tkMessageBox.showinfo(title="Request_info", message="Your request is already in request queue and waiting for approval")
     except Exception as e:
         logger.exception(e.message or str(e.__class__))
         return jsonify(status='fail', message=e.message or str(e.__class__))

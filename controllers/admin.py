@@ -385,7 +385,7 @@ def clone_requests():
                 cr = dict()
                 cr['request_time'] = seconds_to_localtime(row.request_time)
                 try:
-                    vm = conn.find_baadal_vm(id=row.vm_id)
+                    vm = conn.find_baadal_vm(id=row.vmid)
                     cr['vm_name'] = vm.name
                     cr['full_clone'] = 'Yes' if row['full_clone'] == 1 else 'No'
                     cr['user'] = row['user']
@@ -426,9 +426,10 @@ def public_ip_requests():
             for row in rows:
                 cr = {}
                 try:
+                    vm = conn.find_baadal_vm(id=row.vmid)
                     cr['request_time'] = str(row.request_time)
                     cr['user'] = row.user
-                    cr['vmid'] = row.vmid
+                    cr['vmid'] = vm.name
                     response.append(cr)
                 except NotFound:
                     spurious_requests.append(str(row.id))
