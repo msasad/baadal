@@ -84,6 +84,9 @@
     context['ip-addresses'] = baadalApp.ipObjectToString(context['addresses'], true);
     $.ajax( {
       url : '/baadal/ajax/vm_settings_template.html',
+      headers: {
+        "role": "admin",
+      },
       "error" : function(e) {
         if (e.status == 401) {
           document.location.reload();
