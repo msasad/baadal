@@ -156,17 +156,33 @@
                   var message;
                   if (response.status == 'fail') {
                     message = response.message;
-                    } else {
-                    switch (response.action) {
-                      case 'get-console-url':
-                        message = '<a target="_blank" href="' + response.consoleurl + '">' + response.consoleurl+ '</a>';
-                        break;
-                        message = '<a target="_blank" href="' + response.consoleurl + '">' + response.consoleurl+ '</a>';
-                        break;
-                      case 'snapshot':
-                        message = 'Snapshot creation has been initiated.';
-                        break;
-                    }
+                    return;
+                  }
+                  switch (action) {
+                    case 'get-console-url':
+                      message = '<a target="_blank" href="' + response.consoleurl + '">' + response.consoleurl+ '</a>';
+                      break;
+                      message = '<a target="_blank" href="' + response.consoleurl + '">' + response.consoleurl+ '</a>';
+                      break;
+                    case 'snapshot':
+                      message = 'Snapshot creation has been initiated.';
+                      break;
+                    case 'start-resume':
+                      message = 'Start/resume action has been queued. Please wait while your VM starts';
+                      break;
+                    case 'clone':
+                      message = 'Clone request has been posted.';
+                      break;
+                    case 'shutdown':
+                      message = 'VM stop action has been queued. Please wait while your VM is shut down.';
+                      break;
+                    case 'clone':
+                      message = 'Clone request has been posted.';
+                      break;
+                    case 'clone':
+                      message = 'Clone request has been posted.';
+                      break;
+
                   }
                   $modal.find('.panel-footer').show();
                   $modal.find('#modal-info-message').html(message).slideDown();
