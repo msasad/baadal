@@ -193,10 +193,9 @@ def __attach_public_ip(vmid):
                                             status=0
                                            )
             db.commit()
-            tkMessageBox.showinfo(title="Request_info", message="Your request is completed successfully")
-            return jsonify()
+            return jsonify(action=request.vars.action)
        else:
-            tkMessageBox.showinfo(title="Request_info", message="Your request is already in request queue and waiting for approval")
+            return jsonify(action='duplicate-request')
     except Exception as e:
         logger.exception(e.message or str(e.__class__))
         return jsonify(status='fail', message=e.message or str(e.__class__))

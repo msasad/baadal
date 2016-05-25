@@ -254,6 +254,16 @@
                         $modal.find('.panel-footer').show();
                         $modal.find('#modal-info-message').html('<a target="_blank" href="' + response.consoleurl + '">' + response.consoleurl + '</a>').slideDown();
                         break;
+                      case 'attach-public-ip':
+                        $modal.find('.panel-footer').show();
+                        $modal.find('#modal-info-message').html('<p> Your request is completed successfully.</p>').slideDown();
+                        break;
+
+                      case 'duplicate-request':
+                        $modal.find('.panel-footer').show();
+                        $modal.find('#modal-info-message').html('<p> Your request is already in request queue and waiting for approval.</p>').slideDown();
+                        break;
+
                     }
                     console.log(response);
                   }

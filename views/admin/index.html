@@ -155,6 +155,15 @@
                       case 'snapshot':
                         message = 'Snapshot creation has been initiated.';
                         break;
+                      case 'attach-public-ip':
+                        $modal.find('.panel-footer').show();
+                        $modal.find('#modal-info-message').html('<p> Your request is completed successfully.</p>').slideDown();
+                        break;
+
+                      case 'duplicate-request':
+                        $modal.find('.panel-footer').show();
+                        $modal.find('#modal-info-message').html('<p> Your request is already in request queue and waiting for approval.</p>').slideDown();
+                        break;
                     }
                   }
                   $modal.find('.panel-footer').show();
