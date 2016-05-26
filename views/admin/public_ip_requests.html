@@ -55,13 +55,11 @@
       nRow.setAttribute('data-reqid',aData.id);
     }
   });
-
-
   $requests.on('click','.btn-action', function(e) {
     var id = this.closest('tr').getAttribute('data-reqid');
     var action = this.getAttribute('data-action');
     $.ajax({
-      'url': '/baadal/action/handle_clone_request.json',
+      'url': '/baadal/action/handle_public_ip_request.json',
       'type': 'post',
       'dataType' : 'json',
       'data': {
@@ -81,7 +79,9 @@
             $(this).fadeOut();
           });
         } else {
-          $('#error-message').fadeIn();
+          $('#error-message').append("<p style='color:blue'>" + response.message  + "</p>").fadeIn(1000, function () {
+            $table.ajax.reload();
+          });
         }
       }
     });

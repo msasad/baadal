@@ -388,6 +388,36 @@ def handle_resize_request():
             pass
 
 
+def handle_public_ip_request():
+    action = request.vars.action
+    if action == 'approve':
+        return __attach_vm_public_ip()
+    elif action == 'reject':
+        return __reject_public_ip()
+
+def __reject_public_ip():
+    db(db.floating_ip_requests.id == request.vars.id).delete()
+    return jsonify(action='reject')
+
+def __attach_vm_public_ip():
+    try:
+         req = db(db.floating_ip_requests.id==request.vars.id).select().first()
+         conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                  session.password)
+         vm = conn.find_baadal_vm(id=req.vmid)
+         vm.attach_floating_ip()
+         db(db.floating_ip_requests.id == request.vars.id).delete()
+         return jsonify(status='success')
+    except Exception as e:
+         logger.exception(e)
+         db(db.floating_ip_requests.id == request.vars.id).delete()
+         return jsonify(status='fail', message=e.message or str(e.__class__))
+    finally:
+         try:
+            conn.close()
+         except:
+            pass
+
 @auth.requires(user_is_project_admin)
 def handle_clone_request():
     try:

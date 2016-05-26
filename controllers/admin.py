@@ -430,6 +430,7 @@ def public_ip_requests():
                     cr['request_time'] = str(row.request_time)
                     cr['user'] = row.user
                     cr['vmid'] = vm.name
+                    cr['id'] = row.id
                     response.append(cr)
                 except NotFound:
                     spurious_requests.append(str(row.id))
