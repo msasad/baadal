@@ -80,6 +80,19 @@ class BaadalVM(object):
         else:
             return False
 
+    def get_floating_ips(self):
+        """
+        :return corresponding fixed ip, if floating IP is present,
+        False otherwise
+        """
+        floating_ips = []
+        for net in self.server.addresses.itervalues():
+            for addr in net:
+                ip_type = addr['OS-EXT-IPS:type']
+                if ip_type == 'floating':
+                    floating_ips.append(addr['addr'])
+            return floating_ips
+
     def attach_disk(self, disk, device_path=None):
         """
         :param disk: instance of disk to be attached
@@ -90,7 +103,7 @@ class BaadalVM(object):
             disk_letter = self.__next_disk_letter(self.get_attached_disks())
             if not disk_letter:
                 raise BaadalException('No free letter for new disk')
-            devicepath =  '/dev/vd' + disk_letter
+            devicepath = '/dev/vd' + disk_letter
         try:
             self.__conn.nova.volumes.create_server_volume(
                 self.server.id, disk.id, devicepath)
@@ -124,7 +137,8 @@ class BaadalVM(object):
         flavor_id = self.server.flavor['id']
         networks = self.get_networks().keys()
         network_ids = [
-            self.__conn.neutron.list_networks(name=network)['networks'][0]['id'] for network in networks]
+            self.__conn.neutron.list_networks(name=net)['networks'][0]['id']
+            for net in networks]
         nics = [{'net-id': netid for netid in network_ids}]
         snapshot_id = self.server.create_image("temp")
         image = self.__conn.nova.images.find(id=snapshot_id)
@@ -162,6 +176,13 @@ class BaadalVM(object):
         return snapshot_id
 
     def delete(self, ):
+        floating_ips = self.get_floating_ips()
+        if floating_ips:
+            for addr in floating_ips:
+                ip_id = self.__conn.neutron.\
+                        list_floatingips(floating_ip_address=addr)
+                ip_id = ip_id['floatingips'][0]['id']
+                self.__conn.neutron.delete_floatingip(ip_id)
         res = self.server.delete()
         return res
 
