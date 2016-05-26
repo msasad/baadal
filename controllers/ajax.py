@@ -121,3 +121,11 @@ def sgroups():
             conn.close()
         except NameError:
             pass
+
+
+def vm_settings_template():
+    response.delimiters = ('<?', '?>')
+    if user_is_project_admin and request.env.HTTP_ROLE == 'admin':
+        return dict(admin=True)
+    else:
+        return dict(admin=False)

@@ -37,7 +37,7 @@
         "error": function(response, code) {
           console.log(response.status, code);
           if (response.status == 401) {
-            alert('You have been logged out. Please log in again');
+            document.location.reload();
           }
         }
       },
@@ -87,7 +87,7 @@
     });
     var reloadTable = setInterval(function() {
       $table.ajax.reload();
-    }, 30 * 1000);
+    }, 60 * 1000);
 
     $myvms.on('click', '.btn-settings', function(e) {
       var tr = this.closest('tr');
@@ -95,7 +95,7 @@
       context['ip-addresses'] = baadalApp.ipObjectToString(context['addresses'],
         true);
       $.ajax({
-        url: '/baadal/static/templates/vm-settings-template.html',
+        url: '/baadal/ajax/vm_settings_template.html',
         success: function(response) {
           var template = Handlebars.compile(response);
           var html = template(context);
@@ -133,12 +133,35 @@
                         }
                       },
                       success: function(response) {
-                        switch (response.action) {
+                        var message;
+                        switch (action) {
                           case 'get-console-url':
-                            console.log('here');
-                            $modal.find('#modal-info-message').html(response.consoleurl).slideDown();
+                            message = '<a target="_blank" href="' + response.consoleurl +
+                              '">' + response.consoleurl+ '</a>';
+                            break;
+                            message = '<a target="_blank" href="' + response.consoleurl +
+                              '">' + response.consoleurl+ '</a>';
+                            break;
+                          case 'snapshot':
+                            message = 'Snapshot creation has been initiated.';
+                            break;
+                          case 'start-resume':
+                            message = 'Start/resume action has been queued. Please wait' +
+                              ' while your VM starts';
+                            break;
+                          case 'clone':
+                            message = 'Clone request has been posted.';
+                            break;
+                          case 'shutdown':
+                            message = 'VM stop action has been queued. Please wait while' +
+                              'your VM is shut down.';
+                            break;
+                          case 'clone':
+                            message = 'Clone request has been posted.';
                             break;
                         }
+                        $modal.find('.panel-footer').show();
+                        $modal.find('#modal-info-message').html(message).slideDown();
                         console.log(response);
                       }
                     });
@@ -151,8 +174,10 @@
                   '<div class="form-group"> ' +
                   '<label for="disksize" class="control-label"> ' +
                   'Disk size</label> ' +
-                  '<input type="number" class="form-control" name="disksize" id="disksize" value="1" max="1024" min="1" /> ' +
-                  '</div> <button class="btn btn-primary btn-sm" id="btn-disk-request"> Submit Request </button> </form> '
+                  '<input type="number" class="form-control" name="disksize" id="disksize" ' +
+                  'value="1" max="1024" min="1" /> ' +
+                  '</div> <button class="btn btn-primary btn-sm" id="btn-disk-request"> ' +
+                  'Submit Request </button> </form> '
                 var $footer = $modal.find('.panel-footer').html(html);
                 $('#btn-disk-request').on('click', function(e) {
                   e.preventDefault();
@@ -165,14 +190,21 @@
                     },
                     success: function(response) {
                       response.status === 'success' && $footer.html(
-                        '<p class="text-info"> Request posted successfully. ' + 'Extra disk will be added to the VM when the request ' + 'will be approved by admin </p>');
+                        '<p class="text-info"> Request posted successfully. ' +
+                        'Extra disk will be added to the VM when the request ' +
+                        'will be approved by admin </p>');
                       console.log(response);
                     }
                   });
                 });
                 $footer.slideDown();
               } else if (action === 'resize') {
-                var html = '<form class="form-inline" action="#">' + '<label for="new_flavor" class="control-label">' + 'Select new configuration</label>' + '<select class="form-control" name="new_flavor" id="new_flavor"></select>' + '<button class="btn btn-primary btn-sm" id="btn-resize-request">Submit Request</button>' + '</form>'
+                var html = '<form class="form-inline" action="#"> ' +
+                  ' <label for="new_flavor" class="control-label"> ' +
+                  'Select new configuration</label> ' +
+                  ' <select class="form-control" name="new_flavor" id="new_flavor"> </select> ' +
+                  ' <button class="btn btn-primary btn-sm" id="btn-resize-request"> Submit Request' +
+                  '</button> </form>'
                 var $footer = $modal.find('.panel-footer').html(html);
                 var flavor_selector = document.getElementById('new_flavor');
                 $.ajax({
@@ -180,7 +212,8 @@
                   dataType: 'json',
                   success: function(response) {
                     for (var index in response) {
-                      flavor_selector.options.add(new Option(response[index].vcpus + 'CPU, ' + response[index].ram + 'MB RAM', response[index].id));
+                      flavor_selector.options.add(new Option(response[index].vcpus + 'CPU, ' +
+                            response[index].ram + 'MB RAM', response[index].id));
                     }
                     $('#btn-resize-request').on('click', function(e) {
                       e.preventDefault();
@@ -189,10 +222,21 @@
                         type: 'post',
                         data: {
                           'vmid': vmid,
+                          name: context.name,
                           new_flavor: flavor_selector.value
                         },
                         success: function(response) {
-                          console.log(response);
+                          if(response.status == 'success') {
+                            var span = document.createElement('span');
+                            span.classList.add('text-success');
+                            span.innerHTML = 'Request posted successfully';
+                            $footer.html(span);
+                          } else {
+                            var span = document.createElement('span');
+                            span.classList.add('text-danger');
+                            span.innerHTML = 'There was some error in posting the request.';
+                            $footer.html(span);
+                          }
                         },
                         'error': function(response) {
                           var error = response.getResponseHeader('web2py_error');
@@ -228,7 +272,32 @@
                     }
                   },
                   success: function(response) {
-                    switch (response.action) {
+                    var message;
+                    switch (action) {
+                      case 'get-console-url':
+                        message = '<a target="_blank" href="' + response.consoleurl +
+                          '">' + response.consoleurl+ '</a>';
+                        break;
+                        message = '<a target="_blank" href="' + response.consoleurl +
+                          '">' + response.consoleurl+ '</a>';
+                        break;
+                      case 'snapshot':
+                        message = 'Snapshot creation has been initiated.';
+                        break;
+                      case 'start-resume':
+                        message = 'Start/resume action has been queued. Please wait ' +
+                          'while your VM becomes ready.';
+                        break;
+                      case 'clone':
+                        message = 'Clone request has been posted.';
+                        break;
+                      case 'shutdown':
+                        message = 'VM stop action has been queued. Please wait while  ' +
+                          'your VM is shut down.';
+                        break;
+                      case 'clone':
+                        message = 'Clone request has been posted.';
+                        break;
                       case 'snapshot':
                         $modal.find('.panel-footer').show();
                         $modal.find('#modal-info-message').html('<p> Snapshot ' +
@@ -236,10 +305,15 @@
                         break;
                       case 'get-console-url':
                         $modal.find('.panel-footer').show();
-                        $modal.find('#modal-info-message').html('<a target="_blank" href="' + response.consoleurl + '">' + response.consoleurl + '</a>').slideDown();
+                        $modal.find('#modal-info-message').html('<a target="_blank" href="' + 
+                            response.consoleurl + '">' + response.consoleurl +
+                            '</a>').slideDown();
                         break;
                     }
+                    $modal.find('.panel-footer').show();
+                    $modal.find('#modal-info-message').html(message).slideDown();
                     console.log(response);
+                    console.log($modal);
                   }
                 });
               }
@@ -257,6 +331,7 @@
               })
             });
             $modal.on('click', '#fetch-snapshots', function(e) {
+              var $tr = $(this);
               var vmid = document.getElementById('vmid').value;
               $.ajax({
                 url: '/baadal/ajax/snapshots.json',
@@ -266,6 +341,10 @@
                 },
                 success: function(response) {
                   console.log(response);
+                  var html = baadalApp.populateSnapshots(response.data);
+                  console.log(this);
+                  console.log(html);
+                  $tr.closest('tbody').html(html);
                 },
                 error: function(error, response, code) {
                   console.log(error, response, code);
@@ -274,6 +353,7 @@
             });
             $modal.on('hidden.bs.modal', function() {
               $modal.remove();
+              $table.ajax.reload();
             });
           });
         }

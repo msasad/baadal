@@ -41,6 +41,7 @@ db.define_table('vm_requests',
 
 db.define_table('resize_requests',
                 Field('id', 'integer'),
+                Field('vmname', 'string'),
                 Field('user', 'string'),
                 Field('vm_id', 'string'),
                 Field('new_flavor', 'string'),

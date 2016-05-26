@@ -104,8 +104,28 @@ def task_clone_vm(auth, vmid):
         conn = Baadal.Connection(_authurl, _tenant, auth.u, auth.p)
         vm = conn.find_baadal_vm(id=vmid)
         clone = vm.clone()
-        logger.info('VM Cloned: VMID %s, clone_id %s' % \
-                (vmid, clone))
+        logger.info('VM Cloned: VMID %s, clone_id %s' % (vmid, clone))
     except Exception as e:
         logger.exception(e)
+
+def task_resize_vm(auth, reqid):
+    auth = Storage(loads(b64decode(auth)))
+    logger.info('Resizing VM')
+    try:
+        req = db(db.resize_requests.id == reqid).select()[0]
+        conn = Baadal.Connection(_authurl, _tenant, auth.u, auth.p)
+        vm = conn.find_baadal_vm(id=req.vm_id)
+        new_flavor = req.new_flavor
+        vm.resize(new_flavor)
+        req.update_record(status=REQUEST_STATUS_APPROVED)
+        logger.info('VM Resized: VMID %s, old_flavor %s, new_flavor %s' % \
+                    (req.vm_id, vm.server.flavor['id'], req.new_flavor))
+    except Exception as e:
+        logger.exception(e)
+        req.update_record(status=REQUEST_STATUS_POSTED)
+    finally:
+        db.commit()
+        conn.close()
+
+
 

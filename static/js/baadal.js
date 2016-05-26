@@ -76,6 +76,29 @@ baadalApp.filterArrayObject = function(object, array_name, field_name, value) {
   return object;
 };
 
+baadalApp.populateSnapshots = function(data) {
+    var innerHTML = `{{#if snapshots}}
+                  {{#each snapshots}}
+                <tr data-snapshot-id="{{this.id}}">
+                  <td>{{this.name}}</td>
+                  <td>{{this.created}}</td>
+                  <td class="text-center">
+                    <a title="Restore this spanshot" href="#" class="snapshot-restore">
+                      <span class="badge">
+                        <span class="fa fa-reply"></span>
+                      </span>
+                    </a>
+                  </td>
+                </tr>
+                  {{/each}}
+              {{else}}
+                <tr><td colspan="100%" class="text-center"> There are no spanshots </td><tr>
+              {{/if}} `;
+    var template = Handlebars.compile(innerHTML);
+    var html = template(data);
+    return html;
+}
+
 baadalApp.getSettingsButtonsMarkup = function(status) {
    var actions = {
      'ACTIVE' : 'shutdown',

@@ -73,9 +73,9 @@
       nRow.setAttribute('data-vmid', aData.id);
     }
   });
-  // var reloadTable = setInterval(function(){
-  //   $table.ajax.reload();
-  // }, 30*1000);
+  var reloadTable = setInterval(function(){
+    $table.ajax.reload();
+  }, 60*1000);
 
   var $modal;
   $allvms.on('click', '.btn-settings', function (e) {
@@ -83,7 +83,15 @@
     var context = $table.row(tr).data();
     context['ip-addresses'] = baadalApp.ipObjectToString(context['addresses'], true);
     $.ajax( {
-      url : '/baadal/static/templates/vm-admin-settings-template.html',
+      url : '/baadal/ajax/vm_settings_template.html',
+      headers: {
+        "role": "admin",
+      },
+      "error" : function(e) {
+        if (e.status == 401) {
+          document.location.reload();
+        }
+      },
       success : function(response) {
         var template = Handlebars.compile(response);
         var html = template(context);
@@ -140,22 +148,41 @@
                   if (error) {
                     baadalApp.generateTicketLink(error);
                   }
+                  if (response.status == 401) {
+                    document.location.reload();
+                  }
                 },
                 success: function (response) {
                   var message;
                   if (response.status == 'fail') {
                     message = response.message;
-                    } else {
-                    switch (response.action) {
-                      case 'get-console-url':
-                        message = '<a target="_blank" href="' + response.consoleurl + '">' + response.consoleurl+ '</a>';
-                        break;
-                        message = '<a target="_blank" href="' + response.consoleurl + '">' + response.consoleurl+ '</a>';
-                        break;
-                      case 'snapshot':
-                        message = 'Snapshot creation has been initiated.';
-                        break;
-                    }
+                    return;
+                  }
+                  switch (action) {
+                    case 'get-console-url':
+                      message = '<a target="_blank" href="' + response.consoleurl + '">' + response.consoleurl+ '</a>';
+                      break;
+                      message = '<a target="_blank" href="' + response.consoleurl + '">' + response.consoleurl+ '</a>';
+                      break;
+                    case 'snapshot':
+                      message = 'Snapshot creation has been initiated.';
+                      break;
+                    case 'start-resume':
+                      message = 'Start/resume action has been queued. Please wait while your VM starts';
+                      break;
+                    case 'clone':
+                      message = 'Clone request has been posted.';
+                      break;
+                    case 'shutdown':
+                      message = 'VM stop action has been queued. Please wait while your VM is shut down.';
+                      break;
+                    case 'clone':
+                      message = 'Clone request has been posted.';
+                      break;
+                    case 'clone':
+                      message = 'Clone request has been posted.';
+                      break;
+
                   }
                   $modal.find('.panel-footer').show();
                   $modal.find('#modal-info-message').html(message).slideDown();
@@ -163,6 +190,27 @@
                 }
               });
             }
+          });
+          $modal.on('click', '#fetch-snapshots', function(e) {
+            var $tr = $(this);
+            var vmid = document.getElementById('vmid').value;
+            $.ajax({
+              url: '/baadal/ajax/snapshots.json',
+              type: 'post',
+              data: {
+                vmid: vmid,
+              },
+              success: function(response) {
+                console.log(response);
+                var html = baadalApp.populateSnapshots(response.data);
+                console.log(this);
+                console.log(html);
+                $tr.closest('tbody').html(html);
+              },
+              error: function(error, response, code) {
+                console.log(error, response, code);
+              }
+            });
           });
           $modal.on('click', '.snapshot-restore', function(e){
             var vmid = document.getElementById('vmid').value;
@@ -178,6 +226,7 @@
           });
           $modal.on('hidden.bs.modal', function() {
             $modal.remove();
+            $table.ajax.reload();
           });
         });
       }

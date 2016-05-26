@@ -18,8 +18,10 @@
     </table>
   </div>
   <div class="panel-footer">
-    <span style="display:none" class="text-success" id="success-message">Request approved.</span>
-    <span style="display:none" class="text-danger" id="error-message">Request cannot be approved.</span>
+    <span style="display:none" class="text-success" id="success-message-approve">Request approved.</span>
+    <span style="display:none" class="text-danger" id="error-message-approve ">Request cannot be approved.</span>
+    <span style="display:none" class="text-success" id="success-message-reject">Request rejected.</span>
+    <span style="display:none" class="text-danger" id="error-message-reject ">There was some error while deleting the request.</span>
   </div>
 </div>
 {{include 'default-scripts.html'}}
@@ -80,12 +82,12 @@
       },
       'success': function(response) {
         if(response.status == 'success') {
-          $('#success-message').fadeIn(1000, function () {
+          $('#success-message-' + action).fadeIn(1000, function () {
             $table.ajax.reload();
             $(this).fadeOut();
           });
         } else {
-          $('#error-message').fadeIn();
+          $('#error-message-' + action).fadeIn();
         }
       }
     });

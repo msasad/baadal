@@ -1,4 +1,5 @@
 import json
+from novaclient.exceptions import NotFound
 import gluon
 
 
@@ -266,6 +267,7 @@ def account_requests():
         rows = db(db.account_requests.approval_status == 0).select()
         l = rows.as_list()
         for i in l:
+            del i['password']
             i['request_time'] = seconds_to_localtime(i['request_time'])
             FP = 'faculty_privileges'
             i[FP] = 'Yes' if i[FP] else 'No'
@@ -274,7 +276,6 @@ def account_requests():
 
 @auth.requires(user_is_project_admin)
 def disk_requests():
-    from novaclient.exceptions import NotFound
     if request.extension in ('', None, 'html'):
         return dict()
     elif request.extension == 'json':
@@ -321,13 +322,7 @@ def resize_requests():
         return dict()
     elif request.extension == 'json':
         try:
-            # TODO: Return a list of dictionaries with following keys
-            # user,
-            # vm_name,
-            # vm_id
-            # current_config,
-            # requested_config,
-            # request_time
+            # TODO Implement caching
             rows = db(db.resize_requests.status == 0).select()
             response = []
             spurious_requests = []
@@ -337,10 +332,11 @@ def resize_requests():
             for row in rows:
                 cr = {}
                 try:
-                    from novaclient.exceptions import NotFound
                     vm = conn.find_baadal_vm(id=row.vm_id)
                     cr['request_time'] = seconds_to_localtime(row.request_time)
-                    cr['vm_name'] = vm.name
+                    cr['user'] = row.user
+                    cr['vm_name'] = row.vmname
+                    cr['id'] = row.id
                 except NotFound:
                     spurious_requests.append(str(row.id))
                     continue
@@ -390,7 +386,6 @@ def clone_requests():
                 cr = dict()
                 cr['request_time'] = seconds_to_localtime(row.request_time)
                 try:
-                    from novaclient.exceptions import NotFound
                     vm = conn.find_baadal_vm(id=row.vm_id)
                     cr['vm_name'] = vm.name
                     cr['full_clone'] = 'Yes' if i['full_clone'] == 1 else 'No'

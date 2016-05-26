@@ -31,6 +31,7 @@
               </tr>
               </tbody>
             </table>
+            <? if user_is_project_admin: ?>
             {{#if fault.message}}
             <div class=" panel panel-danger">
               <div class="panel-body">
@@ -40,15 +41,20 @@
               </div>
             </div>
             {{/if}}
+            <? pass ?>
             <input type="hidden" id="vmid" value="{{id}}">
             <div class="btn-group" data-vmid="{{id}}" role="group" aria-label="...">
               <button type="button" data-action="snapshot" class="btn btn-lg btn-default btn-action" title="Take Snapshot">
                 <span class="fa fa-camera" aria-hidden="true"></span>
               </button>
+              <button type="button" data-action="add-virtual-disk"
+                class="btn btn-lg btn-default btn-action" title="Request virtual disk">
+                <span class="fa fa-hdd-o" aria-hidden="true"></span>
+              </button>
+              {{#ifCond status '==' 'ACTIVE'}}
               <button type="button" data-action="get-console-url" class="btn btn-lg btn-default btn-action" title="Get Console URL">
                 <span class="fa fa-terminal" aria-hidden="true"></span>
               </button>
-              {{#ifCond status '==' 'ACTIVE'}}
               <button type="button" data-action="shutdown" class="btn btn-lg btn-default btn-action" title="Shutdown">
                 <span class="fa fa-stop" aria-hidden="true"></span>
               </button>
@@ -63,9 +69,11 @@
               <button type="button" data-action="clone" class="btn btn-lg btn-default btn-action" title="Clone">
                 <span class="fa fa-copy" aria-hidden="true"></span>
               </button>
+              <? if user_is_project_admin and admin: ?>
               <button type="button" data-action="migrate" class="btn btn-lg btn-default btn-action" title="Migrate">
                 <span class="fa fa-plane" aria-hidden="true"></span>
               </button>
+              <? pass ?>
                <button type="button" data-action="resize" class="btn btn-lg btn-default btn-action" 
                  title="Request Resize">
                 <span class="fa fa-expand" aria-hidden="true"></span>
@@ -94,26 +102,13 @@
               </tr>
               </thead>
               <tbody>
-                {{#if snapshots}}
-                  {{#each snapshots}}
-                <tr data-snapshot-id="{{this.id}}">
-                  <td>{{this.name}}</td>
-                  <td>{{this.created}}</td>
-                  <td class="text-center">
-                    <a title="Restore this spanshot" href="#" class="snapshot-restore">
-                      <span class="badge">
-                        <span class="fa fa-reply"></span>
-                      </span>
-                    </a>
+                <tr>
+                  <td colspan="100%" class="text-center text-info">
+                    <a id="fetch-snapshots" href="#">Click here to fetch list of snapshots.</a>
                   </td>
                 </tr>
-                  {{/each}}
-              {{else}}
-              <tr><td colspan="100%" class="text-center text-info">No Snapshots</td> </tr>
-              {{/if}}
               </tbody>
             </table>
-
           </div>
           <div class="panel-footer" style="display:none">
             <span style="display:none" class="text-danger" id="modal-error-message">There was some error in the form. Please check the values and submit the form again.</span>

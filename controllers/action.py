@@ -9,16 +9,17 @@ def __do(action, vmid):
         auth = b64encode(dumps(dict(u=session.username, p=session.password)))
         if action == 'migrate':
             pvars = dict(auth=auth, vmid=vmid)
-            scheduler.queue_task(task_migrate_vm, pvars=pvars)
+            scheduler.queue_task(task_migrate_vm, timeout=600, pvars=pvars)
             return jsonify()
         elif action == 'snapshot':
             pvars = dict(auth=auth, vmid=vmid)
-            scheduler.queue_task(task_snapshot_vm, pvars=pvars)
+            scheduler.queue_task(task_snapshot_vm, timeout=600, pvars=pvars)
             return jsonify()
         elif action == 'restore-snapshot':
             snapshot_id = request.vars.snapshot_id
             pvars = dict(auth=auth, vmid=vmid, snapshot_id=snapshot_id)
-            scheduler.queue_task(task_restore_snapshot, pvars=pvars)
+            scheduler.queue_task(task_restore_snapshot, timeout=600,
+                                 pvars=pvars)
             return jsonify()
 
         conn = Baadal.Connection(_authurl, _tenant, session.username,
@@ -260,7 +261,7 @@ def __create():
         row.update_record(state=REQUEST_STATUS_PROCESSING)
         logger.info('Queuing task')
         auth = b64encode(dumps(dict(u=session.username, p=session.password)))
-        scheduler.queue_task(task_create_vm,
+        scheduler.queue_task(task_create_vm, timeout=600,
                              pvars={'reqid': row.id, 'auth': auth})
         db.commit()
         return jsonify(action='approve')
@@ -335,14 +336,19 @@ def handle_account_request():
 @auth.requires(user_is_project_admin)
 def handle_resize_request():
     try:
-        conn = Baadal.Connection(_authurl, _tenant, session.username,
-                                 session.password)
-        row = db(db.resize_requests.id == request.vars.id).select()[0]
-        vm = conn.find_baadal_vm(id=row.vm_id)
-        vm.resize(row['new_flavor'])
-        row.update_record(status=1)
+        if request.vars.action == 'reject':
+            db(db.resize_requests.id == request.vars.id).delete()
+        elif request.vars.action == 'approve':
+            row = db(db.resize_requests.id == request.vars.id).select()[0]
+            row.update_record(status=REQUEST_STATUS_PROCESSING)
+            auth = b64encode(dumps(dict(u=session.username,
+                             p=session.password)))
+            scheduler.queue_task(task_resize_vm, timeout=600,
+                                 pvars={'reqid': row.id, 'auth': auth})
         db.commit()
+        return jsonify(action=request.vars.action)
     except Exception as e:
+        row.update_record(status=REQUEST_STATUS_POSTED)
         message = e.message or str(e.__class__)
         logger.error(message)
         return jsonify(status='fail', message=message)
