@@ -267,6 +267,7 @@ def account_requests():
         rows = db(db.account_requests.approval_status == 0).select()
         l = rows.as_list()
         for i in l:
+            del i['password']
             i['request_time'] = seconds_to_localtime(i['request_time'])
             FP = 'faculty_privileges'
             i[FP] = 'Yes' if i[FP] else 'No'
