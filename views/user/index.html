@@ -42,10 +42,11 @@
         }
       },
       "oLanguage": {
-        "sEmptyTable": "You don't have any VMs currently! You may request one <a href=\"./request\">here</a>"
+        "sEmptyTable": "You don't have any VMs currently! You may request one <a href=\"./form\">here</a>"
       },
       "aoColumnDefs": [{
         "aTargets": [5],
+        "bSortable": false,
         "mData": null,
         "mRender": function(data, type, full) {
           if (type == 'display' || type == 'filter') {
@@ -58,6 +59,7 @@
         }
       }, {
         "aTargets": [6],
+        "bSortable": false,
         "mData": null,
         "mRender": function(data, type, full) {
           if (type === 'display') {

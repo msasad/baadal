@@ -36,6 +36,7 @@
     "aoColumnDefs": [
       {
         "aTargets": [5],
+        "bSortable": false,
         "mData": null,
         "mRender": function(data, type, full) {
           if (type == 'display' || type == 'filter') {
@@ -50,6 +51,7 @@
        {
          "aTargets": [8],
          "mData": null,
+         "bSortable": false,
          "mRender": function (data, type, full) {
            if (type === 'display' ) {
              return baadalApp.getSettingsButtonsMarkup(data.status);
