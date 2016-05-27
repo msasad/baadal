@@ -401,12 +401,28 @@ def __reject_public_ip():
 
 def __attach_vm_public_ip():
     try:
+         auth = b64encode(dumps(dict(u=session.username, p=session.password)))
+         auth = Storage(loads(b64decode(auth)))
          req = db(db.floating_ip_requests.id==request.vars.id).select().first()
          conn = Baadal.Connection(_authurl, _tenant, session.username,
                                   session.password)
          vm = conn.find_baadal_vm(id=req.vmid)
+         vm_name = vm.name
          vm.attach_floating_ip()
          db(db.floating_ip_requests.id == request.vars.id).delete()
+         context = Storage()
+         context.username = auth.u
+         context.vm_name = vm_name
+         context.mail_support = mail_support
+         user_info = ldap.fetch_user_info(auth.u)
+         context.user_email = user_info['user_email']
+         context.gateway_server = gateway_server
+         context.req_time = req.request_time
+         logger.info('sending mail')
+         logger.debug(user_info)
+         mailer.send(mailer.MailTypes.IPRequest, context.user_email,
+                     context)
+         logger.info('mail sent')
          return jsonify(status='success')
     except Exception as e:
          logger.exception(e)
