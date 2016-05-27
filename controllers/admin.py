@@ -385,10 +385,14 @@ def clone_requests():
             for row in rows:
                 cr = dict()
                 cr['request_time'] = seconds_to_localtime(row.request_time)
+                cr['id'] = row.id
+                cr['vm_id'] = row.vm_id
+                cr['full_clone'] = 'Yes' if row['full_clone'] == 1 else 'No'
+                cr['clone_name'] = row.clone_name
+                cr['user'] = row.user
                 try:
                     vm = conn.find_baadal_vm(id=row.vm_id)
                     cr['vm_name'] = vm.name
-                    cr['full_clone'] = 'Yes' if i['full_clone'] == 1 else 'No'
                     response.append(cr)
                 except NotFound:
                     spurious_requests.append(str(row.id))
@@ -401,8 +405,8 @@ def clone_requests():
             return jsonify(data=response)
         except Exception as e:
             logger.exception(e)
-            return jsonify(status='fail',
-                           message=e.message or str(e.__class__))
+            raise HTTP(500, body=jsonify(status='fail',
+                           message=e.message or str(e.__class__)))
         finally:
             try:
                 conn.close()
