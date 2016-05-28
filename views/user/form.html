@@ -1,4 +1,4 @@
-{{extend 'blank-page.html'}}
+<? extend 'blank-page.html' ?>
 <div class="panel panel-primary">
   <div class="panel-heading">
     <h3 class="panel-title">Request a new virtual machine</h3>
@@ -77,7 +77,7 @@
             </div>
           </div>
 
-          {{if not (ldap.user_is_faculty(auth.user.username) or user_is_project_admin):}}
+          <? if not (ldap.user_is_faculty(auth.user.username) or user_is_project_admin): ?>
           <div class="form-group">
             <label for="faculty" class="col-sm-6 control-label">Faculty Approver*</label>
             <div class="col-sm-6">
@@ -85,7 +85,7 @@
             </div>
           </div>
 
-          {{pass}}
+          <? pass ?>
 
           <div class="form-group">
             <div class="col-sm-6 col-sm-offset-6">
@@ -118,7 +118,7 @@
     <span style="display:none" class="text-success" id="success-message">Request successfully posted.</span>
   </div>
 </div>
-{{include 'default-scripts.html'}}
+<? include 'default-scripts.html' ?>
 <script>
 (function(){
   $.ajax({
@@ -211,4 +211,4 @@
   }, false);
 })();
 </script>
-{{include 'wrap.html'}}
+<? include 'wrap.html' ?>

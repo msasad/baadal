@@ -14,6 +14,7 @@ default_keypair = config.get('misc', 'default_keypair')
 
 user_is_project_admin = False
 
+response.delimiters = ('<?','?>')
 
 if auth.is_logged_in():
     try:

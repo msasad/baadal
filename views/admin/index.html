@@ -1,4 +1,4 @@
-{{extend 'blank-page.html'}}
+<? extend 'blank-page.html' ?>
 <div class="panel panel-primary">
   <div class="panel-heading">
     <h3 class="panel-title">All Virtual Machines</h3>
@@ -21,7 +21,28 @@
     </table>
   </div>
 </div>
-{{include 'default-scripts.html'}}
+<? include 'default-scripts.html' ?>
+<script id="snapshots-tmpl" type="text/x-handlebar-template">
+{{#if snapshots}}
+  {{#each snapshots}}
+    <tr data-snapshot-id="{{this.id}}">
+      <td>{{this.name}}</td>
+      <td>{{this.created}}</td>
+      <td class="text-center">
+        <a title="Restore this spanshot" href="#" class="snapshot-restore">
+          <span class="badge">
+            <span class="fa fa-reply"></span>
+          </span>
+        </a>
+      </td>
+    </tr>
+  {{/each}}
+{{else}}
+  <tr>
+    <td colspan="100%" class="text-center"> There are no spanshots </td>
+  <tr>
+{{/if}}
+</script>
 <script src="/baadal/static/js/datatables.min.js"></script>
 <script src="/baadal/static/js/dataTables.bootstrap.min.js"></script>
 <script>
@@ -204,7 +225,7 @@
               },
               success: function(response) {
                 console.log(response);
-                var html = baadalApp.populateSnapshots(response.data);
+                var html = baadalApp.populateSnapshots(response.data, document.getElementById('snapshots-tmpl').innerHTML);
                 console.log(this);
                 console.log(html);
                 $tr.closest('tbody').html(html);
@@ -276,4 +297,4 @@
   });
 })();
 </script>
-{{include 'wrap.html'}}
+<? include 'wrap.html' ?>
