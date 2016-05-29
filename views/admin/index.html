@@ -43,6 +43,17 @@
   <tr>
 {{/if}}
 </script>
+<script id="btns-tmpl" type="text/x-handlebar-template">
+<div class="btn-group" role="group" aria-label="...">
+  <button title="{{title}}" type="button" data-action="{{title}}" class="btn btn-success btn-action" aria-label="Start">
+    <span class="fa fa-{{icon}}" aria-hidden="true"></span>
+  </button>
+  <button title="Settings" type="button"data-action="settings" class="btn btn-primary btn-settings" aria-label="Settings">
+    <span class="fa fa-cog" aria-hidden="true"></span>
+  </button>
+</div>
+</script>
+
 <script src="/baadal/static/js/datatables.min.js"></script>
 <script src="/baadal/static/js/dataTables.bootstrap.min.js"></script>
 <script>
@@ -75,7 +86,7 @@
          "bSortable": false,
          "mRender": function (data, type, full) {
            if (type === 'display' ) {
-             return baadalApp.getSettingsButtonsMarkup(data.status);
+             return baadalApp.getSettingsButtonsMarkup(data.status, document.getElementById('btns-tmpl').innerHTML);
            }
            return data;
          }
