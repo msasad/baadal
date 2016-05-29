@@ -91,8 +91,14 @@ var baadalApp = (function ($) {
       this.setupTable(config.isAdmin);
       this.attachEvents();
 
-      var promise = $.get(this.templateURL),
+      var promise,
         $this = this;
+      promise = $.ajax({
+        url: $this.templateURL,
+        headers: {
+          role: config.isAdmin ? 'admin' : 'user'
+        }
+      });
       promise.then(function (response) {
         $this.dialogTmpl = Handlebars.compile(response);
       });
