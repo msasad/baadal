@@ -175,17 +175,15 @@ def __add_virtual_disk(vmid, size):
 
 def __check_public_ip_entry(vmid):
         try:
-            rows = db(db.floating_ip_requests.status == 0).select()
-            for row in rows:
-                   if row.vmid==vmid :
-                        return False
-            return True
+           row = db((db.floating_ip_requests.status == 0) & (db.floating_ip_requests.vmid == vmid)).select()
+           if len(row) > 0:
+               return False
+           return True
         except Exception as e:
-            logger.exception(e)
+           logger.exception(e)
 
 
 def __attach_public_ip(vmid):
-    import tkMessageBox
     try:
        if __check_public_ip_entry(vmid):
             db.floating_ip_requests.insert(vmid=request.vars.vmid,
@@ -396,25 +394,22 @@ def handle_public_ip_request():
         return __reject_public_ip()
 
 def __reject_public_ip():
-    db(db.floating_ip_requests.id == request.vars.id).delete()
     return jsonify(action='reject')
 
 def __attach_vm_public_ip():
     try:
-         auth = b64encode(dumps(dict(u=session.username, p=session.password)))
-         auth = Storage(loads(b64decode(auth)))
          req = db(db.floating_ip_requests.id==request.vars.id).select().first()
          conn = Baadal.Connection(_authurl, _tenant, session.username,
                                   session.password)
          vm = conn.find_baadal_vm(id=req.vmid)
          vm_name = vm.name
          vm.attach_floating_ip()
-         db(db.floating_ip_requests.id == request.vars.id).delete()
+         req.update_record(status=1)
          context = Storage()
-         context.username = auth.u
+         context.username = session.username
          context.vm_name = vm_name
          context.mail_support = mail_support
-         user_info = ldap.fetch_user_info(auth.u)
+         user_info = ldap.fetch_user_info(session.username)
          context.user_email = user_info['user_email']
          context.gateway_server = gateway_server
          context.req_time = req.request_time
@@ -426,7 +421,6 @@ def __attach_vm_public_ip():
          return jsonify(status='success')
     except Exception as e:
          logger.exception(e)
-         db(db.floating_ip_requests.id == request.vars.id).delete()
          return jsonify(status='fail', message=e.message or str(e.__class__))
     finally:
          try:
