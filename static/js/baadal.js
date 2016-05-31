@@ -8,6 +8,15 @@ jQuery
 var baadalApp = (function ($) {
   'use strict';
   baadalApp = {};
+  
+  baadalApp.requestAction = function (data) {
+    return $.ajax({
+      url: '/baadal/action/index.json',
+      type: 'post',
+      data: data
+    });
+  };
+  
   baadalApp.serialize = function (temp) {
     var obj = {}, i, curr;
     for (i = temp.length - 1; i >= 0; i -= 1) {
@@ -91,18 +100,20 @@ var baadalApp = (function ($) {
       this.setupTable(config.isAdmin);
       this.attachEvents();
 
-      var promise,
+      var promise1,
+        promise2,
         $this = this;
-      promise = $.ajax({
+      promise1 = $.ajax({
         url: $this.templateURL,
         headers: {
           role: config.isAdmin ? 'admin' : 'user'
         }
       });
-      promise.then(function (response) {
+      promise1.then(function (response) {
         $this.dialogTmpl = Handlebars.compile(response);
       });
     },
+
     setupTable: function (isAdmin) {
       var dataURL = this.dataURL,
         emptyMsg = "You don't have any VMs currently! You may request" +
@@ -183,7 +194,13 @@ var baadalApp = (function ($) {
 
     attachEvents: function () {
       var $this = this,
-        actionbtn = '#' + $this.modalid + ' .btn-action';
+        actionbtn = '#' + $this.modalid + ' .btn-action',
+        btn_vm_del_yes = 'vm-delete-confirmation button[name=btn-yes]',
+        btn_vm_del_no = 'vm-delete-confirmation button[name=btn-no]',
+        action,
+        action_confirmed = false,
+        data = {},
+        promise;
 
       // Event handler for click of settings button
       $this.table.on('click', '.btn-settings', function (e) {
@@ -201,196 +218,91 @@ var baadalApp = (function ($) {
         $this.$modal.footer = $this.$modal.find('.panel-footer');
       });
 
+      $(document.body).on('click', btn_vm_del_no, function () {
+        $('#vm-delete-confirmation').slideUp();
+      });
+
+      $(document.body).on('click', '#btn-resize-request', function (e) {
+        e.preventDefault();
+        data.vmid = $('#vmid').value();
+        data.new_flavor = $('#new_flavor').value();
+        promise = $.post({
+          url: '/baadal/post_request/request_resize.json',
+          data: data
+        });
+      });
+
       // Event handler for click of action buttons on settings dialog
       $(document.body).on('click', actionbtn, function () {
-        var vmid = $(this).parent.data('vmid'),
-          action = $(this).data('action'),
-          buttons_html = '<span>Do you really want to delete this VM? This action cannot be undone!</span> <button type="button" name="btn-yes"            class="btn btn-danger" data-confirm="yes">Yes</button>            <button type="button" name="btn-no" class="btn btn-success"            data-confirm="no">No</button>',
+        promise = null;
+        var vmid = $(this).parent().data('vmid'),
           html,
           span,
-          flavor_selector;
+          flavor_selector,
+          promise2;
+        action = $(this).data('action');
           // var vmid = this.parentElement.getAttribute('data-vmid');
           // var action = this.getAttribute('data-action');
-        if (action === 'delete') {
-          $this.$modal.footer.html(buttons_html).slideDown(function () {
-
-            this.children.namedItem('btn-no').addEventListener('click', function () {
-              $this.$modla.footer.slideUp().html('');
-            });
-            this.children.namedItem('btn-yes').addEventListener('click', function () {
-              $.ajax({
-                url: '/baadal/action/index.json',
-                type: 'post',
-                data: {
-                  'vmid': vmid,
-                  'action': action
-                },
-                'error': function (response) {
-                  var error = response.getResponseHeader('web2py_error');
-                  if (error) {
-                    baadalApp.generateTicketLink(error);
-                  }
-                },
-                success: function (response) {
-                  var message;
-                  switch (action) {
-                  case 'get-console-url':
-                    message = '<a target="_blank" href="' + response.consoleurl +
-                      '">' + response.consoleurl + '</a>';
-                    break;
-                  case 'snapshot':
-                    message = 'Snapshot creation has been initiated.';
-                    break;
-                  case 'start-resume':
-                    message = 'Start/resume action has been queued. Please wait' +
-                      ' while your VM starts';
-                    break;
-                  case 'shutdown':
-                    message = 'VM stop action has been queued. Please wait while' +
-                      'your VM is shut down.';
-                    break;
-                  case 'clone':
-                    message = 'Clone request has been posted.';
-                    break;
-                  }
-                  $this.$modal.footer.show();
-                  $this.$modal.find('#modal-info-message').html(message).slideDown();
-                }
-              });
-              $this.$modal.footer.slideUp().html('');
-            });
+        data.action = action;
+        data.vmid = vmid;
+        console.log(action);
+        switch (action) {
+        case 'delete':
+          $('#vm-delete-confirmation').slideDown().siblings().hide();
+          this.children.namedItem('btn-yes').addEventListener('click', function () {
+            action_confirmed = true;
           });
-        } else if (action === 'add-virtual-disk') {
-          html = '<form class="form-inline" action="#"> ' +
-            '<div class="form-group"> ' +
-            '<label for="disksize" class="control-label"> ' +
-            'Disk size</label> ' +
-            '<input type="number" class="form-control" name="disksize" id="disksize" ' +
-            'value="1" max="1024" min="1" /> ' +
-            '</div> <button class="btn btn-primary btn-sm" id="btn-disk-request"> ' +
-            'Submit Request </button> </form> ';
-          $this.$modal.footer.html(html);
+          break;
+        case 'add-virtual-disk':
+          console.log('hwere');
+          $('#disk-size-input').slideDown().siblings().hide();
           $('#btn-disk-request').on('click', function (e) {
             e.preventDefault();
-            $.ajax({
-              url: '/baadal/action/index.json',
-              data: {
-                'vmid': vmid,
-                action: 'add-virtual-disk',
-                disksize: document.getElementById('disksize').value
-              },
-              success: function (response) {
-                if (response.status === 'success') {
-                  $this.$modal.footer.html(
-                    '<p class="text-info"> Request posted successfully. ' +
-                      'Extra disk will be added to the VM when the request ' +
-                      'will be approved by admin </p>'
-                  );
-                }
-              }
+            promise = baadalApp.requestAction({
+              vmid: vmid,
+              action: 'add-virtual-disk',
+              disksize: document.getElementById('disksize').value
+            });
+//            $.ajax({
+//              url: '/baadal/action/index.json',
+//              data: {
+//                'vmid': vmid,
+//                action: 'add-virtual-disk',
+//                disksize: document.getElementById('disksize').value
+//              },
+//              success: function (response) {
+//                if (response.status === 'success') {
+//                  $this.$modal.footer.html(
+//                    '<p class="text-info"> Request posted successfully. ' +
+//                      'Extra disk will be added to the VM when the request ' +
+//                      'will be approved by admin </p>'
+//                  );
+//                }
+//              }
+//            });
+          });
+          break;
+        case 'resize':
+          promise2 = $.getJSON('/baadal/ajax/configs.json');
+          $('#resize-form').slideDown().siblings().hide();
+          flavor_selector = document.getElementById('new_flavor');
+          promise2.then(function (response) {
+            response.forEach(function (flavor, index) {
+              flavor_selector.options.add(new Option(flavor.vcpus + 'CPU, ' +
+                flavor.ram + 'MB RAM', flavor.id));
             });
           });
-          $this.modal.footer.slideDown();
-        } else if (action === 'resize') {
-          flavor_selector = document.getElementById('new_flavor');
-          html = '<form class="form-inline" action="#"> ' +
-                ' <label for="new_flavor" class="control-label"> ' +
-                'Select new configuration</label> ' +
-                ' <select class="form-control" name="new_flavor" id="new_flavor"> </select> ' +
-                ' <button class="btn btn-primary btn-sm" id="btn-resize-request"> Submit Request' +
-                '</button> </form>';
-          $this.$modal.footer.html(html);
-          $.ajax({
-            url: '/baadal/ajax/configs.json',
-            dataType: 'json',
-            success: function (response) {
-              response.forEach(function (flavor, index) {
-                flavor_selector.options.add(new Option(flavor.vcpus + 'CPU, ' +
-                      flavor.ram + 'MB RAM', flavor.id));
-              });
-              $('#btn-resize-request').on('click', function (e) {
-                e.preventDefault();
-                $.ajax({
-                  url: '/baadal/post_request/request_resize.json',
-                  type: 'post',
-                  data: {
-                    'vmid': vmid,
-                    // name: context.name,
-                    name:  undefined,
-                    new_flavor: flavor_selector.value
-                  },
-                  success: function (response) {
-                    var span = document.createElement('span');
-                    if (response.status === 'success') {
-                      span.classList.add('text-success');
-                      span.innerHTML = 'Request posted successfully';
-                      $this.$modal.footer.html(span);
-                    } else {
-                      span = document.createElement('span');
-                      span.classList.add('text-danger');
-                      span.innerHTML = 'There was some error in posting the request.';
-                      $this.$modal.footer.html(span);
-                    }
-                  },
-                  'error': function (response) {
-                    var error = response.getResponseHeader('web2py_error');
-                    if (error) {
-                      baadalApp.generateTicketLink(error);
-                    }
-                  }
-                });
-                return false;
-              });
-              $this.$modal.footer.slideDown();
-            },
-            'error': function (response) {
-              var error = response.getResponseHeader('web2py_error');
-              if (error) {
-                baadalApp.generateTicketLink(error);
-              }
-            }
-          });
-        } else {
-          $.ajax({
-            url: '/baadal/action/index.json',
-            type: 'post',
-            data: {
-              'vmid': vmid,
-              'action': action
-            },
-            'error': function (response) {
-              var error = response.getResponseHeader('web2py_error');
-              if (error) {
-                baadalApp.generateTicketLink(error);
-              }
-            },
-            success: function (response) {
-              var message;
-              switch (action) {
-              case 'get-console-url':
-                message = '<a target="_blank" href="' + response.consoleurl +
-                  '">' + response.consoleurl + '</a>';
-                break;
-              case 'snapshot':
-                message = 'Snapshot creation has been initiated.';
-                break;
-              case 'start-resume':
-                message = 'Start/resume action has been queued. Please wait ' +
-                  'while your VM becomes ready.';
-                break;
-              case 'shutdown':
-                message = 'VM stop action has been queued. Please wait while  ' +
-                  'your VM is shut down.';
-                break;
-              case 'clone':
-                message = 'Clone request has been posted.';
-                break;
-              }
-              $this.$modal.footer.show();
-              $this.$modal.find('#modal-info-message').html(message).slideDown();
-            }
-          });
+          break;
+        default:
+          promise = baadalApp.requestAction(data);
         }
+        console.log(promise);
+        promise.then(function (response) {
+          console.log(response);
+          if (response.message) {
+            $('#modal-info-message').html(response.message).slideDown().siblings().hide();
+          }
+        });
       });
 
       // Event handler for snapshot-restore buttons
