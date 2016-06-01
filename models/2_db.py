@@ -100,6 +100,11 @@ db.define_table('vm_activity_log',
                 Field('remarks', 'string')
                 )
 
+db.define_table('vm_user_map',
+                Field('id', 'integer'),
+                Field('vmid', 'string'),
+                Field('user', 'string'))
+
 auth = Auth(db)
 auth.define_tables(username=True)
 auth.settings.login_methods.append(ldap_auth(mode='custom',

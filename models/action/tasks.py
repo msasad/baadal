@@ -28,6 +28,14 @@ def task_create_vm(reqid, auth):
             logger.info('VM created')
             try:
                 req.update_record(state=REQUEST_STATUS_APPROVED)
+                db.vm_user_map.insert(vmid=vm.id, user=req.requester);
+                if(req.owner != None and req.requester != req.owner):
+                    db.vm_user_map.insert(vmid=vm.id, user=req.owner);
+
+                if(req.collaborators != None):
+                    for collaborator in req.collaborators.split(','):
+                        db.vm_user_map.insert(vmid=vm.id, user=collaborator.strip());
+
                 context = Storage()
                 context.username = auth.u
                 context.vm_name = name

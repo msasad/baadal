@@ -19,24 +19,30 @@ def my_vms():
         conn = Baadal.Connection(_authurl, _tenant, session.username,
                                  session.password)
         images = dict()
-        vms = conn.baadal_vms()
+        vms = conn.baadal_vms(all_users=True)
+        vm_list = []
+        for vm_row in db(db.vm_user_map.user==session.username).select(db.vm_user_map.vmid):
+            vm_list.append(vm_row.vmid)
+
         response = list()
         for vm in vms:
-            vm_properties = vm.properties()
-            image_id = vm_properties['image']['id']
-            if not images.has_key(image_id):
-                image = conn.find_image(id=image_id)
-                meta = image.metadata
-                images[image_id] = ' '.join([meta['os_name'],
-                    meta['os_version'], meta['os_arch'],
-                    meta['os_edition'], meta['disk_size']])
-            vm_properties['image']['info'] = images[image_id]
-            response.append(vm_properties)
+            if vm.id in vm_list:
+                vm_properties = vm.properties()
+                image_id = vm_properties['image']['id']
+                if not images.has_key(image_id):
+                    image = conn.find_image(id=image_id)
+                    meta = image.metadata
+                    images[image_id] = ' '.join([meta['os_name'],
+                        meta['os_version'], meta['os_arch'],
+                        meta['os_edition'], meta['disk_size']])
+                vm_properties['image']['info'] = images[image_id]
+                response.append(vm_properties)
         #     snapshots = vm.properties()['snapshots']
         #     for index in range(0, len(snapshots)):
         #         snapshots[index]['created'] = convert_timezone(
         #             snapshots[index]['created'])
         #     vm_properties['snapshots'] = snapshots
+
         return jsonify(data=response)
         #return jsonify(data=vms)
     except Exception as e:

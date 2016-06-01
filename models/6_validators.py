@@ -51,6 +51,7 @@ def password_is_valid(password, password_repeat):
 
 
 def validate_vm_request_form(vars):
+
     fields = []
     if not vmname_is_valid(vars.vm_name):
         fields.append('vm_name')
@@ -123,15 +124,20 @@ def public_ip_is_valid(public_ip):
 
 
 def collaborators_is_valid(collaborators):
-    valid = True
-    return valid
+    for collaborator in collaborators.split(","):
+        if not ldap.fetch_user_info(collaborator.strip()):
+            logger.info("VERIFICATION FAILED"+collaborator)
+            return False
+    return True
 
 
 def faculty_is_valid(faculty):
-    valid = True
+    user_info = ldap.fetch_user_info(faculty)
+    if user_info:
+        if 'uid=faculty' in user_info['user_dn']:
+            return True
 
-    return valid
-    pass
+    return False
 
 
 def validate_subnet_form(vars):

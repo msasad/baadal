@@ -34,6 +34,7 @@ def __do(action, vmid):
         elif action == 'reboot':
             vm.reboot()
         elif action == 'delete':
+            db(db.vm_user_map.vmid == vmid).delete()
             vm.delete()
         elif action == 'resume':
             vm.resume()
