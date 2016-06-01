@@ -24,19 +24,20 @@ def update_user_info(user_info):
     db(db.auth_user.username == user_id).update(first_name=user_name_list[0],
                                                            last_name=user_name_list[1],
                                                            email=user_info['user_email'])
-    add_or_update_auth_memberships(user.id, user_info['user_dn'])
+    roles = [{'role':'user'}]
+    if(ldap.user_is_faculty(	user_info['user_id'])):
+        roles.append({'role':'faculty'})
+
+    add_or_update_auth_memberships(user.id, roles)
 
 
-def add_or_update_auth_memberships(user_id, user_dn):
+def add_or_update_auth_memberships(user_id, roles):
 
     current_roles = db((user_id == db.auth_membership.user_id) &
                        (db.auth_membership.group_id == db.auth_group.id)).\
                         select(db.auth_group.role).as_list()
 
     logger.info("users current roles: %s", current_roles)
-    roles = [{'role':'user'}]
-    if('uid=faculty' in user_dn):
-        roles.append({'role':'faculty'})
     logger.info("users new roles: %s", roles)
     if current_roles != roles:
         db(db.auth_membership.user_id == user_id).delete()

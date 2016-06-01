@@ -123,7 +123,10 @@ def public_ip_is_valid(public_ip):
     return public_ip in ('yes', 'No')
 
 
-def collaborators_is_valid(collaborators):
+def collaborators_is_valid(collaborators)
+    if collaborators.strip() == '':
+        return True
+
     for collaborator in collaborators.split(","):
         if not ldap.fetch_user_info(collaborator.strip()):
             logger.info("VERIFICATION FAILED"+collaborator)
@@ -132,12 +135,7 @@ def collaborators_is_valid(collaborators):
 
 
 def faculty_is_valid(faculty):
-    user_info = ldap.fetch_user_info(faculty)
-    if user_info:
-        if 'uid=faculty' in user_info['user_dn']:
-            return True
-
-    return False
+    return ldap.user_is_faculty(faculty)
 
 
 def validate_subnet_form(vars):
