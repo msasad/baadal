@@ -8,7 +8,7 @@ jQuery
 var baadalApp = (function ($) {
   'use strict';
   baadalApp = {};
-  
+
   baadalApp.requestAction = function (data) {
     return $.ajax({
       url: '/baadal/action/index.json',
@@ -16,7 +16,7 @@ var baadalApp = (function ($) {
       data: data
     });
   };
-  
+
   baadalApp.serialize = function (temp) {
     var obj = {}, i, curr;
     for (i = temp.length - 1; i >= 0; i -= 1) {
@@ -202,6 +202,18 @@ var baadalApp = (function ($) {
         data = {},
         promise;
 
+      $(document.body).on('click', '#btn-disk-request', function (e) {
+        e.preventDefault();
+        data.disksize = document.getElementById('disksize').value;
+        promise = baadalApp.requestAction(data);
+        promise.then(function (response) {
+          console.log(response);
+          if (response.message) {
+            $('#modal-info-message').html(response.message).fadeIn().siblings().hide();
+          }
+        });
+      });
+
       // Event handler for click of settings button
       $this.table.on('click', '.btn-settings', function (e) {
         var tr = this.closest('tr'),
@@ -225,10 +237,17 @@ var baadalApp = (function ($) {
       $(document.body).on('click', '#btn-resize-request', function (e) {
         e.preventDefault();
         data.vmid = $('#vmid').val();
-        data.new_flavor = $('#new_flavor').value();
-        promise = $.post({
+        data.new_flavor = $('#new_flavor').val();
+        promise = $.ajax({
+          type: 'post',
           url: '/baadal/post_request/request_resize.json',
           data: data
+        });
+        promise.then(function (response) {
+          console.log(response);
+          if (response.status === 'success') {
+            $('#modal-info-message').html('Resize request has been successfully posted.').fadeIn().siblings().hide();
+          }
         });
       });
 
@@ -252,14 +271,6 @@ var baadalApp = (function ($) {
           break;
         case 'add-virtual-disk':
           $('#disk-size-input').fadeIn().siblings().hide();
-          $('#btn-disk-request').on('click', function (e) {
-            e.preventDefault();
-            promise = baadalApp.requestAction({
-              vmid: vmid,
-              action: 'add-virtual-disk',
-              disksize: document.getElementById('disksize').value
-            });
-          });
           break;
         case 'resize':
           promise2 = $.getJSON('/baadal/ajax/configs.json');

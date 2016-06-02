@@ -185,7 +185,6 @@ def __add_virtual_disk(vmid, size):
     try:
         db.virtual_disk_requests.insert(user=session.username, vmid=vmid,
                                         disk_size=int(size), status=0)
-        return jsonify()
     except Exception as e:
         logger.exception(e.message or str(e.__class__))
         return jsonify(status='fail', message=e.message or str(e.__class__))
