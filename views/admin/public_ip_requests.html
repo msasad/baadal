@@ -1,4 +1,4 @@
-{{extend 'blank-page.html'}}
+<? extend 'blank-page.html' ?>
 <div class="panel panel-primary">
   <div class="panel-heading">
     <h3 class="panel-title">Pending Public IP Requests</h3>
@@ -20,7 +20,7 @@
     <span style="display:none" class="text-danger" id="error-message">Request cannot be approved.</span>
   </div>
 </div>
-{{include 'default-scripts.html'}}
+<? include 'default-scripts.html' ?>
 <script src="/baadal/static/js/datatables.min.js"></script>
 <script src="/baadal/static/js/dataTables.bootstrap.min.js"></script>
 <script>
@@ -81,11 +81,11 @@
         } else {
           $('#error-message').append("<p style='color:blue'>" + response.message  + "</p>").fadeIn(1000, function () {
             $table.ajax.reload();
-          });
+         });
         }
       }
     });
   });
 })();
 </script>
-{{include 'wrap.html'}}
+<? include 'wrap.html' ?>

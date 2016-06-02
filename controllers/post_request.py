@@ -80,6 +80,7 @@ def request_resize():
 
 
 def register_user():
+    from passlib.hash import ldap_sha1
     error_fields = validate_registration_form(request.vars)
     if len(error_fields):
         raise HTTP(400, body=jsonify(status='fail', fields=list(error_fields)))
@@ -90,9 +91,10 @@ def register_user():
         except Exception:
             pass
 
+        password = ldap_sha1.encrypt(request.vars.password)
         db.account_requests.insert(username=request.vars.username,
                                    userid=request.vars.userid,
-                                   password=request.vars.password,
+                                   password=password,
                                    email=request.vars.email,
                                    faculty_privileges=faculty_privileges,
                                    request_time=int(time.time()),

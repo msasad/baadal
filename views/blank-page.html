@@ -8,9 +8,10 @@
   <meta name="description" content="">
   <meta name="author" content="">
 
-  <title>{{=(response.title or request.application).capitalize()}}</title>
+  <title><? =(response.title or request.application).capitalize() ?></title>
   <link rel="icon" href="/baadal/static/images/favicon.png" />
   <link rel="stylesheet" href="/baadal/static/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="/baadal/static/css/bootstrap-theme.min.css" />
   <link href="/baadal/static/css/sb-admin.css" rel="stylesheet">
   <link href="/baadal/static/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
   <link href="/baadal/static/css/dataTables.bootstrap.min.css" rel="stylesheet" type="text/css">
@@ -71,7 +72,7 @@
       </li> -->
       <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-          <i class="fa fa-user"></i> {{=auth.user.username}}<b class="caret"></b>
+          <i class="fa fa-user"></i> <?=auth.user.username?><b class="caret"></b>
         </a>
         <ul class="dropdown-menu">
           <!--
@@ -106,7 +107,7 @@
             <li><a href="#">Mail Admin</a></li> -->
           </ul>
         </li>
-        {{if (ldap.user_is_faculty(session.username)):}}
+        <?if (ldap.user_is_faculty(session.username)):?>
         <li>
           <a href="javascript:;" data-toggle="collapse" data-target="#faculty-menu">
             <i class="fa fa-fw fa-arrows-v"></i> Faculty Menu <i class="fa fa-fw fa-caret-down"></i>
@@ -115,8 +116,8 @@
             <li><a href="/baadal/faculty/pending_requests.html">Pending Approvals</a></li>
           </ul>
         </li>
-        {{pass}}
-        {{if user_is_project_admin:}}
+        <?pass?>
+        <?if user_is_project_admin:?>
         <!-- <li>
           <a href="javascript:;" data-toggle="collapse" data-target="#orgadmin-menu">
             <i class="fa fa-fw fa-arrows-v"></i> Org-Admin Menu <i class="fa fa-fw fa-caret-down"></i>
@@ -141,12 +142,12 @@
             <!-- <li><a href="#">Tasks</a></li>
             <li><a href="#">Sanity Check</a></li> -->
             <li><a href="/baadal/admin/hosts.html">Manage Compute Hosts</a></li>
-            <li><a href="/baadal/admin/security_groups.html">Configure Security Groups</a></li>
+            <!-- <li><a href="/baadal/admin/security_groups.html">Configure Security Groups</a></li> -->
             <li><a href="/baadal/admin/networking.html">Configure Networks</a></li>
             <!-- <li><a href="#">Shutdown Baadal</a></li> -->
           </ul>
         </li>
-        {{pass}}
+        <?pass?>
       </ul>
     </div>
     <!-- /.navbar-collapse -->
@@ -155,4 +156,4 @@
       <div class="container-fluid">
         <div class="row">
           <div class="col-lg-12">
-            {{include}}
+            <?include?>

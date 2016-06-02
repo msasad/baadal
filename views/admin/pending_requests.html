@@ -1,4 +1,4 @@
-{{extend 'blank-page.html'}}
+<? extend 'blank-page.html' ?>
 <div class="modal fade" id="my-modal">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -111,14 +111,22 @@
     <span style="display:none" class="text-danger" id="error-message">Request cannot be approved.</span>
   </div>
 </div>
-{{include 'default-scripts.html'}}
+<? include 'default-scripts.html' ?>
 <script src="/baadal/static/js/datatables.min.js"></script>
 <script src="/baadal/static/js/dataTables.bootstrap.min.js"></script>
 <script>
 (function(){
   var $requests = $('#requests');
   var $table = $requests.DataTable( {
-    "ajax": "/baadal/admin/pending_requests.json",
+    "ajax": {
+      "url": "/baadal/admin/pending_requests.json",
+      "error": function(e, s) {
+        if (e.status == 401) {
+          document.location.reload();
+        }
+        console.log(e, s);
+      }
+    },
     "oLanguage": {
       "sEmptyTable": "No pending requests!"
     },
@@ -136,9 +144,8 @@
         "aTargets": [7],
         "mData": null,
         "mRender": function (data, type, full) {
-
           approve_class = 'btn-success';
-          if(data.state == 0){
+          if(data.state == 0) {
               approve_class = 'btn-warning';
           }
 
@@ -199,6 +206,11 @@
     $.ajax({
       'type': 'GET',
       'url': '/baadal/ajax/configs.json',
+      "error": function(e) {
+        if (e.status == 401) {
+          document.location.reload();
+        }
+      },
       'success': function(response) {
         console.log(response);
         var configSelect = document.getElementById('edit-config');
@@ -263,4 +275,4 @@
   });
 })();
 </script>
-{{include 'wrap.html'}}
+<? include 'wrap.html' ?>

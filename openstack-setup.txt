@@ -79,6 +79,7 @@ Configure keystone to use LDAP for identity
     - set appropriate values for basedn, and objectclasses
     - set enabled user emulation to true
     - set cn=enabled_users,ou=Groups,dc=baadal,dc=iitd,dc=ernet,dc=in
+    - add entry of each enabled user in group enabled_users
 
 To implement custom access control
     - configure /etc/nova/policy.json file to allow all users to list, start, shutdown VM owned by any user

@@ -81,6 +81,9 @@ def networks():
 
 @auth.requires_login()
 def snapshots():
+    from datetime import datetime
+    from pytz import timezone
+    time_fmt = '%Y-%m-%dT%H:%M:%SZ'
     try:
         conn = Baadal.Connection(_authurl, _tenant, session.username,
                                  session.password)
@@ -89,7 +92,11 @@ def snapshots():
             snapshots = vm.get_snapshots()
             l = []
             for snapshot in snapshots:
-                l.append({'id': snapshot.id, 'created': snapshot.created,
+                created = datetime.strptime(snapshot.created,time_fmt)
+                created =  created.replace(tzinfo=timezone('UTC'))
+                created = created.astimezone(timezone('Asia/Kolkata'))
+                created = created.strftime(time_fmt)
+                l.append({'id': snapshot.id, 'created': created,
                           'name': snapshot.name})
             return jsonify(data={'snapshots':l})
     except Exception as e:
@@ -125,12 +132,7 @@ def sgroups():
 
 def vm_settings_template():
     response.delimiters = ('<?', '?>')
-    referer = request.env.http_referer
-    host = request.env.http_host
-    if referer is None:
-        raise HTTP(400)
-    path = referer[referer.find(host) + len(host):]
-    if path.startswith('/baadal/user/'):
-        return dict(admin=False)
-    elif path.startswith('/baadal/admin/'):
+    if user_is_project_admin and request.env.HTTP_ROLE == 'admin':
         return dict(admin=True)
+    else:
+        return dict(admin=False)

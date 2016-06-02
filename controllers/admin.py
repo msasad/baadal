@@ -267,6 +267,7 @@ def account_requests():
         rows = db(db.account_requests.approval_status == 0).select()
         l = rows.as_list()
         for i in l:
+            del i['password']
             i['request_time'] = seconds_to_localtime(i['request_time'])
             FP = 'faculty_privileges'
             i[FP] = 'Yes' if i[FP] else 'No'
@@ -384,12 +385,14 @@ def clone_requests():
             for row in rows:
                 cr = dict()
                 cr['request_time'] = seconds_to_localtime(row.request_time)
+                cr['id'] = row.id
+                cr['vm_id'] = row.vm_id
+                cr['full_clone'] = 'Yes' if row['full_clone'] == 1 else 'No'
+                cr['clone_name'] = row.clone_name
+                cr['user'] = row.user
                 try:
                     vm = conn.find_baadal_vm(id=row.vm_id)
                     cr['vm_name'] = vm.name
-                    cr['full_clone'] = 'Yes' if row['full_clone'] == 1 else 'No'
-                    cr['user'] = row['user']
-                    cr['clone_name'] = row['clone_name']
                     response.append(cr)
                 except NotFound:
                     spurious_requests.append(str(row.id))
@@ -402,8 +405,8 @@ def clone_requests():
             return jsonify(data=response)
         except Exception as e:
             logger.exception(e)
-            return jsonify(status='fail',
-                           message=e.message or str(e.__class__))
+            raise HTTP(500, body=jsonify(status='fail',
+                           message=e.message or str(e.__class__)))
         finally:
             try:
                 conn.close()
@@ -450,8 +453,6 @@ def public_ip_requests():
                 conn.close()
             except:
                 pass
-
-
 
 
 @auth.requires(user_is_project_admin)
