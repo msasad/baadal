@@ -68,7 +68,7 @@
       'type': 'post',
       'dataType' : 'json',
       'data': {
-        'id':id,
+        'id': id,
         'action': action
       },
       'error' : function(response) {
@@ -84,7 +84,9 @@
             $(this).fadeOut();
           });
         } else {
-          $('#error-message').fadeIn();
+          $('#error-message').fadeIn(1000, function () {
+            $(this).fadeOut();
+          });
         }
       }
     });

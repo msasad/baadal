@@ -281,6 +281,7 @@ def disk_requests():
     elif request.extension == 'json':
         response = []
         spurious_requests = []
+        cache = {}
         try:
             rows = db(db.virtual_disk_requests.status == 0).select()
             conn = Baadal.Connection(_authurl, _tenant, session.username,
@@ -288,7 +289,10 @@ def disk_requests():
             for row in rows:
                 try:
                     cr = {}
-                    vm = conn.find_baadal_vm(id=row.vmid)
+                    if not cache.has_key(row.vmid):
+                        vm = conn.find_baadal_vm(id=row.vmid)
+                        cache[row.vmid] = vm.name
+                    cr['vm_name'] = cache[row.vmid]
                     cr['id'] = row.id
                     cr['request_time'] = str(row.request_time)
                     cr['vm_name'] = vm.name
