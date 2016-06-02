@@ -224,7 +224,7 @@ var baadalApp = (function ($) {
 
       $(document.body).on('click', '#btn-resize-request', function (e) {
         e.preventDefault();
-        data.vmid = $('#vmid').value();
+        data.vmid = $('#vmid').val();
         data.new_flavor = $('#new_flavor').value();
         promise = $.post({
           url: '/baadal/post_request/request_resize.json',
@@ -234,28 +234,24 @@ var baadalApp = (function ($) {
 
       // Event handler for click of action buttons on settings dialog
       $(document.body).on('click', actionbtn, function () {
-        promise = null;
+        promise = undefined;
         var vmid = $(this).parent().data('vmid'),
           html,
           span,
           flavor_selector,
           promise2;
         action = $(this).data('action');
-          // var vmid = this.parentElement.getAttribute('data-vmid');
-          // var action = this.getAttribute('data-action');
         data.action = action;
         data.vmid = vmid;
-        console.log(action);
         switch (action) {
         case 'delete':
-          $('#vm-delete-confirmation').slideDown().siblings().hide();
+          $('#vm-delete-confirmation').fadeIn().siblings().hide();
           this.children.namedItem('btn-yes').addEventListener('click', function () {
             action_confirmed = true;
           });
           break;
         case 'add-virtual-disk':
-          console.log('hwere');
-          $('#disk-size-input').slideDown().siblings().hide();
+          $('#disk-size-input').fadeIn().siblings().hide();
           $('#btn-disk-request').on('click', function (e) {
             e.preventDefault();
             promise = baadalApp.requestAction({
@@ -263,46 +259,30 @@ var baadalApp = (function ($) {
               action: 'add-virtual-disk',
               disksize: document.getElementById('disksize').value
             });
-//            $.ajax({
-//              url: '/baadal/action/index.json',
-//              data: {
-//                'vmid': vmid,
-//                action: 'add-virtual-disk',
-//                disksize: document.getElementById('disksize').value
-//              },
-//              success: function (response) {
-//                if (response.status === 'success') {
-//                  $this.$modal.footer.html(
-//                    '<p class="text-info"> Request posted successfully. ' +
-//                      'Extra disk will be added to the VM when the request ' +
-//                      'will be approved by admin </p>'
-//                  );
-//                }
-//              }
-//            });
           });
           break;
         case 'resize':
           promise2 = $.getJSON('/baadal/ajax/configs.json');
-          $('#resize-form').slideDown().siblings().hide();
           flavor_selector = document.getElementById('new_flavor');
           promise2.then(function (response) {
             response.forEach(function (flavor, index) {
               flavor_selector.options.add(new Option(flavor.vcpus + 'CPU, ' +
                 flavor.ram + 'MB RAM', flavor.id));
             });
+            $('#resize-form').fadeIn().siblings().hide();
           });
           break;
         default:
           promise = baadalApp.requestAction(data);
         }
-        console.log(promise);
-        promise.then(function (response) {
-          console.log(response);
-          if (response.message) {
-            $('#modal-info-message').html(response.message).slideDown().siblings().hide();
-          }
-        });
+        if (promise) {
+          promise.then(function (response) {
+            console.log(response);
+            if (response.message) {
+              $('#modal-info-message').html(response.message).fadeIn().siblings().hide();
+            }
+          });
+        }
       });
 
       // Event handler for snapshot-restore buttons

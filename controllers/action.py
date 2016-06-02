@@ -4,7 +4,7 @@ from base64 import b64encode
 from json import dumps
 
 
-def __do(action, vmid):
+'''def __do(action, vmid):
     try:
         auth = b64encode(dumps(dict(u=session.username, p=session.password)))
         if action == 'migrate':
@@ -62,9 +62,12 @@ def __do(action, vmid):
         except Exception:
             pass
 
+'''
+
 
 def __start(vm):
     vm.start()
+
 
 def __start_resume(vm):
     status = vm.get_status()
@@ -72,6 +75,7 @@ def __start_resume(vm):
         vm.resume()
     elif status == 'Shutdown':
         vm.start()
+
 
 def __shutdown(vm):
     vm.shutdown()
@@ -84,6 +88,7 @@ def __pause(vm):
 def __reboot(vm):
     vm.reboot()
 
+
 def __delete(vm):
     vm.delete()
 
@@ -92,7 +97,7 @@ def __resume(vm):
     vm.resume()
 
 
-def __snapshot(vm):
+def __snapshot(vmid):
     auth = b64encode(dumps(dict(u=session.username, p=session.password)))
     pvars = dict(auth=auth, vmid=vmid)
     scheduler.queue_task(task_snapshot_vm, timeout=600, pvars=pvars)
@@ -154,7 +159,7 @@ def index():
         elif action == 'start-resume':
             message = __start_resume(vm)
         elif action == 'snapshot':
-            message = __snapshot(vm)
+            message = __snapshot(vmid)
         elif action == 'get-console-url':
             message = __get_console_url(vm)
         elif action == 'clone':
