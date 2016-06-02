@@ -29,6 +29,12 @@ class BaadalMailer(object):
                 "'{0[requestType]}' request on {0[requestTime]}. It is "\
                 "waiting for your approval."
 
+        class IPRequest(object):
+            subject = 'Public IP allotted successfully'
+            mailbody = "Dear {0[username]}  public IP to "\
+                " {0[vm_name]} vm allotted successfully."
+
+
         class VMCreated(object):
             subject = 'Your BaadalVM has been created'
             mailbody = "Dear {0[username]},\n\nThe VM {0[vm_name]}, requested"\

@@ -414,6 +414,47 @@ def clone_requests():
                 pass
 
 
+
+@auth.requires(user_is_project_admin)
+def public_ip_requests():
+    if request.extension in ('', None, 'html'):
+        return dict()
+    elif request.extension == 'json':
+        try:
+            rows = db(db.floating_ip_requests.status == 0).select()
+            response = []
+            conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                     session.password)
+            spurious_requests = []
+            for row in rows:
+                cr = {}
+                try:
+                    vm = conn.find_baadal_vm(id=row.vmid)
+                    cr['request_time'] = str(row.request_time)
+                    cr['user'] = row.user
+                    cr['vmid'] = vm.name
+                    cr['id'] = row.id
+                    response.append(cr)
+                except NotFound:
+                    spurious_requests.append(str(row.id))
+                    continue
+            if len(spurious_requests):
+                query = 'delete from public_ip_requests where id in (%s)' % \
+                           (','.join(spurious_requests))
+                db.executesql(query)
+                db.commit()
+            return jsonify(data=response)
+        except Exception as e:
+            logger.exception(e)
+            return jsonify(status='fail',
+                           message=e.message or str(e.__class__))
+        finally:
+            try:
+                conn.close()
+            except:
+                pass
+
+
 @auth.requires(user_is_project_admin)
 def index():
     return dict()

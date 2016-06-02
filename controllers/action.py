@@ -172,6 +172,8 @@ def index():
             message = __migrate(vmid)
         elif action == 'add-virtual-disk':
             message = __add_virtual_disk(vmid, request.vars.disksize)
+        elif action == 'attach-public-ip':
+            message =  __attach_public_ip(vmid)
         message = message or action.capitalize() + ' request has been accepted.'
         return jsonify(message=message)
     except Exception as e:
@@ -184,6 +186,34 @@ def __add_virtual_disk(vmid, size):
         db.virtual_disk_requests.insert(user=session.username, vmid=vmid,
                                         disk_size=int(size), status=0)
         return jsonify()
+    except Exception as e:
+        logger.exception(e.message or str(e.__class__))
+        return jsonify(status='fail', message=e.message or str(e.__class__))
+
+
+def __check_public_ip_entry(vmid):
+        try:
+           row = db((db.floating_ip_requests.status == 0) & (db.floating_ip_requests.vmid == vmid)).select()
+           if len(row) > 0:
+               return False
+           return True
+        except Exception as e:
+           logger.exception(e)
+
+
+def __attach_public_ip(vmid):
+    try:
+       if __check_public_ip_entry(vmid):
+            db.floating_ip_requests.insert(vmid=request.vars.vmid,
+                                            user=session.username,
+                                            status=0
+                                           )
+            db.commit()
+            message = ' Public IP request has been accepted. '
+            return message
+       else:
+            message = ' Public IP request alredy in request queue and waiting for approval'
+            return message
     except Exception as e:
         logger.exception(e.message or str(e.__class__))
         return jsonify(status='fail', message=e.message or str(e.__class__))
@@ -375,6 +405,49 @@ def handle_resize_request():
         except:
             pass
 
+
+def handle_public_ip_request():
+    action = request.vars.action
+    if action == 'approve':
+        return __attach_vm_public_ip()
+    elif action == 'reject':
+        return __reject_public_ip()
+
+def __reject_public_ip():
+    db(db.floating_ip_requests.id == request.vars.id).delete()
+    return jsonify(action='reject')
+
+def __attach_vm_public_ip():
+    try:
+         req = db(db.floating_ip_requests.id==request.vars.id).select().first()
+         conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                  session.password)
+         vm = conn.find_baadal_vm(id=req.vmid)
+         vm_name = vm.name
+         vm.attach_floating_ip()
+         req.update_record(status=1)
+         context = Storage()
+         context.username = session.username
+         context.vm_name = vm_name
+         context.mail_support = mail_support
+         user_info = ldap.fetch_user_info(session.username)
+         context.user_email = user_info['user_email']
+         context.gateway_server = gateway_server
+         context.req_time = req.request_time
+         logger.info('sending mail')
+         logger.debug(user_info)
+         mailer.send(mailer.MailTypes.IPRequest, context.user_email,
+                     context)
+         logger.info('mail sent')
+         return jsonify(status='success')
+    except Exception as e:
+         logger.exception(e)
+         return jsonify(status='fail', message=e.message or str(e.__class__))
+    finally:
+         try:
+            conn.close()
+         except:
+            pass
 
 @auth.requires(user_is_project_admin)
 def handle_clone_request():
