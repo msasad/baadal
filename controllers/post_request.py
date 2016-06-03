@@ -30,12 +30,13 @@ def new_vm():
                               request_time=int(time.time()),
                               state=vm_state
                               )
-        user_email = ldap.fetch_user_info(session.username)['user_email']
         context = Storage()
-        context.username = session.username
+        user_info = ldap.fetch_user_info(session.username)
+        context.username = user_info['user_name']
+        user_email = user_info['user_email']
         context.user_email = user_email
         context.vm_name = request.vars.vm_name
-        context.support_email = mail_support
+        context.mail_support = mail_support
 
         if mailer.send(mailer.MailTypes.VMRequest, user_email, context):
             db.commit()
