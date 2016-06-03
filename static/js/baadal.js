@@ -214,12 +214,28 @@ var baadalApp = (function ($) {
         });
       });
 
+      // Event handler for click of open-console button
+      $this.table.on('click', '.btn-console', function (e) {
+        var vmid = $(this).closest('tr').data('vmid');
+        $.ajax({
+          url: '/baadal/action/index.json',
+          data: {
+            vmid: vmid,
+            action: 'get-console-url',
+            urlonly: true
+          },
+          success: function(response) {
+            window.open(response.message);
+          }
+        });
+      });
+
       // Event handler for click of settings button
       $this.table.on('click', '.btn-settings', function (e) {
         var tr = this.closest('tr'),
           context = $this.$dt.row(tr).data(),
           html;
-        context['ip-addresses'] = baadalApp.ipObjectToString(context.addresses,       true);
+        context['ip-addresses'] = baadalApp.ipObjectToString(context.addresses, true);
         html = $this.dialogTmpl(context);
         $(document.body).prepend(html);
         $this.$modal = $('#' + $this.modalid).modal('show');

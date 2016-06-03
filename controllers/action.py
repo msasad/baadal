@@ -128,7 +128,10 @@ def __restore_snapshot(vmid):
 def __get_console_url(vm):
     console_type = config.get('misc', 'console_type')
     consoleurl = vm.get_console_url(console_type=console_type)
-    return '<a target="_blank" href="{0}">{0}</a>'.format(consoleurl)
+    if request.vars.urlonly:
+        return consoleurl
+    else:
+        return '<a target="_blank" href="{0}">{0}</a>'.format(consoleurl)
 
 
 def __migrate(vmid):
