@@ -1,10 +1,10 @@
-﻿import gluon
+import gluon
 import time
 from base64 import b64encode
 from json import dumps
 
 
-def __do(action, vmid):
+'''def __do(action, vmid):
     try:
         auth = b64encode(dumps(dict(u=session.username, p=session.password)))
         if action == 'migrate':
@@ -62,111 +62,160 @@ def __do(action, vmid):
         except Exception:
             pass
 
-
-def __start(vmid):
-    return __do('start', vmid)
+'''
 
 
-def __start_resume(vmid):
-    return __do('start-resume', vmid)
+def __start(vm):
+    vm.start()
 
 
-def __shutdown(vmid):
-    return __do('shutdown', vmid)
+def __start_resume(vm):
+    status = vm.get_status()
+    if status == 'Paused':
+        vm.resume()
+    elif status == 'Shutdown':
+        vm.start()
 
 
-def __pause(vmid):
-    return __do('pause', vmid)
+def __shutdown(vm):
+    vm.shutdown()
 
 
-def __reboot(vmid):
-    return __do('reboot', vmid)
+def __pause(vm):
+    vm.pause()
 
 
-def __delete(vmid):
-    return __do('delete', vmid)
+def __reboot(vm):
+    vm.reboot()
 
 
-def __resume(vmid):
-    return __do('resume', vmid)
+def __delete(vm):
+    vm.delete()
+
+
+def __resume(vm):
+    vm.resume()
 
 
 def __snapshot(vmid):
-    return __do('snapshot', vmid)
+    auth = b64encode(dumps(dict(u=session.username, p=session.password)))
+    pvars = dict(auth=auth, vmid=vmid)
+    scheduler.queue_task(task_snapshot_vm, timeout=600, pvars=pvars)
 
 
 def __clone_vm(vmid):
     import time
-    try:
-        db.clone_requests.insert(vm_id=request.vars.vmid,
-                                 request_time=int(time.time()),
-                                 user=session.username,
-                                 full_clone=1,
-                                 status=0
-                                 )
-        db.commit()
-        return jsonify()
-    except Exception as e:
-        logger.exception(e.message or str(e.__class__))
-        return jsonify(status='fail', message=e.message or str(e.__class__))
-    # return __do('clone', vmid)
+    db.clone_requests.insert(vm_id=request.vars.vmid,
+                             request_time=int(time.time()),
+                             user=session.username,
+                             full_clone=1,
+                             status=0
+                             )
+    db.commit()
 
 
-def __power_off(vmid):
-    return __do('poweroff', vmid)
+def __power_off(vm):
+    vm.shutdown(force=True)
 
 
 def __restore_snapshot(vmid):
-    return __do('restore-snapshot', vmid)
+    snapshot_id = request.vars.snapshot_id
+    pvars = dict(auth=auth, vmid=vmid, snapshot_id=snapshot_id)
+    scheduler.queue_task(task_restore_snapshot, timeout=600,
+                         pvars=pvars)
 
 
-def __get_console_url(vmid):
-    return __do('get-console-url', vmid)
+def __get_console_url(vm):
+    console_type = config.get('misc', 'console_type')
+    consoleurl = vm.get_console_url(console_type=console_type)
+    if request.vars.urlonly:
+        return consoleurl
+    else:
+        return '<a target="_blank" href="{0}">{0}</a>'.format(consoleurl)
 
 
 def __migrate(vmid):
-    return __do('migrate', vmid)
+    pvars = dict(auth=auth, vmid=vmid)
+    scheduler.queue_task(task_migrate_vm, timeout=600, pvars=pvars)
 
 
 @auth.requires_login()
 def index():
     action = request.vars.action
     vmid = request.vars.vmid
-    if action == 'start':
-        return __start(vmid)
-    elif action == 'shutdown':
-        return __shutdown(vmid)
-    elif action == 'pause':
-        return __pause(vmid)
-    elif action == 'restart':
-        return __reboot(vmid)
-    elif action == 'delete':
-        return __delete(vmid)
-    elif action == 'resume':
-        return __resume(vmid)
-    elif action == 'start-resume':
-        return __start_resume(vmid)
-    elif action == 'snapshot':
-        return __snapshot(vmid)
-    elif action == 'get-console-url':
-        return __get_console_url(vmid)
-    elif action == 'clone':
-        return __clone_vm(vmid)
-    elif action == 'poweroff':
-        return __power_off(vmid)
-    elif action == 'restore-snapshot':
-        return __restore_snapshot(vmid)
-    elif action == 'migrate':
-        return __migrate(vmid)
-    elif action == 'add-virtual-disk':
-        return __add_virtual_disk(vmid, request.vars.disksize)
+    try:
+        conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                 session.password)
+        vm = conn.find_baadal_vm(id=vmid)
+        if action == 'start':
+            message = __start(vm)
+        elif action == 'shutdown':
+            message = __shutdown(vm)
+        elif action == 'pause':
+            message = __pause(vm)
+        elif action == 'restart':
+            message = __reboot(vm)
+        elif action == 'delete':
+            message = __delete(vm)
+        elif action == 'resume':
+            message = __resume(vm)
+        elif action == 'start-resume':
+            message = __start_resume(vm)
+        elif action == 'snapshot':
+            message = __snapshot(vmid)
+        elif action == 'get-console-url':
+            message = __get_console_url(vm)
+        elif action == 'clone':
+            message = __clone_vm(vmid)
+        elif action == 'poweroff':
+            message = __power_off(vm)
+        elif action == 'restore-snapshot':
+            message = __restore_snapshot(vmid)
+        elif action == 'migrate':
+            message = __migrate(vmid)
+        elif action == 'add-virtual-disk':
+            message = __add_virtual_disk(vmid, request.vars.disksize)
+        elif action == 'attach-public-ip':
+            message =  __attach_public_ip(vmid)
+        message = message or action.capitalize() + ' request has been accepted.'
+        return jsonify(message=message)
+    except Exception as e:
+        logger.exception(e)
+        return jsonify(status='fail')
 
 
 def __add_virtual_disk(vmid, size):
     try:
         db.virtual_disk_requests.insert(user=session.username, vmid=vmid,
                                         disk_size=int(size), status=0)
-        return jsonify()
+    except Exception as e:
+        logger.exception(e.message or str(e.__class__))
+        return jsonify(status='fail', message=e.message or str(e.__class__))
+
+
+def __check_public_ip_entry(vmid):
+        try:
+           row = db((db.floating_ip_requests.status == 0) & (db.floating_ip_requests.vmid == vmid)).select()
+           if len(row) > 0:
+               return False
+           return True
+        except Exception as e:
+           logger.exception(e)
+
+
+def __attach_public_ip(vmid):
+    try:
+       if __check_public_ip_entry(vmid):
+            db.floating_ip_requests.insert(vmid=request.vars.vmid,
+                                            user=session.username,
+                                            status=0
+                                           )
+            db.commit()
+            message = ' Public IP request has been accepted. '
+            return message
+       else:
+            message = ' Public IP request alredy in request queue and waiting for approval'
+            return message
     except Exception as e:
         logger.exception(e.message or str(e.__class__))
         return jsonify(status='fail', message=e.message or str(e.__class__))
@@ -358,6 +407,49 @@ def handle_resize_request():
         except:
             pass
 
+
+def handle_public_ip_request():
+    action = request.vars.action
+    if action == 'approve':
+        return __attach_vm_public_ip()
+    elif action == 'reject':
+        return __reject_public_ip()
+
+def __reject_public_ip():
+    db(db.floating_ip_requests.id == request.vars.id).delete()
+    return jsonify(action='reject')
+
+def __attach_vm_public_ip():
+    try:
+         req = db(db.floating_ip_requests.id==request.vars.id).select().first()
+         conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                  session.password)
+         vm = conn.find_baadal_vm(id=req.vmid)
+         vm_name = vm.name
+         vm.attach_floating_ip()
+         req.update_record(status=1)
+         context = Storage()
+         context.username = session.username
+         context.vm_name = vm_name
+         context.mail_support = mail_support
+         user_info = ldap.fetch_user_info(session.username)
+         context.user_email = user_info['user_email']
+         context.gateway_server = gateway_server
+         context.req_time = req.request_time
+         logger.info('sending mail')
+         logger.debug(user_info)
+         mailer.send(mailer.MailTypes.IPRequest, context.user_email,
+                     context)
+         logger.info('mail sent')
+         return jsonify(status='success')
+    except Exception as e:
+         logger.exception(e)
+         return jsonify(status='fail', message=e.message or str(e.__class__))
+    finally:
+         try:
+            conn.close()
+         except:
+            pass
 
 @auth.requires(user_is_project_admin)
 def handle_clone_request():

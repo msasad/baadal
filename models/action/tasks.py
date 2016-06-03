@@ -29,13 +29,13 @@ def task_create_vm(reqid, auth):
             try:
                 req.update_record(state=REQUEST_STATUS_APPROVED)
                 context = Storage()
-                context.username = auth.u
+                user_info = ldap.fetch_user_info(auth.u)
+                context.username = user_info['user_name']
+                context.user_email = user_info['user_email']
                 context.vm_name = name
                 context.mail_support = mail_support
-                user_info = ldap.fetch_user_info(auth.u)
-                context.user_email = user_info['user_email']
                 context.gateway_server = gateway_server
-                context.req_time = seconds_to_localtime(req.request_time)
+                context.request_time = seconds_to_localtime(req.request_time)
                 logger.info('sending mail')
                 mailer.send(mailer.MailTypes.VMCreated, context.user_email,
                             context)

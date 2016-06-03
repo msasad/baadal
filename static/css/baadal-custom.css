@@ -12,3 +12,11 @@ textarea {
   max-width: 0;
   overflow-x: hidden;
 }
+
+#vm-settings-modal .panel-footer>span {
+	display: none;
+}
+
+#disk-size-input input {
+	display: inline-block;
+}

@@ -1,4 +1,4 @@
-{{extend 'blank-page.html'}}
+<? extend 'blank-page.html' ?>
 <div class="modal fade" id="my-modal">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -111,7 +111,7 @@
     <span style="display:none" class="text-danger" id="error-message">Request cannot be approved.</span>
   </div>
 </div>
-{{include 'default-scripts.html'}}
+<? include 'default-scripts.html' ?>
 <script src="/baadal/static/js/datatables.min.js"></script>
 <script src="/baadal/static/js/dataTables.bootstrap.min.js"></script>
 <script>
@@ -144,9 +144,8 @@
         "aTargets": [7],
         "mData": null,
         "mRender": function (data, type, full) {
-
           approve_class = 'btn-success';
-          if(data.state == 0){
+          if(data.state == 0) {
               approve_class = 'btn-warning';
           }
 
@@ -276,4 +275,4 @@
   });
 })();
 </script>
-{{include 'wrap.html'}}
+<? include 'wrap.html' ?>

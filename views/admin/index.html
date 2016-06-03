@@ -1,4 +1,4 @@
-{{extend 'blank-page.html'}}
+<? extend 'blank-page.html' ?>
 <div class="panel panel-primary">
   <div class="panel-heading">
     <h3 class="panel-title">All Virtual Machines</h3>
@@ -21,257 +21,54 @@
     </table>
   </div>
 </div>
-{{include 'default-scripts.html'}}
+<? include 'default-scripts.html' ?>
+<script id="snapshots-tmpl" type="text/x-handlebar-template">
+{{#if snapshots}}
+  {{#each snapshots}}
+    <tr data-snapshot-id="{{this.id}}">
+      <td>{{this.name}}</td>
+      <td>{{this.created}}</td>
+      <td class="text-center">
+        <a title="Restore this spanshot" href="#" class="snapshot-restore">
+          <span class="badge">
+            <span class="fa fa-reply"></span>
+          </span>
+        </a>
+      </td>
+    </tr>
+  {{/each}}
+{{else}}
+  <tr>
+    <td colspan="100%" class="text-center"> There are no spanshots </td>
+  <tr>
+{{/if}}
+</script>
+<script id="btns-tmpl" type="text/x-handlebar-template">
+<div class="btn-group" role="group" aria-label="...">
+  <button title="{{title}}" type="button" data-action="{{title}}" class="btn btn-success btn-action" aria-label="Start">
+    <span class="fa fa-{{icon}}" aria-hidden="true"></span>
+  </button>
+  <button title="Settings" type="button"data-action="settings" class="btn btn-primary btn-settings" aria-label="Settings">
+    <span class="fa fa-cog" aria-hidden="true"></span>
+  </button>
+</div>
+</script>
+
 <script src="/baadal/static/js/datatables.min.js"></script>
 <script src="/baadal/static/js/dataTables.bootstrap.min.js"></script>
 <script>
-'use strict';
-(function() {
-  var $allvms = $('#all-vms');
-  var $table = $allvms.DataTable( {
-    "ajax": "/baadal/admin/all_vms.json",
-    "oLanguage": {
-      "sEmptyTable": "You have no VMs!"
-    },
-    "aoColumnDefs": [
-      {
-        "aTargets": [5],
-        "mData": null,
-        "mRender": function(data, type, full) {
-          if (type == 'display' || type == 'filter') {
-            var addresses = data.addresses;
-            if (typeof addresses == "object") {
-              return baadalApp.ipObjectToString(addresses);
-            }
-          }
-          return data;
-        }
-      },
-       {
-         "aTargets": [8],
-         "mData": null,
-         "mRender": function (data, type, full) {
-           if (type === 'display' ) {
-             return baadalApp.getSettingsButtonsMarkup(data.status);
-           }
-           return data;
-         }
-      }
-    ],
-    "columns": [
-      { "data": "name" },
-      { "data": "status" },
-      { "data": "user_id" },
-      { "data": "flavor.id"},
-      { "data": "image.info"},
-      { "data": null },
-      { "data": "OS-EXT-SRV-ATTR:instance_name"  },
-      { "data": "OS-EXT-SRV-ATTR:host" },
-      { "data": null }
-    ],
-    "fnCreatedRow": function( nRow, aData, iDataIndex ) {
-      nRow.setAttribute('data-vmid', aData.id);
-    }
-  });
-  var reloadTable = setInterval(function(){
-    $table.ajax.reload();
-  }, 60*1000);
+  (function () {
+    var config = {
+      tableid: 'all-vms',
+      modalid: 'vm-settings-modal',
+      templateURL: document.location.origin + '/baadal/ajax/vm_settings_template.html',
+      dataURL: document.location.origin + '/baadal/admin/all_vms.json',
+      isAdmin: true
+    };
 
-  var $modal;
-  $allvms.on('click', '.btn-settings', function (e) {
-    var tr = this.closest('tr');
-    var context = $table.row(tr).data();
-    context['ip-addresses'] = baadalApp.ipObjectToString(context['addresses'], true);
-    $.ajax( {
-      url : '/baadal/ajax/vm_settings_template.html',
-      headers: {
-        "role": "admin",
-      },
-      "error" : function(e) {
-        if (e.status == 401) {
-          document.location.reload();
-        }
-      },
-      success : function(response) {
-        var template = Handlebars.compile(response);
-        var html = template(context);
-        $(document.body).prepend(html);
-        $modal = $('#vm-settings-modal').modal('show');
-        $modal.on('shown.bs.modal', function() {
-          $modal.on('click', '.btn-action', function() {
-            var vmid = this.parentElement.getAttribute('data-vmid');
-            var action = this.getAttribute('data-action');
-            if (action === 'delete') {
-              var buttons_html = '\
-              <span>Do you really want to delete this VM? This action cannot be undone!</span>\
-             \
-                <button type="button" name="btn-yes" class="btn btn-danger" data-confirm="yes">Yes</button>\
-                <button type="button" name="btn-no" class="btn btn-success" data-confirm="no">No</button>\
-              ';
-              var footer;
-              $modal.find('.panel-footer').html(buttons_html).slideDown(function () {
-                footer = this;
-                this.children.namedItem('btn-no').addEventListener('click', function () {
-                  footer && $(footer).slideUp().html('');
-                });
-                this.children.namedItem('btn-yes').addEventListener('click', function () {
-                  $.ajax({
-                    url: '/baadal/action/index.json',
-                    type: 'post',
-                    data: {
-                      'vmid': vmid,
-                      'action': action
-                    },
-                    'error': function (response) {
-                      var error = response.getResponseHeader('web2py_error');
-                      if (error) {
-                        baadalApp.generateTicketLink(error);
-                      }
-                    },
-                    success: function (response) {
-                      console.log(response);
-                    }
-                  });
-                  footer && $(footer).slideUp().html('');
-                });
-              });
-            } else {
-              $.ajax({
-                url: '/baadal/action/index.json',
-                type: 'post',
-                data: {
-                  'vmid': this.parentElement.getAttribute('data-vmid'),
-                  'action': this.getAttribute('data-action')
-                },
-                'error': function (response) {
-                  var error = response.getResponseHeader('web2py_error');
-                  if (error) {
-                    baadalApp.generateTicketLink(error);
-                  }
-                  if (response.status == 401) {
-                    document.location.reload();
-                  }
-                },
-                success: function (response) {
-                  var message;
-                  if (response.status == 'fail') {
-                    message = response.message;
-                    return;
-                  }
-                  switch (action) {
-                    case 'get-console-url':
-                      message = '<a target="_blank" href="' + response.consoleurl + '">' + response.consoleurl+ '</a>';
-                      break;
-                      message = '<a target="_blank" href="' + response.consoleurl + '">' + response.consoleurl+ '</a>';
-                      break;
-                    case 'snapshot':
-                      message = 'Snapshot creation has been initiated.';
-                      break;
-                    case 'start-resume':
-                      message = 'Start/resume action has been queued. Please wait while your VM starts';
-                      break;
-                    case 'clone':
-                      message = 'Clone request has been posted.';
-                      break;
-                    case 'shutdown':
-                      message = 'VM stop action has been queued. Please wait while your VM is shut down.';
-                      break;
-                    case 'clone':
-                      message = 'Clone request has been posted.';
-                      break;
-                    case 'clone':
-                      message = 'Clone request has been posted.';
-                      break;
+    baadalApp.vmView.init(config);
+    //console.log(baadalApp.vmView);
 
-                  }
-                  $modal.find('.panel-footer').show();
-                  $modal.find('#modal-info-message').html(message).slideDown();
-                  console.log(response);
-                }
-              });
-            }
-          });
-          $modal.on('click', '#fetch-snapshots', function(e) {
-            var $tr = $(this);
-            var vmid = document.getElementById('vmid').value;
-            $.ajax({
-              url: '/baadal/ajax/snapshots.json',
-              type: 'post',
-              data: {
-                vmid: vmid,
-              },
-              success: function(response) {
-                console.log(response);
-                var html = baadalApp.populateSnapshots(response.data);
-                console.log(this);
-                console.log(html);
-                $tr.closest('tbody').html(html);
-              },
-              error: function(error, response, code) {
-                console.log(error, response, code);
-              }
-            });
-          });
-          $modal.on('click', '.snapshot-restore', function(e){
-            var vmid = document.getElementById('vmid').value;
-            $.ajax({
-              url: '/baadal/action/index.json',
-              type: 'post',
-              data: {
-                vmid: vmid,
-                action: 'restore-snapshot',
-                snapshot_id: this.closest('tr').getAttribute('data-snapshot-id')
-              }
-            })
-          });
-          $modal.on('hidden.bs.modal', function() {
-            $modal.remove();
-            $table.ajax.reload();
-          });
-        });
-      }
-    });
-  });
-  $allvms.on('click','.btn-action', function(e) {
-    var id = this.closest('tr').getAttribute('data-vmid');
-    var action = this.getAttribute('data-action');
-    var tooltip;
-    if (action === 'start') {
-      tooltip = 'Starting...';
-    } else {
-      tooltip = 'Stopping...'
-    }
-    var span = this.children[0]
-    span.title = tooltip;
-    span.classList.remove('fa-play', 'fa-stop');
-    span.classList.add('fa-refresh', 'fa-spin');
-    $
-      $.ajax({
-        'url': '/baadal/action/index.json',
-        'type': 'post',
-        'dataType': 'json',
-        'data': {
-          'vmid': id,
-          'action': action
-        },
-        'error': function (response) {
-          var error = response.getResponseHeader('web2py_error');
-          if (error) {
-            baadalApp.generateTicketLink(error);
-          }
-        },
-        'success': function (response) {
-          if (response.status == 'success') {
-            $('#success-message').fadeIn(1000, function () {
-              $table.ajax.reload();
-              $(this).fadeOut();
-            });
-          } else {
-            $('#error-message').fadeIn();
-          }
-        }
-      });
-  });
-})();
+  })();
 </script>
-{{include 'wrap.html'}}
+<? include 'wrap.html' ?>

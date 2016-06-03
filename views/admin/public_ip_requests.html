@@ -1,7 +1,7 @@
 <? extend 'blank-page.html' ?>
 <div class="panel panel-primary">
   <div class="panel-heading">
-    <h3 class="panel-title">Pending Virtual Disk Requests</h3>
+    <h3 class="panel-title">Pending Public IP Requests</h3>
   </div>
   <div class="panel-body">
     <table id="requests" class="table table-striped table-condensed table-bordered table-hover">
@@ -9,7 +9,6 @@
             <tr>
                 <th>User</th>
                 <th>VM Name</th>
-                <th>Disk Size</th>
                 <th>Request Time</th>
                 <th>Actions</th>
             </tr>
@@ -17,8 +16,7 @@
     </table>
   </div>
   <div class="panel-footer">
-    <span style="display:none" class="text-success" id="success-message-approve">Request approved.</span>
-    <span style="display:none" class="text-success" id="success-message-reject">Request rejected.</span>
+    <span style="display:none" class="text-success" id="success-message">Request approved.</span>
     <span style="display:none" class="text-danger" id="error-message">Request cannot be approved.</span>
   </div>
 </div>
@@ -29,19 +27,18 @@
 (function(){
   var $requests = $('#requests');
   var $table = $requests.DataTable( {
-    "ajax": "/baadal/admin/disk_requests.json",
+    "ajax": "/baadal/admin/public_ip_requests.json",
     "oLanguage": {
       "sEmptyTable": "No pending requests!"
     },
     "columns": [
       { "data": "user" },
-      { "data": "vm_name" },
-      { "data": "disk_size" },
+      { "data": "vmid" },
       { "data": "request_time" }
     ],
     "aoColumnDefs": [
       {
-        "aTargets": [4],
+        "aTargets": [3],
         "mData": null,
         "mRender": function (data, type, full) {
           return '<div class="btn-group" role="group" aria-label="..."> <button title="Approve" type="button" data-action="approve" class="btn btn-action btn-success" aria-label="Approve">\
@@ -58,17 +55,15 @@
       nRow.setAttribute('data-reqid',aData.id);
     }
   });
-
-
   $requests.on('click','.btn-action', function(e) {
     var id = this.closest('tr').getAttribute('data-reqid');
     var action = this.getAttribute('data-action');
     $.ajax({
-      'url': '/baadal/action/handle_disk_request.json',
+      'url': '/baadal/action/handle_public_ip_request.json',
       'type': 'post',
       'dataType' : 'json',
       'data': {
-        'id': id,
+        'id':id,
         'action': action
       },
       'error' : function(response) {
@@ -79,14 +74,14 @@
       },
       'success': function(response) {
         if(response.status == 'success') {
-          $('#success-message-' + response.action).fadeIn(1000, function () {
+          $('#success-message').fadeIn(1000, function () {
             $table.ajax.reload();
             $(this).fadeOut();
           });
         } else {
-          $('#error-message').fadeIn(1000, function () {
-            $(this).fadeOut();
-          });
+          $('#error-message').append("<p style='color:blue'>" + response.message  + "</p>").fadeIn(1000, function () {
+            $table.ajax.reload();
+         });
         }
       }
     });

@@ -1,4 +1,4 @@
-<div class="modal fade" id="vm-settings-modal">
+<div class="modal fade" id="vm-settings-modal" data-vmid="{{id}}">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
@@ -42,7 +42,7 @@
             </div>
             {{/if}}
             <? pass ?>
-            <input type="hidden" id="vmid" value="{{id}}">
+            <input type="hidden" id="vmid" value="{{id}}" data-vmname="{{name}}">
             <div class="btn-group" data-vmid="{{id}}" role="group" aria-label="...">
               <button type="button" data-action="snapshot" class="btn btn-lg btn-default btn-action" title="Take Snapshot">
                 <span class="fa fa-camera" aria-hidden="true"></span>
@@ -50,6 +50,9 @@
               <button type="button" data-action="add-virtual-disk"
                 class="btn btn-lg btn-default btn-action" title="Request virtual disk">
                 <span class="fa fa-hdd-o" aria-hidden="true"></span>
+              </button>
+              <button type="button" data-action="attach-public-ip" class="btn btn-lg btn-default btn-action" title="Request Public IP">
+                <span class="fa fa-fire" aria-hidden="true"></span>
               </button>
               {{#ifCond status '==' 'ACTIVE'}}
               <button type="button" data-action="get-console-url" class="btn btn-lg btn-default btn-action" title="Get Console URL">
@@ -110,10 +113,41 @@
               </tbody>
             </table>
           </div>
-          <div class="panel-footer" style="display:none">
-            <span style="display:none" class="text-danger" id="modal-error-message">There was some error in the form. Please check the values and submit the form again.</span>
-            <span style="display:none" class="text-info" id="modal-info-message"></span>
-            <span style="display:none" class="text-success" id="modal-success-message">Request successfully posted.</span>
+          <div class="panel-footer">
+            <span class="text-danger" id="modal-error-message">
+              There was some error in the form. Please check the values and submit the form again.
+            </span>
+            <span class="text-info" id="modal-info-message"></span>
+            <span class="text-success" id="modal-success-message">
+              Request successfully posted.
+            </span>
+            <span id="vm-delete-confirmation">
+              Do you really want to delete this VM? This action cannot be undone!
+              <button type="button" name="btn-yes" class="btn btn-danger" data-confirm="yes">Yes</button>
+              <button type="button" name="btn-no" class="btn btn-success"            data-confirm="no">No</button>
+            </span>
+            <span id="disk-size-input">
+              <form class="form-inline">
+                <div class="form-group">
+                  <label for="disksize" class="control-label">Disk size</label>
+                  <input type="number" class="form-control" name="disksize" id="disksize" value="1" max="1024" min="1" maxlength="4" size="4" />
+                  <button class="btn btn-primary btn-sm" id="btn-disk-request">
+                    Submit Request
+                  </button>
+                </div>
+              </form>
+            </span>
+            <span id="resize-form">
+              <form class="form-inline" action="#">
+                 <label for="new_flavor" class="control-label">
+                   Select new configuration
+                 </label>
+                 <select class="form-control" name="new_flavor" id="new_flavor"></select> 
+                 <button class="btn btn-primary btn-sm" id="btn-resize-request">
+                   Submit Request
+                 </button>
+               </form>
+            </span>
           </div>
         </div>
         <div class="modal-footer">
