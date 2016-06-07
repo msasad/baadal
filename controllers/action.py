@@ -454,13 +454,21 @@ def __attach_vm_public_ip():
 @auth.requires(user_is_project_admin)
 def handle_clone_request():
     try:
-        conn = Baadal.Connection(_authurl, _tenant, session.username,
-                                 session.password)
-        row = db(db.clone_requests.id == request.vars.id).select()[0]
-        vm = conn.find_baadal_vm(id=row.vm_id)
-        vm.clone()
-        row.update_record(status=1)
-        db.commit()
+        if request.vars.action == 'approve':
+            row = db(db.clone_requests.id == request.vars.id).select()[0]
+            row.update_record(status=REQUEST_STATUS_PROCESSING)
+            auth = b64encode(dumps(dict(u=session.username,
+                             p=session.password)))
+            scheduler.queue_task(task_clone_vm, timeout=600,
+                                 pvars={'reqid': row.id, 'auth': auth})
+            db.commit()
+            return jsonify(message='Request successfully approved')
+        elif request.vars.action == 'reject':
+            db(db.clone_requests.id == request.vars.id).delete()
+            db.commit()
+            return jsonify(message='Request successfully deleted')
+        else:
+            raise HTTP(400)
     except Exception as e:
         message = e.message or str(e.__class__)
         logger.error(message)

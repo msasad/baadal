@@ -62,6 +62,7 @@
 
 
   $requests.on('click','.btn-action', function(e) {
+    this.disabled = true;
     var id = this.closest('tr').getAttribute('data-reqid');
     var action = this.getAttribute('data-action');
     $.ajax({
@@ -80,7 +81,7 @@
       },
       'success': function(response) {
         if(response.status == 'success') {
-          $('#success-message').fadeIn(1000, function () {
+          $('#success-message').html(response.message).fadeIn(1000, function () {
             $table.ajax.reload();
             $(this).fadeOut();
           });

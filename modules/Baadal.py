@@ -130,9 +130,7 @@ class BaadalVM(object):
          defaults to Full (optional)
         :return:
         """
-        # create a snapshot of the  machine
-        # create a new vm using the newly created snapshot
-        # delete the snapshot
+
         clone_name = clone_name or self.server.name + '_clone'
         flavor_id = self.server.flavor['id']
         networks = self.get_networks().keys()
@@ -140,33 +138,27 @@ class BaadalVM(object):
             self.__conn.neutron.list_networks(name=net)['networks'][0]['id']
             for net in networks]
         nics = [{'net-id': netid for netid in network_ids}]
-        snapshot_id = self.server.create_image("temp")
-        image = self.__conn.nova.images.find(id=snapshot_id)
-        while image.status != 'ACTIVE':
-            image = self.__conn.nova.images.find(id=snapshot_id)
-            pass
+        image = self.__conn.nova.images.find(id=self.server.image['id'])
+        flavor = self.__conn.nova.flavors.find(id=flavor_id)
+        clone = self.server.manager.create(clone_name, image,
+                                           flavor, nics=nics,
+                                           security_groups=networks,
+                                           meta=self.server.metadata)
+        while clone.status != 'ACTIVE':
+            clone = clone.manager.find(id=clone.id)
         else:
-            flavor = self.__conn.nova.flavors.find(id=flavor_id)
-            clone = self.server.manager.create(clone_name, image,
-                                               flavor, nics=nics,
-                                               security_groups=networks,
-                                               meta=self.server.metadata)
-            while clone.status != 'ACTIVE':
-                clone = clone.manager.find(id=clone.id)
-            else:
-                image.delete()
-                attached_disks = self.get_attached_disks()
-                for i in attached_disks:
-                    volid = i['id']
-                    if full:
-                        volume_clone = self.__conn.cinder.volumes.create(
-                            i['size'], source_volid=i['id'])
-                        volid = volume_clone.id
-                        while volume_clone.status != 'available':
-                            volume_clone = self.__conn.cinder.volumes.get(
-                                volume_clone.id)
-                    self.__conn.nova.volumes.create_server_volume(
-                        clone.id, volid, i['path'])
+            attached_disks = self.get_attached_disks()
+            for i in attached_disks:
+                volid = i['id']
+                if full:
+                    volume_clone = self.__conn.cinder.volumes.create(
+                        i['size'], source_volid=i['id'])
+                    volid = volume_clone.id
+                    while volume_clone.status != 'available':
+                        volume_clone = self.__conn.cinder.volumes.get(
+                            volume_clone.id)
+                self.__conn.nova.volumes.create_server_volume(
+                    clone.id, volid, i['path'])
         return clone
 
     def create_snapshot(self, snapshot_name=None):
