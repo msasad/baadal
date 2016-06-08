@@ -29,13 +29,13 @@ def task_create_vm(reqid, auth):
             try:
                 req.update_record(state=REQUEST_STATUS_APPROVED)
                 context = Storage()
-                context.username = auth.u
+                user_info = ldap.fetch_user_info(auth.u)
+                context.username = user_info['user_name']
+                context.user_email = user_info['user_email']
                 context.vm_name = name
                 context.mail_support = mail_support
-                user_info = ldap.fetch_user_info(auth.u)
-                context.user_email = user_info['user_email']
                 context.gateway_server = gateway_server
-                context.req_time = seconds_to_localtime(req.request_time)
+                context.request_time = seconds_to_localtime(req.request_time)
                 logger.info('sending mail')
                 mailer.send(mailer.MailTypes.VMCreated, context.user_email,
                             context)
@@ -93,6 +93,18 @@ def task_restore_snapshot(auth, vmid, snapshot_id):
         vm = conn.find_baadal_vm(id=vmid)
         vm.restore_snapshot(snapshot_id)
         logger.info('Snapshot restored: VMID %s, snapshot_id %s' % \
+                (vmid, snapshot_id))
+    except Exception as e:
+        logger.exception(e)
+
+
+def task_delete_snapshot(auth, vmid, snapshot_id):
+    auth = Storage(loads(b64decode(auth)))
+    try:
+        conn = Baadal.Connection(_authurl, _tenant, auth.u, auth.p)
+        image = conn.find_image(id=snapshot_id)
+        status = image.delete()
+        logger.info('Snapshot deleted: VMID %s, snapshot_id %s' % \
                 (vmid, snapshot_id))
     except Exception as e:
         logger.exception(e)

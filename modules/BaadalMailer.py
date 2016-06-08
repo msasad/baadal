@@ -25,7 +25,7 @@ class BaadalMailer(object):
 
         class ApprovalReminder(object):
             subject = 'Request waiting for your approval'
-            mailbody = "Dear {0[approverName]},\n\n{0[userName]} has made a "\
+            mailbody = "Dear {0[approver]},\n\n{0[user]} has made a "\
                 "'{0[requestType]}' request on {0[requestTime]}. It is "\
                 "waiting for your approval."
 
@@ -37,16 +37,14 @@ class BaadalMailer(object):
 
         class VMCreated(object):
             subject = 'Your BaadalVM has been created'
-            mailbody = "Dear {0[username]},\n\nThe VM {0[vm_name]}, requested"\
-                " at {0[request_time]} is successfully created and is now" \
-                " available for use. Following operations are allowed on" \
-                " VM:\n 1. Start\n2. Stop\n3. Pause\n4. Resume\n5. Destroy" \
-                " \n6. Delete\n\n Default credentials for VM is as follows:" \
-                " \nUsername:root/baadalservervm/baadaldesktopvm\n" \
-                " Password:baadal\n\n To access VM using assigned private" \
-                " IP; SSH to baadal gateway machine using your GCL" \
-                " credential .\n username@{0[gateway_server]}\n For other"\
-                " details, Please login to Baadal web interface."
+            mailbody = ("Dear {0[username]},\n\nThe VM {0[vm_name]}, requested"
+                " at {0[request_time]} is successfully created and is now"
+                " available for use. To access your VM from within the web"
+                " browser, login to Baadal using your credentials and click"
+                " on the open console icon, which looks like >_\n"
+                " Default credentials for VM is as follows:"
+                " \nUsername:root/baadalservervm/baadaldesktopvm\n"
+                " Password:baadal\n\n")
 
         class TaskComplete(object):
             subject = '{0[taskType]} task successful'

@@ -8,7 +8,7 @@ jQuery
 var baadalApp = (function ($) {
   'use strict';
   baadalApp = {};
-  
+
   baadalApp.requestAction = function (data) {
     return $.ajax({
       url: '/baadal/action/index.json',
@@ -16,7 +16,7 @@ var baadalApp = (function ($) {
       data: data
     });
   };
-  
+
   baadalApp.serialize = function (temp) {
     var obj = {}, i, curr;
     for (i = temp.length - 1; i >= 0; i -= 1) {
@@ -202,12 +202,40 @@ var baadalApp = (function ($) {
         data = {},
         promise;
 
+      $(document.body).on('click', '#btn-disk-request', function (e) {
+        e.preventDefault();
+        data.disksize = document.getElementById('disksize').value;
+        promise = baadalApp.requestAction(data);
+        promise.then(function (response) {
+          console.log(response);
+          if (response.message) {
+            $('#modal-info-message').html(response.message).fadeIn().siblings().hide();
+          }
+        });
+      });
+
+      // Event handler for click of open-console button
+      $this.table.on('click', '.btn-console', function (e) {
+        var vmid = $(this).closest('tr').data('vmid');
+        $.ajax({
+          url: '/baadal/action/index.json',
+          data: {
+            vmid: vmid,
+            action: 'get-console-url',
+            urlonly: true
+          },
+          success: function(response) {
+            window.open(response.message);
+          }
+        });
+      });
+
       // Event handler for click of settings button
       $this.table.on('click', '.btn-settings', function (e) {
         var tr = this.closest('tr'),
           context = $this.$dt.row(tr).data(),
           html;
-        context['ip-addresses'] = baadalApp.ipObjectToString(context.addresses,       true);
+        context['ip-addresses'] = baadalApp.ipObjectToString(context.addresses, true);
         html = $this.dialogTmpl(context);
         $(document.body).prepend(html);
         $this.$modal = $('#' + $this.modalid).modal('show');
@@ -286,7 +314,7 @@ var baadalApp = (function ($) {
       });
 
       // Event handler for snapshot-restore buttons
-      $(document.body).on('click', '#' + $this.modalid + '.snapshot-restore', function (e) {
+      $(document.body).on('click', '#' + $this.modalid + ' .snapshot-restore', function (e) {
         var vmid = document.getElementById('vmid').value;
         $.ajax({
           url: '/baadal/action/index.json',
@@ -295,9 +323,33 @@ var baadalApp = (function ($) {
             vmid: vmid,
             action: 'restore-snapshot',
             snapshot_id: this.closest('tr').getAttribute('data-snapshot-id')
+          },
+          success: function(response) {
+              if (response.message) {
+                  $('#modal-info-message').html(response.message).fadeIn().siblings().hide();
+              }
           }
         });
       });
+
+      $(document.body).on('click', '.snapshot-delete', function (e) {
+        var vmid = document.getElementById('vmid').value;
+        $.ajax({
+          url: '/baadal/action/index.json',
+          type: 'post',
+          data: {
+            vmid: vmid,
+            action: 'delete-snapshot',
+            snapshot_id: this.closest('tr').getAttribute('data-snapshot-id')
+          },
+          success: function(response) {
+              if (response.message) {
+                  $('#modal-info-message').html(response.message).fadeIn().siblings().hide();
+              }
+          }
+        });
+      });
+
 
       $(document.body).on('click', '#fetch-snapshots', function (e) {
         var $tr = $(this),
