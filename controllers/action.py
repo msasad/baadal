@@ -88,6 +88,7 @@ def __pause(vm):
 def __reboot(vm):
     vm.reboot()
 
+
 def __delete(vm):
     vm.delete()
 
@@ -136,7 +137,10 @@ def __delete_snapshot(vmid):
 def __get_console_url(vm):
     console_type = config.get('misc', 'console_type')
     consoleurl = vm.get_console_url(console_type=console_type)
-    return '<a target="_blank" href="{0}">{0}</a>'.format(consoleurl)
+    if request.vars.urlonly:
+        return consoleurl
+    else:
+        return '<a target="_blank" href="{0}">{0}</a>'.format(consoleurl)
 
 
 def __migrate(vmid):
@@ -195,7 +199,6 @@ def __add_virtual_disk(vmid, size):
     try:
         db.virtual_disk_requests.insert(user=session.username, vmid=vmid,
                                         disk_size=int(size), status=0)
-        return jsonify()
     except Exception as e:
         logger.exception(e.message or str(e.__class__))
         return jsonify(status='fail', message=e.message or str(e.__class__))
@@ -462,13 +465,21 @@ def __attach_vm_public_ip():
 @auth.requires(user_is_project_admin)
 def handle_clone_request():
     try:
-        conn = Baadal.Connection(_authurl, _tenant, session.username,
-                                 session.password)
-        row = db(db.clone_requests.id == request.vars.id).select()[0]
-        vm = conn.find_baadal_vm(id=row.vm_id)
-        vm.clone()
-        row.update_record(status=1)
-        db.commit()
+        if request.vars.action == 'approve':
+            row = db(db.clone_requests.id == request.vars.id).select()[0]
+            row.update_record(status=REQUEST_STATUS_PROCESSING)
+            auth = b64encode(dumps(dict(u=session.username,
+                             p=session.password)))
+            scheduler.queue_task(task_clone_vm, timeout=600,
+                                 pvars={'reqid': row.id, 'auth': auth})
+            db.commit()
+            return jsonify(message='Request successfully approved')
+        elif request.vars.action == 'reject':
+            db(db.clone_requests.id == request.vars.id).delete()
+            db.commit()
+            return jsonify(message='Request successfully deleted')
+        else:
+            raise HTTP(400)
     except Exception as e:
         message = e.message or str(e.__class__)
         logger.error(message)

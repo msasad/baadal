@@ -98,27 +98,18 @@ def task_restore_snapshot(auth, vmid, snapshot_id):
         logger.exception(e)
 
 
-def task_delete_snapshot(auth, vmid, snapshot_id):
+def task_clone_vm(auth, reqid):
     auth = Storage(loads(b64decode(auth)))
+    req = db(db.clone_requests.id == reqid).select()[0]
     try:
         conn = Baadal.Connection(_authurl, _tenant, auth.u, auth.p)
-        image = conn.find_image(id=snapshot_id)
-        status = image.delete()
-        logger.info('Snapshot deleted: VMID %s, snapshot_id %s' % \
-                (vmid, snapshot_id))
-    except Exception as e:
-        logger.exception(e)
-
-
-def task_clone_vm(auth, vmid):
-    auth = Storage(loads(b64decode(auth)))
-    try:
-        conn = Baadal.Connection(_authurl, _tenant, auth.u, auth.p)
-        vm = conn.find_baadal_vm(id=vmid)
+        vm = conn.find_baadal_vm(id=req.vm_id)
         clone = vm.clone()
-        logger.info('VM Cloned: VMID %s, clone_id %s' % (vmid, clone))
+        logger.info('VM Cloned: VMID %s, clone_id %s' % (vm_id, clone))
+        req.update_record(status=REQUEST_STATUS_APPROVED)
     except Exception as e:
         logger.exception(e)
+        req.update_record(status=REQUEST_STATUS_POSTED)
 
 def task_resize_vm(auth, reqid):
     auth = Storage(loads(b64decode(auth)))
@@ -140,4 +131,13 @@ def task_resize_vm(auth, reqid):
         conn.close()
 
 
-
+def task_delete_snapshot(auth, vmid, snapshot_id):
+    auth = Storage(loads(b64decode(auth)))
+    try:
+        conn = Baadal.Connection(_authurl, _tenant, auth.u, auth.p)
+        image = conn.find_image(id=snapshot_id)
+        status = image.delete()
+        logger.info('Snapshot deleted: VMID %s, snapshot_id %s' % \
+                (vmid, snapshot_id))
+    except Exception as e:
+        logger.exception(e)

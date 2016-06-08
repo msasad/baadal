@@ -34,7 +34,7 @@
       <td>{{this.name}}</td>
       <td>{{this.created}}</td>
       <td class="text-center">
-        <a title="Restore this snapshot" href="#" class="snapshot-restore">
+        <a title="Restore this spanshot" href="#" class="snapshot-restore">
           <span class="badge">
             <span class="fa fa-reply"></span>
           </span>
@@ -54,10 +54,13 @@
 </script>
 <script id="btns-tmpl" type="text/x-handlebar-template">
 <div class="btn-group" role="group" aria-label="...">
-  <button title="{{title}}" type="button" data-action="{{title}}" class="btn btn-success btn-action" aria-label="Start">
+  <button title="Open Console" type="button" data-action="open-console" class="btn btn-default btn-console" aria-label="Open Console">
+    <span class="fa fa-terminal" aria-hidden="true"></span>
+  </button>
+  <button title="{{action}}" type="button" data-action="{{action}}" class="btn btn-success btn-action" aria-label="Start">
     <span class="fa fa-{{icon}}" aria-hidden="true"></span>
   </button>
-  <button title="Settings" type="button"data-action="settings" class="btn btn-primary btn-settings" aria-label="Settings">
+  <button title="Settings" type="button" data-action="settings" class="btn btn-primary btn-settings" aria-label="Settings">
     <span class="fa fa-cog" aria-hidden="true"></span>
   </button>
 </div>

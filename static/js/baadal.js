@@ -253,10 +253,17 @@ var baadalApp = (function ($) {
       $(document.body).on('click', '#btn-resize-request', function (e) {
         e.preventDefault();
         data.vmid = $('#vmid').val();
-        data.new_flavor = $('#new_flavor').value();
-        promise = $.post({
+        data.new_flavor = $('#new_flavor').val();
+        promise = $.ajax({
+          type: 'post',
           url: '/baadal/post_request/request_resize.json',
           data: data
+        });
+        promise.then(function (response) {
+          console.log(response);
+          if (response.status === 'success') {
+            $('#modal-info-message').html('Resize request has been successfully posted.').fadeIn().siblings().hide();
+          }
         });
       });
 
@@ -280,14 +287,6 @@ var baadalApp = (function ($) {
           break;
         case 'add-virtual-disk':
           $('#disk-size-input').fadeIn().siblings().hide();
-          $('#btn-disk-request').on('click', function (e) {
-            e.preventDefault();
-            promise = baadalApp.requestAction({
-              vmid: vmid,
-              action: 'add-virtual-disk',
-              disksize: document.getElementById('disksize').value
-            });
-          });
           break;
         case 'resize':
           promise2 = $.getJSON('/baadal/ajax/configs.json');
