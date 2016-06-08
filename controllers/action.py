@@ -119,6 +119,7 @@ def __power_off(vm):
 
 
 def __restore_snapshot(vmid):
+    auth = b64encode(dumps(dict(u=session.username, p=session.password)))
     snapshot_id = request.vars.snapshot_id
     pvars = dict(auth=auth, vmid=vmid, snapshot_id=snapshot_id)
     scheduler.queue_task(task_restore_snapshot, timeout=600,

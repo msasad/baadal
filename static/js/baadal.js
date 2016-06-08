@@ -313,7 +313,7 @@ var baadalApp = (function ($) {
       });
 
       // Event handler for snapshot-restore buttons
-      $(document.body).on('click', '#' + $this.modalid + '.snapshot-restore', function (e) {
+      $(document.body).on('click', '#' + $this.modalid + ' .snapshot-restore', function (e) {
         var vmid = document.getElementById('vmid').value;
         $.ajax({
           url: '/baadal/action/index.json',
@@ -322,6 +322,11 @@ var baadalApp = (function ($) {
             vmid: vmid,
             action: 'restore-snapshot',
             snapshot_id: this.closest('tr').getAttribute('data-snapshot-id')
+          },
+          success: function(response) {
+              if (response.message) {
+                  $('#modal-info-message').html(response.message).fadeIn().siblings().hide();
+              }
           }
         });
       });
