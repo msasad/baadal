@@ -331,6 +331,25 @@ var baadalApp = (function ($) {
         });
       });
 
+      $(document.body).on('click', '.snapshot-delete', function (e) {
+        var vmid = document.getElementById('vmid').value;
+        $.ajax({
+          url: '/baadal/action/index.json',
+          type: 'post',
+          data: {
+            vmid: vmid,
+            action: 'delete-snapshot',
+            snapshot_id: this.closest('tr').getAttribute('data-snapshot-id')
+          },
+          success: function(response) {
+              if (response.message) {
+                  $('#modal-info-message').html(response.message).fadeIn().siblings().hide();
+              }
+          }
+        });
+      });
+
+
       $(document.body).on('click', '#fetch-snapshots', function (e) {
         var $tr = $(this),
           vmid = document.getElementById('vmid').value;

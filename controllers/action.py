@@ -126,6 +126,14 @@ def __restore_snapshot(vmid):
                          pvars=pvars)
 
 
+def __delete_snapshot(vmid):
+    auth = b64encode(dumps(dict(u=session.username, p=session.password)))
+    snapshot_id = request.vars.snapshot_id
+    pvars = dict(auth=auth, vmid=vmid, snapshot_id=snapshot_id)
+    logger.debug(pvars)
+    scheduler.queue_task(task_delete_snapshot, timeout=600, pvars=pvars)
+
+
 def __get_console_url(vm):
     console_type = config.get('misc', 'console_type')
     consoleurl = vm.get_console_url(console_type=console_type)
@@ -172,6 +180,8 @@ def index():
             message = __power_off(vm)
         elif action == 'restore-snapshot':
             message = __restore_snapshot(vmid)
+        elif action == 'delete-snapshot':
+            message = __delete_snapshot(vmid)
         elif action == 'migrate':
             message = __migrate(vmid)
         elif action == 'add-virtual-disk':

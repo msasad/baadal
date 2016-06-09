@@ -98,6 +98,17 @@ def task_restore_snapshot(auth, vmid, snapshot_id):
         logger.exception(e)
 
 
+def task_delete_snapshot(auth, vmid, snapshot_id):
+    auth = Storage(loads(b64decode(auth)))
+    try:
+        conn = Baadal.Connection(_authurl, _tenant, auth.u, auth.p)
+        image = conn.find_image(id=snapshot_id)
+        status = image.delete()
+        logger.info('Snapshot deleted: VMID %s, snapshot_id %s' % \
+                (vmid, snapshot_id))
+    except Exception as e:
+        logger.exception(e)
+
 def task_clone_vm(auth, reqid):
     auth = Storage(loads(b64decode(auth)))
     req = db(db.clone_requests.id == reqid).select()[0]
