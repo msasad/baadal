@@ -298,7 +298,6 @@ def disk_requests():
                     cr['vm_name'] = cache[row.vmid]
                     cr['id'] = row.id
                     cr['request_time'] = str(row.request_time)
-                    cr['vm_name'] = vm.name
                     cr['user'] = row.user
                     cr['disk_size'] = row.disk_size
                     response.append(cr)
