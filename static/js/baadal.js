@@ -141,6 +141,7 @@ var baadalApp = (function ($) {
       ];
 
       this.$dt = this.table.DataTable({
+        "responsive": true,
         "ajax": {
           "url": dataURL,
           "error": function (response, code) {

@@ -62,3 +62,17 @@ code {
   font-size: 80%;
 }
 
+#wrapper {
+  padding-left: 170px;
+}
+
+.side-nav {
+  left: 170px;
+  width: 170px;
+  margin-left: -170px;
+  font-size: 12px;
+}
+
+.side-nav > li > a {
+  width: 170px;
+}
