@@ -195,8 +195,8 @@ var baadalApp = (function ($) {
     attachEvents: function () {
       var $this = this,
         actionbtn = '#' + $this.modalid + ' .btn-action',
-        btn_vm_del_yes = 'vm-delete-confirmation button[name=btn-yes]',
-        btn_vm_del_no = 'vm-delete-confirmation button[name=btn-no]',
+        btn_vm_del_yes = '#vm-delete-confirmation button[name=btn-yes]',
+        btn_vm_del_no = '#vm-delete-confirmation button[name=btn-no]',
         action,
         action_confirmed = false,
         data = {},
@@ -247,7 +247,23 @@ var baadalApp = (function ($) {
       });
 
       $(document.body).on('click', btn_vm_del_no, function () {
-        $('#vm-delete-confirmation').slideUp();
+        $('#vm-delete-confirmation').fadeOut();
+      });
+
+      $(document.body).on('click', btn_vm_del_yes, function () {
+          data.action = 'delete';
+          $.ajax({
+              type: 'post',
+              url: '/baadal/action/index.json',
+              data: data,
+              success: function(response) {
+                  console.log(response);
+                  $('#modal-info-message').html(response.message).fadeIn().siblings().hide();
+              },
+              error: function(error, response, code) {
+                  console.log(error, response, code);
+              }
+          });
       });
 
       $(document.body).on('click', '#btn-resize-request', function (e) {
@@ -280,11 +296,11 @@ var baadalApp = (function ($) {
         data.vmid = vmid;
         switch (action) {
         case 'delete':
-          $('#vm-delete-confirmation').fadeIn().siblings().hide();
-          this.children.namedItem('btn-yes').addEventListener('click', function () {
-            action_confirmed = true;
-          });
-          break;
+           $('#vm-delete-confirmation').fadeIn().siblings().hide();
+        //   $this.children.namedItem('btn-yes').addEventListener('click', function () {
+        //     action_confirmed = true;
+        //   });
+           break;
         case 'add-virtual-disk':
           $('#disk-size-input').fadeIn().siblings().hide();
           break;
