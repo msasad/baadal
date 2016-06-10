@@ -235,11 +235,16 @@ var baadalApp = (function ($) {
       $this.table.on('click', '.btn-settings', function (e) {
         var tr = this.closest('tr'),
           context = $this.$dt.row(tr).data(),
-          html;
+          html, keys;
         context['ip-addresses'] = baadalApp.ipObjectToString(context.addresses, true);
+        keys = Object.keys(context.addresses);
+        console.log(context.addresses);
         html = $this.dialogTmpl(context);
         $(document.body).prepend(html);
         $this.$modal = $('#' + $this.modalid).modal('show');
+        if (context.addresses[keys[0]].length === 2) {
+            $this.$modal.find('[data-action=attach-public-ip]').attr('disabled', 'disabled');
+        }
         $this.$modal.on('hidden.bs.modal', function () {
           $this.$modal.remove();
           $this.$dt.ajax.reload();
