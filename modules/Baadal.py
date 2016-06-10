@@ -138,27 +138,31 @@ class BaadalVM(object):
             self.__conn.neutron.list_networks(name=net)['networks'][0]['id']
             for net in networks]
         nics = [{'net-id': netid for netid in network_ids}]
-        image = self.__conn.nova.images.find(id=self.server.image['id'])
-        flavor = self.__conn.nova.flavors.find(id=flavor_id)
-        clone = self.server.manager.create(clone_name, image,
-                                           flavor, nics=nics,
-                                           security_groups=networks,
-                                           meta=self.server.metadata)
-        while clone.status != 'ACTIVE':
-            clone = clone.manager.find(id=clone.id)
+        snapshot_id = self.server.create_image("temp")
+        image = self.__conn.nova.images.find(id=snapshot_id)
+        while image.status != 'ACTIVE':
+            image = self.__conn.nova.images.find(id=snapshot_id)
         else:
-            attached_disks = self.get_attached_disks()
-            for i in attached_disks:
-                volid = i['id']
-                if full:
-                    volume_clone = self.__conn.cinder.volumes.create(
-                        i['size'], source_volid=i['id'])
-                    volid = volume_clone.id
-                    while volume_clone.status != 'available':
-                        volume_clone = self.__conn.cinder.volumes.get(
-                            volume_clone.id)
-                self.__conn.nova.volumes.create_server_volume(
-                    clone.id, volid, i['path'])
+            flavor = self.__conn.nova.flavors.find(id=flavor_id)
+            clone = self.server.manager.create(clone_name, image,
+                                               flavor, nics=nics,
+                                               security_groups=networks,
+                                               meta=self.server.metadata)
+            while clone.status != 'ACTIVE':
+                clone = clone.manager.find(id=clone.id)
+            else:
+                attached_disks = self.get_attached_disks()
+                for i in attached_disks:
+                    volid = i['id']
+                    if full:
+                        volume_clone = self.__conn.cinder.volumes.create(
+                            i['size'], source_volid=i['id'])
+                        volid = volume_clone.id
+                        while volume_clone.status != 'available':
+                            volume_clone = self.__conn.cinder.volumes.get(
+                                volume_clone.id)
+                    self.__conn.nova.volumes.create_server_volume(
+                        clone.id, volid, i['path'])
         return clone
 
     def create_snapshot(self, snapshot_name=None):
@@ -309,7 +313,8 @@ class BaadalVM(object):
         res = self.server.resume()
         return res
 
-    def restore_snapshot(self, snapshot_id, password=None, preserve_ephemeral=False, **kwargs):
+    def restore_snapshot(self, snapshot_id, password=None,
+                         preserve_ephemeral=False, **kwargs):
         self.server.rebuild(snapshot_id, password=password,
                             preserve_ephemeral=preserve_ephemeral, **kwargs)
 
@@ -335,9 +340,19 @@ class BaadalVM(object):
         return self.server.metadata
 
 
+class ConnectionWrapper:
+
+    def __init__(self, nova, cinder, neutron, keystone):
+        self.nova = nova
+        self.neutron = neutron
+        self.cinder = cinder
+        self.keystone = keystone
+
+
 class Connection:
     """
-    A wrapper class for objects of novaclient, neutronclient, cinderclient and keystoneclient
+    A wrapper class for objects of novaclient, neutronclient, cinderclient
+    and keystoneclient
     """
 
     def __init__(self, authurl, tenant_name, username, password):
@@ -351,24 +366,14 @@ class Connection:
                            password=password, tenant_name=tenant_name)
         sess = session.Session(auth=auth)
 
-        class ConnectionWrapper:
-
-            def __init__(self, nova, cinder, neutron, keystone):
-                self.nova = nova
-                self.neutron = neutron
-                self.cinder = cinder
-                self.keystone = keystone
-            pass
-
         self.__auth = auth
         self.__sess = sess
         __nova = client.Client('2', session=sess)
-        __cinder = cclient.Client('2', session=sess) 
+        __cinder = cclient.Client('2', session=sess)
         __neutron = nclient.Client('2.0', session=sess)
         __keystone = ksclient.Client(session=sess)
         self.__conn = ConnectionWrapper(__nova, __cinder, __neutron, __keystone)
         self.conn = ConnectionWrapper(__nova, __cinder, __neutron, __keystone)
-        del ConnectionWrapper
 
         self.userid = self.__conn.nova.client.get_user_id()
         self.user_is_project_admin = self.__conn.user_is_project_admin = bool(
@@ -381,7 +386,6 @@ class Connection:
         self.auth = auth
         self.sess = sess
         self.keystone = self.__conn.keystone
-        pass
 
     def add_user_role(self, user_id, tenant_name, role):
         tenant_id = self.__conn.keystone.tenants.find(
@@ -569,8 +573,9 @@ class Connection:
             if net['name'] == netname:
                 return net['id']
 
-    def create_network(self, network_name, provider_segmentation_id, shared=True,
-                       external=False, provider_network_type='gre',
+    def create_network(self, network_name, provider_segmentation_id,
+                       shared=True, external=False,
+                       provider_network_type='gre',
                        provider_physical_network=None, admin_state_up=True):
         request_body = dict()
         request_body['name'] = network_name
@@ -592,16 +597,21 @@ class Connection:
         """
         creates a subnet in the specified network
         :param name: string: name to give to the subnet
-        :param network_id: string: id of the network to which this subnet belongs
+        :param network_id: string: id of the network to which this subnet
+            belongs
         :param cidr: string: the CIDR to be assigned to the network
         :param ip_version: integer: 4 or 6, defaults to 4; optional
-        :param dns_nameservers: list: list of nameservers addresses to be used by this subnet; optional
+        :param dns_nameservers: list: list of nameservers addresses to be used
+            by this subnet; optional
         :param gateway_ip: string: default gateway IP of the subnet; optional
         :param enable_dhcp: boolean: True or False, default True; optional
-        :param host_routes: list: list of dictionaries of the format {destination:xxx, nexthop:xxx};
-                where destination is a CIDR and nexthop is IP address; optional
-        :param allocation_pool_start: string: starting address of the allocation pool; optional
-        :param allocation_pool_end: string: ending address of the allocation pool; optional
+        :param host_routes: list: list of dictionaries of the format
+            {destination:xxx, nexthop:xxx};
+            where destination is a CIDR and nexthop is IP address; optional
+        :param allocation_pool_start: string: starting address of the
+            allocation pool; optional
+        :param allocation_pool_end: string: ending address of the allocation
+            pool; optional
         :return:
         """
         if int(ip_version) not in (4, 6):
@@ -623,8 +633,12 @@ class Connection:
         request_body['ip_version'] = int(ip_version)
         request_body['host_routes'] = host_routes
         if allocation_pool_end is not None:
-            request_body['allocation_pools'] = [{'start': allocation_pool_start,
-                                                 'end': allocation_pool_end}]
+            request_body['allocation_pools'] = [
+                    {
+                        'start': allocation_pool_start,
+                        'end': allocation_pool_end
+                    }
+                ]
 
         subnet = self.__conn.neutron.\
             create_subnet(body={'subnet': request_body})
