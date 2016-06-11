@@ -11,9 +11,15 @@ def pending_requests():
         rows = db(db.vm_requests.state < 2).select()
         l = rows.as_list()
         pub_ip = 'public_ip_required'
+        flavors = {}
+        networks = {}
         for i in l:
-            i['flavor'] = flavor_info(i['flavor'])
-            i['sec_domain'] = network_name_from_id(i['sec_domain'])
+            if not flavors.has_key(i['flavor']):
+                flavors[i['flavor']] = flavor_info(i['flavor'])
+            i['flavor'] = flavors[i['flavor']]
+            if not networks.has_key(i['sec_domain']):
+                networks[i['sec_domain']] = network_name_from_id(i['sec_domain'])
+            i['sec_domain'] = networks[i['sec_domain']]
             i['request_time'] = seconds_to_localtime(i['request_time'])
             i[pub_ip] = 'Required' if i[pub_ip] == 1 else 'Not Required'
         return json.dumps({'data': l})
@@ -117,7 +123,7 @@ def all_vms():
     try:
         conn = Baadal.Connection(_authurl, _tenant, session.username,
                                  session.password)
-        vms = conn.baadal_vms(True)
+        vms = conn.baadal_vms(all_owners=True)
         response = list()
         images = dict()
         for vm in vms:
@@ -141,7 +147,7 @@ def all_vms():
             response.append(vm_properties)
         return jsonify(data=response)
     except Exception as e:
-        logger.error(e.message or str(e.__class__))
+        logger.exception(e.message or str(e.__class__))
         return jsonify(status='fail')
     finally:
         try:
