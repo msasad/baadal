@@ -22,7 +22,7 @@ def my_vms():
         conn = Baadal.Connection(_authurl, _tenant, session.username,
                                  session.password)
         images = dict()
-        vms = conn.baadal_vms()
+        vms = conn.baadal_vms(user=session.username)
         response = list()
         for vm in vms:
             vm_properties = vm.properties()

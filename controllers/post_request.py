@@ -4,16 +4,20 @@ from gluon.tools import Storage
 
 @auth.requires_login()
 def new_vm():
+    request_time = time.time()
     fields = validate_vm_request_form(request.vars)
+    approver_mail_required = False
+    mail2 = True
     if len(fields):
         raise HTTP(400,body=jsonify(status='fail', fields=fields))
     try:
-        if ('faculty' in auth.user_groups.values()) or \
-                ('admin' in auth.user_groups.values()):
+        if (ldap.user_is_faculty(session.username)) or \
+                (user_is_project_admin):
             owner_id = session.username
             vm_state = 1
         else:
             owner_id = request.vars.faculty
+            approver_mail_required = True
             vm_state = 0
 
         public_ip_required = 1 if request.vars.public_ip == 'yes' else 0
@@ -27,18 +31,26 @@ def new_vm():
                               public_ip_required=public_ip_required,
                               extra_storage=request.vars.storage,
                               collaborators=request.vars.collaborators,
-                              request_time=int(time.time()),
+                              request_time=request_time,
                               state=vm_state
                               )
         context = Storage()
         user_info = ldap.fetch_user_info(session.username)
         context.username = user_info['user_name']
         user_email = user_info['user_email']
-        context.user_email = user_email
         context.vm_name = request.vars.vm_name
         context.mail_support = mail_support
 
-        if mailer.send(mailer.MailTypes.VMRequest, user_email, context):
+        mail1 = mailer.send(mailer.MailTypes.VMRequest, user_email, context)
+        if approver_mail_required:
+            user_info = ldap.fetch_user_info(request.vars.faculty)
+            context.approver = user_info['user_name']
+            user_email = user_info['user_email']
+            context.request_type = 'New VM'
+            context.request_time = seconds_to_localtime(request_time)
+            mail2 = mailer.send(mailer.MailTypes.ApprovalReminder, user_email,
+                                context)
+        if mail1 and mail2:
             db.commit()
             return jsonify()
         else:

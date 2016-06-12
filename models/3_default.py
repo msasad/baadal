@@ -22,9 +22,8 @@ if auth.is_logged_in():
         user_is_project_admin = conn.user_is_project_admin
     except Exception as e:
         logger.exception(e.message + str(e.__class__))
-        logger.error('cannot determine if user in admin')
+        logger.error('cannot determine if user is admin')
         raise HTTP(500)
-        pass
     finally:
         try:
             conn.close()

@@ -117,13 +117,13 @@ var baadalApp = (function ($) {
     setupTable: function (isAdmin) {
       var dataURL = this.dataURL,
         emptyMsg = "You don't have any VMs currently! You may request" +
-              "one <a href=\"./form\">here</a>",
+              " one <a href=\"./form\">here</a>",
         columns,
         $dt;
       columns = isAdmin ? [
         { "data": "name" },
         { "data": "status" },
-        { "data": "user_id" },
+        { "data": "owner" },
         { "data": "flavor.id" },
         { "data": "image.info" },
         { "data": null },
@@ -133,7 +133,7 @@ var baadalApp = (function ($) {
       ] : [
         { "data": "name" },
         { "data": "status" },
-        { "data": "user_id" },
+        { "data": "owner" },
         { "data": "flavor.id" },
         { "data": "image.info" },
         { "data": null },

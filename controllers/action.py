@@ -257,14 +257,19 @@ def handle_disk_request():
                        action=request.vars.action)
 
 
-@auth.requires(user_is_project_admin)
+@auth.requires(user_is_project_admin or ldap.user_is_faculty(session.username))
 def handle_request():
     action = request.vars.action
     if action == 'approve':
-        return __create()
+        if user_is_project_admin:
+            return __create()
+        else:
+            raise HTTP(401)
     elif action == 'edit':
-        return __modify_request()
-        # return __create()
+        if user_is_project_admin:
+            return __modify_request()
+        else:
+            raise HTTP(401)
     elif action in ('reject', 'delete'):
         return __reject()
     elif action == 'faculty_edit':

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from gluon import current
 import datetime
 _EXTERNAL_NETWORK = 'ext-net'
 _UNKNOWN_ERROR_MSG = 'Unknown Error'
@@ -64,7 +65,16 @@ class BaadalVM(object):
         self.start_time = self.server.__getattr__('OS-SRV-USG:launched_at')
         self.security_domain = None
         self.snapshots = []
-        pass
+        metadata = self.server.metadata
+        self.owner = metadata.get('owner', None)
+        self.requester = metadata.get('requester', None)
+        if metadata.has_key('collaborators'):
+            self.collaborators = metadata['collaborators'].split(',')
+        else:
+            self.collaborators = []
+        self.allowed_users = [self.requester, self.owner]
+        self.allowed_users.extend(self.collaborators)
+        self.allowed_users = list(set(self.allowed_users))
 
     @staticmethod
     def __next_disk_letter(disks, prefix='/dev/vd'):
@@ -286,6 +296,7 @@ class BaadalVM(object):
         #     username = self.__conn.keystone.users.get(userid)
         #     if username:
         #         properties['owner'] = username.to_dict()
+        server_properties['owner'] = self.owner
         return server_properties
 
     def reboot(self, soft=True):
@@ -421,7 +432,14 @@ class Connection:
             values[item] = stats[USAGE_PARAMS[item]]
         return values
 
-    def baadal_vms(self, all_users=False):
+    @staticmethod
+    def __check_filter_sanity(collaborator, owner, requester):
+        c = bool(collaborator)
+        o = bool(owner)
+        r = bool(requester)
+        return c ^ o ^ r and not c & o & r
+
+    def baadal_vms(self, user=None, all_owners=False):
         """
         :param all_users: optional; list VMs belonging to all users in
         the project, requires admin role
@@ -429,19 +447,21 @@ class Connection:
         """
         if not self.__conn.nova:
             raise BaadalException('Not connected to openstack nova service')
-        if all_users:
+
+        all_vms = self.__conn.nova.servers.list()
+        all_vms = [BaadalVM(server=i, conn=self.__conn) for i in all_vms]
+        filtered_vms = []
+
+        if all_owners:
             if not self.user_is_project_admin:
                 raise BaadalException(
                     'Access denied! User must be project admin to list all VMs')
             else:
-                serverlist = self.__conn.nova.servers.list()
-        else:
-            serverlist = self.__conn.nova.servers.findall(
-                user_id=self.userid)
-        if serverlist:
-            serverlist = [BaadalVM(server=i, conn=self.__conn)
-                          for i in serverlist]
-        return serverlist or []
+                filtered_vms = all_vms
+        elif user:
+            filtered_vms = [vm for vm in all_vms if user in vm.allowed_users]
+
+        return filtered_vms
 
     def find_baadal_vm(self, **kwargs):
         """
@@ -453,7 +473,8 @@ class Connection:
         baadalvm = self.nova.servers.find(**kwargs)
         return BaadalVM(server=baadalvm, conn=self.conn)
 
-    def create_baadal_vm(self, name, image, template, nics, **kwargs):
+    def create_baadal_vm(self, name, image, template, nics, owner, requester,
+                         collaborators=None, **kwargs):
         """
         :param name:
         :param image:
@@ -476,6 +497,11 @@ class Connection:
                                                  nics=nics,
                                                  security_groups=[sec_group],
                                                  **kwargs)
+        while server.status != 'ACTIVE':
+            server = server.manager.find(id=server.id)
+        server.manager.set_meta_item(server, 'owner', owner)
+        server.manager.set_meta_item(server, 'requester', requester)
+        server.manager.set_meta_item(server, 'collaborators', collaborators)
         return BaadalVM(server=server, conn=self.__conn)
 
     def create_volume(self, size, imageref=None):

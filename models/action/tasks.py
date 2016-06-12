@@ -12,12 +12,17 @@ def task_create_vm(reqid, auth):
         conn = Baadal.Connection(_authurl, _tenant, auth.u, auth.p)
         name = req.vm_name
         img = req.image
+        owner = req.owner
+        collaborators = req.collaborators
+        requester = req.requester
         flavor = req.flavor
         nics = [{'net-id': req.sec_domain}]
         kp = default_keypair
         pub_ip = req.public_ip_required
         vdisk = req.extra_storage
-        vm = conn.create_baadal_vm(name, img, flavor, nics, key_name=kp)
+        vm = conn.create_baadal_vm(name, img, flavor, nics, key_name=kp,
+                                   requester=requester, owner=owner,
+                                   collaborators=collaborators)
         status = vm.get_status()
         while status not in ('Running', 'Error'):
             logger.info('VM %s in creation, current status %s' % \
@@ -29,7 +34,7 @@ def task_create_vm(reqid, auth):
             try:
                 req.update_record(state=REQUEST_STATUS_APPROVED)
                 context = Storage()
-                user_info = ldap.fetch_user_info(auth.u)
+                user_info = ldap.fetch_user_info(req.requester)
                 context.username = user_info['user_name']
                 context.user_email = user_info['user_email']
                 context.vm_name = name
@@ -48,7 +53,7 @@ def task_create_vm(reqid, auth):
                         disk = conn.create_volume(vdisk)
                         while disk.status != 'available':
                             disk = conn.get_disk_by_id(disk.id)
-                        num_disks = vm.metadata()['disks']
+                        num_disks = vm.metadata().get('disks', 0)
                         disk_path = '/dev/vd' + chr(97 + num_disks)
                         vm.attach_disk(disk, disk_path)
                         vm.update(disks=num_disks + 1)
@@ -140,6 +145,3 @@ def task_resize_vm(auth, reqid):
     finally:
         db.commit()
         conn.close()
-
-
-
