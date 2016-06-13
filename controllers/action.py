@@ -156,6 +156,9 @@ def index():
         conn = Baadal.Connection(_authurl, _tenant, session.username,
                                  session.password)
         vm = conn.find_baadal_vm(id=vmid)
+        if not (user_is_project_admin or session.username in vm.allowed_users):
+            raise HTTP(401, body='You are not allowed to perform the selected \
+                    action on the selected VM')
         if action == 'start':
             message = __start(vm)
         elif action == 'shutdown':
@@ -190,6 +193,8 @@ def index():
             message =  __attach_public_ip(vmid)
         message = message or action.capitalize() + ' request has been accepted.'
         return jsonify(message=message)
+    except HTTP as e:
+        raise e
     except Exception as e:
         logger.exception(e)
         return jsonify(status='fail')
