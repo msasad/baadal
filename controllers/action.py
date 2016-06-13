@@ -157,8 +157,8 @@ def index():
                                  session.password)
         vm = conn.find_baadal_vm(id=vmid)
         if not (user_is_project_admin or session.username in vm.allowed_users):
-            raise HTTP(401, body='You are not allowed to perform the selected \
-                    action on the selected VM')
+            raise HTTP(401, body='You are not allowed to perform the ' + \
+                    'selected action on the selected VM')
         if action == 'start':
             message = __start(vm)
         elif action == 'shutdown':
