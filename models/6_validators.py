@@ -123,6 +123,8 @@ def public_ip_is_valid(public_ip):
 
 
 def collaborators_is_valid(collaborators):
+    if collaborators.strip() == '':
+        return True
     for collaborator in collaborators.split(','):
         if not ldap.fetch_user_info(collaborator.strip()):
             return False
