@@ -256,6 +256,24 @@ var baadalApp = (function ($) {
         $('#vm-delete-confirmation').fadeOut();
       });
 
+      $(document.body).on('click', '#update-collaborators', function (e) {
+        e.preventDefault();
+        data.action = 'update-collaborators';
+        data.collaborators = $('#collaborators').val();
+        $.ajax({
+            type: 'post',
+            url: '/baadal/action/index.json',
+            data: data,
+            success: function(response) {
+                console.log(response);
+                $('#modal-info-message').html(response.message).fadeIn().siblings().hide();
+            },
+            error: function(error, response, code) {
+              $('#modal-error-message').html(error.responseText).fadeIn().siblings().hide();
+              console.log(error, response, code);
+            }
+        });
+      });
       $(document.body).on('click', btn_vm_del_yes, function () {
           data.action = 'delete';
           $.ajax({
@@ -320,6 +338,9 @@ var baadalApp = (function ($) {
             });
             $('#resize-form').fadeIn().siblings().hide();
           });
+          break;
+        case 'manage-users':
+          $('#edit-collaborators').fadeIn().siblings().hide();
           break;
         default:
           promise = baadalApp.requestAction(data);

@@ -191,6 +191,8 @@ def index():
             message = __add_virtual_disk(vmid, request.vars.disksize)
         elif action == 'attach-public-ip':
             message =  __attach_public_ip(vmid)
+        elif action == 'update-collaborators':
+            message =  __update_collaborators(vm)
         message = message or action.capitalize() + ' request has been accepted.'
         return jsonify(message=message)
     except HTTP as e:
@@ -198,6 +200,13 @@ def index():
     except Exception as e:
         logger.exception(e)
         return jsonify(status='fail')
+
+def __update_collaborators(vm):
+    if collaborators_is_valid(request.vars.collaborators):
+        vm.update(collaborators=request.vars.collaborators)
+        return 'VM collaborators has been updated successfully'
+    else:
+        raise HTTP(400, body='Invalid collaborators')
 
 
 def __add_virtual_disk(vmid, size):
