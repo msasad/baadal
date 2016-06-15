@@ -14,6 +14,8 @@ def pending_requests():
         flavors = {}
         networks = {}
         for i in l:
+            if i['owner'] is None:
+                i['owner'] = "IITD Admin"
             if not flavors.has_key(i['flavor']):
                 flavors[i['flavor']] = flavor_info(i['flavor'])
             i['flavor'] = flavors[i['flavor']]
