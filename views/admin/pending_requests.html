@@ -99,6 +99,7 @@
                 <th>Security Domain</th>
                 <th>Request Time</th>
                 <th>Collaborators</th>
+                <th>Approver</th>
                 <th>Actions</th>
                 <!--<th>Purpose</th> -->
             </tr>
@@ -137,15 +138,16 @@
       { "data": "public_ip_required" },
       { "data": "sec_domain" },
       { "data": "request_time" },
-      { "data": "collaborators" }
+      { "data": "collaborators" },
+      { "data": "owner" }
     ],
     "aoColumnDefs": [
       {
-        "aTargets": [7],
+        "aTargets": [8],
         "mData": null,
         "mRender": function (data, type, full) {
           approve_class = 'btn-success';
-          if(data.state == 0) {
+          if(data.state == 0 && data.owner != 'IITD Admin'){
               approve_class = 'btn-warning';
           }
 
@@ -218,8 +220,8 @@
         for (i = response.length-1; i>=0; i--) {
           console.log(response[i]);
           var curr_config = response[i];
-          var text = curr_config['vcpus'] + 'CPU, ' + curr_config['ram'] + 'MB RAM';
-          configSelect.options[configSelect.options.length] = new Option(text, curr_config['id'], data.flavor == curr_config.id);
+          var text = curr_config['vcpus'] + ' VCPUs, ' + curr_config['ram'] + ' MB RAM';
+          configSelect.options[configSelect.options.length] = new Option(text, curr_config['id'], data.flavor == text);
         }
       }
     });

@@ -77,7 +77,7 @@ db.define_table('floating_ip_requests',
                 Field('id', 'integer'),
                 Field('user', 'string', required=True),
                 Field('vmid', 'string', required=True),
-                Field('request_time', 'datetime'),
+                Field('request_time', 'datetime', default=request.now),
                 Field('status', 'integer')
                 )
 

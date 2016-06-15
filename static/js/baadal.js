@@ -117,13 +117,13 @@ var baadalApp = (function ($) {
     setupTable: function (isAdmin) {
       var dataURL = this.dataURL,
         emptyMsg = "You don't have any VMs currently! You may request" +
-              "one <a href=\"./form\">here</a>",
+              " one <a href=\"./form\">here</a>",
         columns,
         $dt;
       columns = isAdmin ? [
         { "data": "name" },
         { "data": "status" },
-        { "data": "user_id" },
+        { "data": "owner" },
         { "data": "flavor.id" },
         { "data": "image.info" },
         { "data": null },
@@ -133,7 +133,7 @@ var baadalApp = (function ($) {
       ] : [
         { "data": "name" },
         { "data": "status" },
-        { "data": "user_id" },
+        { "data": "owner" },
         { "data": "flavor.id" },
         { "data": "image.info" },
         { "data": null },
@@ -141,6 +141,7 @@ var baadalApp = (function ($) {
       ];
 
       this.$dt = this.table.DataTable({
+        "responsive": true,
         "ajax": {
           "url": dataURL,
           "error": function (response, code) {
@@ -195,8 +196,8 @@ var baadalApp = (function ($) {
     attachEvents: function () {
       var $this = this,
         actionbtn = '#' + $this.modalid + ' .btn-action',
-        btn_vm_del_yes = 'vm-delete-confirmation button[name=btn-yes]',
-        btn_vm_del_no = 'vm-delete-confirmation button[name=btn-no]',
+        btn_vm_del_yes = '#vm-delete-confirmation button[name=btn-yes]',
+        btn_vm_del_no = '#vm-delete-confirmation button[name=btn-no]',
         action,
         action_confirmed = false,
         data = {},
@@ -234,11 +235,16 @@ var baadalApp = (function ($) {
       $this.table.on('click', '.btn-settings', function (e) {
         var tr = this.closest('tr'),
           context = $this.$dt.row(tr).data(),
-          html;
+          html, keys;
         context['ip-addresses'] = baadalApp.ipObjectToString(context.addresses, true);
+        keys = Object.keys(context.addresses);
+        console.log(context.addresses);
         html = $this.dialogTmpl(context);
         $(document.body).prepend(html);
         $this.$modal = $('#' + $this.modalid).modal('show');
+        if (context.addresses[keys[0]].length === 2) {
+            $this.$modal.find('[data-action=attach-public-ip]').attr('disabled', 'disabled');
+        }
         $this.$modal.on('hidden.bs.modal', function () {
           $this.$modal.remove();
           $this.$dt.ajax.reload();
@@ -247,7 +253,41 @@ var baadalApp = (function ($) {
       });
 
       $(document.body).on('click', btn_vm_del_no, function () {
-        $('#vm-delete-confirmation').slideUp();
+        $('#vm-delete-confirmation').fadeOut();
+      });
+
+      $(document.body).on('click', '#update-collaborators', function (e) {
+        e.preventDefault();
+        data.action = 'update-collaborators';
+        data.collaborators = $('#collaborators').val();
+        $.ajax({
+            type: 'post',
+            url: '/baadal/action/index.json',
+            data: data,
+            success: function(response) {
+                console.log(response);
+                $('#modal-info-message').html(response.message).fadeIn().siblings().hide();
+            },
+            error: function(error, response, code) {
+              $('#modal-error-message').html(error.responseText).fadeIn().siblings().hide();
+              console.log(error, response, code);
+            }
+        });
+      });
+      $(document.body).on('click', btn_vm_del_yes, function () {
+          data.action = 'delete';
+          $.ajax({
+              type: 'post',
+              url: '/baadal/action/index.json',
+              data: data,
+              success: function(response) {
+                  console.log(response);
+                  $('#modal-info-message').html(response.message).fadeIn().siblings().hide();
+              },
+              error: function(error, response, code) {
+                  console.log(error, response, code);
+              }
+          });
       });
 
       $(document.body).on('click', '#btn-resize-request', function (e) {
@@ -280,11 +320,11 @@ var baadalApp = (function ($) {
         data.vmid = vmid;
         switch (action) {
         case 'delete':
-          $('#vm-delete-confirmation').fadeIn().siblings().hide();
-          this.children.namedItem('btn-yes').addEventListener('click', function () {
-            action_confirmed = true;
-          });
-          break;
+           $('#vm-delete-confirmation').fadeIn().siblings().hide();
+        //   $this.children.namedItem('btn-yes').addEventListener('click', function () {
+        //     action_confirmed = true;
+        //   });
+           break;
         case 'add-virtual-disk':
           $('#disk-size-input').fadeIn().siblings().hide();
           break;
@@ -298,6 +338,9 @@ var baadalApp = (function ($) {
             });
             $('#resize-form').fadeIn().siblings().hide();
           });
+          break;
+        case 'manage-users':
+          $('#edit-collaborators').fadeIn().siblings().hide();
           break;
         default:
           promise = baadalApp.requestAction(data);
@@ -313,7 +356,7 @@ var baadalApp = (function ($) {
       });
 
       // Event handler for snapshot-restore buttons
-      $(document.body).on('click', '#' + $this.modalid + '.snapshot-restore', function (e) {
+      $(document.body).on('click', '#' + $this.modalid + ' .snapshot-restore', function (e) {
         var vmid = document.getElementById('vmid').value;
         $.ajax({
           url: '/baadal/action/index.json',
@@ -322,9 +365,33 @@ var baadalApp = (function ($) {
             vmid: vmid,
             action: 'restore-snapshot',
             snapshot_id: this.closest('tr').getAttribute('data-snapshot-id')
+          },
+          success: function(response) {
+              if (response.message) {
+                  $('#modal-info-message').html(response.message).fadeIn().siblings().hide();
+              }
           }
         });
       });
+
+      $(document.body).on('click', '.snapshot-delete', function (e) {
+        var vmid = document.getElementById('vmid').value;
+        $.ajax({
+          url: '/baadal/action/index.json',
+          type: 'post',
+          data: {
+            vmid: vmid,
+            action: 'delete-snapshot',
+            snapshot_id: this.closest('tr').getAttribute('data-snapshot-id')
+          },
+          success: function(response) {
+              if (response.message) {
+                  $('#modal-info-message').html(response.message).fadeIn().siblings().hide();
+              }
+          }
+        });
+      });
+
 
       $(document.body).on('click', '#fetch-snapshots', function (e) {
         var $tr = $(this),

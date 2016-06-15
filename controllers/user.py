@@ -1,3 +1,6 @@
+from novaclient.exceptions import NotFound
+
+
 @auth.requires_login()
 def index():
     return dict()
@@ -19,17 +22,20 @@ def my_vms():
         conn = Baadal.Connection(_authurl, _tenant, session.username,
                                  session.password)
         images = dict()
-        vms = conn.baadal_vms()
+        vms = conn.baadal_vms(user=session.username)
         response = list()
         for vm in vms:
             vm_properties = vm.properties()
             image_id = vm_properties['image']['id']
             if not images.has_key(image_id):
-                image = conn.find_image(id=image_id)
-                meta = image.metadata
-                images[image_id] = ' '.join([meta['os_name'],
-                    meta['os_version'], meta['os_arch'],
-                    meta['os_edition'], meta['disk_size']])
+                try:
+                    image = conn.find_image(id=image_id)
+                    meta = image.metadata
+                    images[image_id] = ' '.join([meta['os_name'],
+                        meta['os_version'], meta['os_arch'],
+                        meta['os_edition'], meta['disk_size']])
+                except NotFound:
+                    images[image_id] = 'Image not found'
             vm_properties['image']['info'] = images[image_id]
             response.append(vm_properties)
         #     snapshots = vm.properties()['snapshots']

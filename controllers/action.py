@@ -119,10 +119,19 @@ def __power_off(vm):
 
 
 def __restore_snapshot(vmid):
+    auth = b64encode(dumps(dict(u=session.username, p=session.password)))
     snapshot_id = request.vars.snapshot_id
     pvars = dict(auth=auth, vmid=vmid, snapshot_id=snapshot_id)
     scheduler.queue_task(task_restore_snapshot, timeout=600,
                          pvars=pvars)
+
+
+def __delete_snapshot(vmid):
+    auth = b64encode(dumps(dict(u=session.username, p=session.password)))
+    snapshot_id = request.vars.snapshot_id
+    pvars = dict(auth=auth, vmid=vmid, snapshot_id=snapshot_id)
+    logger.debug(pvars)
+    scheduler.queue_task(task_delete_snapshot, timeout=600, pvars=pvars)
 
 
 def __get_console_url(vm):
@@ -147,6 +156,9 @@ def index():
         conn = Baadal.Connection(_authurl, _tenant, session.username,
                                  session.password)
         vm = conn.find_baadal_vm(id=vmid)
+        if not (user_is_project_admin or session.username in vm.allowed_users):
+            raise HTTP(401, body='You are not allowed to perform the ' + \
+                    'selected action on the selected VM')
         if action == 'start':
             message = __start(vm)
         elif action == 'shutdown':
@@ -171,17 +183,30 @@ def index():
             message = __power_off(vm)
         elif action == 'restore-snapshot':
             message = __restore_snapshot(vmid)
+        elif action == 'delete-snapshot':
+            message = __delete_snapshot(vmid)
         elif action == 'migrate':
             message = __migrate(vmid)
         elif action == 'add-virtual-disk':
             message = __add_virtual_disk(vmid, request.vars.disksize)
         elif action == 'attach-public-ip':
             message =  __attach_public_ip(vmid)
+        elif action == 'update-collaborators':
+            message =  __update_collaborators(vm)
         message = message or action.capitalize() + ' request has been accepted.'
         return jsonify(message=message)
+    except HTTP as e:
+        raise e
     except Exception as e:
         logger.exception(e)
         return jsonify(status='fail')
+
+def __update_collaborators(vm):
+    if collaborators_is_valid(request.vars.collaborators):
+        vm.update(collaborators=request.vars.collaborators)
+        return 'VM collaborators has been updated successfully'
+    else:
+        raise HTTP(400, body='Invalid collaborators')
 
 
 def __add_virtual_disk(vmid, size):
@@ -246,14 +271,19 @@ def handle_disk_request():
                        action=request.vars.action)
 
 
-@auth.requires(user_is_project_admin)
+@auth.requires(user_is_project_admin or ldap.user_is_faculty(session.username))
 def handle_request():
     action = request.vars.action
     if action == 'approve':
-        return __create()
+        if user_is_project_admin:
+            return __create()
+        else:
+            raise HTTP(401)
     elif action == 'edit':
-        return __modify_request()
-        # return __create()
+        if user_is_project_admin:
+            return __modify_request()
+        else:
+            raise HTTP(401)
     elif action in ('reject', 'delete'):
         return __reject()
     elif action == 'faculty_edit':
@@ -454,13 +484,21 @@ def __attach_vm_public_ip():
 @auth.requires(user_is_project_admin)
 def handle_clone_request():
     try:
-        conn = Baadal.Connection(_authurl, _tenant, session.username,
-                                 session.password)
-        row = db(db.clone_requests.id == request.vars.id).select()[0]
-        vm = conn.find_baadal_vm(id=row.vm_id)
-        vm.clone()
-        row.update_record(status=1)
-        db.commit()
+        if request.vars.action == 'approve':
+            row = db(db.clone_requests.id == request.vars.id).select()[0]
+            row.update_record(status=REQUEST_STATUS_PROCESSING)
+            auth = b64encode(dumps(dict(u=session.username,
+                             p=session.password)))
+            scheduler.queue_task(task_clone_vm, timeout=600,
+                                 pvars={'reqid': row.id, 'auth': auth})
+            db.commit()
+            return jsonify(message='Request successfully approved')
+        elif request.vars.action == 'reject':
+            db(db.clone_requests.id == request.vars.id).delete()
+            db.commit()
+            return jsonify(message='Request successfully deleted')
+        else:
+            raise HTTP(400)
     except Exception as e:
         message = e.message or str(e.__class__)
         logger.error(message)

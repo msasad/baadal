@@ -64,7 +64,16 @@ class BaadalVM(object):
         self.start_time = self.server.__getattr__('OS-SRV-USG:launched_at')
         self.security_domain = None
         self.snapshots = []
-        pass
+        metadata = self.server.metadata
+        self.owner = metadata.get('owner', None)
+        self.requester = metadata.get('requester', None)
+        if metadata.has_key('collaborators'):
+            self.collaborators = metadata['collaborators'].split(',')
+        else:
+            self.collaborators = []
+        self.allowed_users = [self.requester, self.owner]
+        self.allowed_users.extend(self.collaborators)
+        self.allowed_users = list(set(self.allowed_users))
 
     @staticmethod
     def __next_disk_letter(disks, prefix='/dev/vd'):
@@ -130,9 +139,7 @@ class BaadalVM(object):
          defaults to Full (optional)
         :return:
         """
-        # create a snapshot of the  machine
-        # create a new vm using the newly created snapshot
-        # delete the snapshot
+
         clone_name = clone_name or self.server.name + '_clone'
         flavor_id = self.server.flavor['id']
         networks = self.get_networks().keys()
@@ -144,7 +151,6 @@ class BaadalVM(object):
         image = self.__conn.nova.images.find(id=snapshot_id)
         while image.status != 'ACTIVE':
             image = self.__conn.nova.images.find(id=snapshot_id)
-            pass
         else:
             flavor = self.__conn.nova.flavors.find(id=flavor_id)
             clone = self.server.manager.create(clone_name, image,
@@ -154,7 +160,6 @@ class BaadalVM(object):
             while clone.status != 'ACTIVE':
                 clone = clone.manager.find(id=clone.id)
             else:
-                image.delete()
                 attached_disks = self.get_attached_disks()
                 for i in attached_disks:
                     volid = i['id']
@@ -290,6 +295,7 @@ class BaadalVM(object):
         #     username = self.__conn.keystone.users.get(userid)
         #     if username:
         #         properties['owner'] = username.to_dict()
+        server_properties['owner'] = self.owner
         return server_properties
 
     def reboot(self, soft=True):
@@ -317,7 +323,8 @@ class BaadalVM(object):
         res = self.server.resume()
         return res
 
-    def restore_snapshot(self, snapshot_id, password=None, preserve_ephemeral=False, **kwargs):
+    def restore_snapshot(self, snapshot_id, password=None,
+                         preserve_ephemeral=False, **kwargs):
         self.server.rebuild(snapshot_id, password=password,
                             preserve_ephemeral=preserve_ephemeral, **kwargs)
 
@@ -343,9 +350,19 @@ class BaadalVM(object):
         return self.server.metadata
 
 
+class ConnectionWrapper:
+
+    def __init__(self, nova, cinder, neutron, keystone):
+        self.nova = nova
+        self.neutron = neutron
+        self.cinder = cinder
+        self.keystone = keystone
+
+
 class Connection:
     """
-    A wrapper class for objects of novaclient, neutronclient, cinderclient and keystoneclient
+    A wrapper class for objects of novaclient, neutronclient, cinderclient
+    and keystoneclient
     """
 
     def __init__(self, authurl, tenant_name, username, password):
@@ -359,24 +376,14 @@ class Connection:
                            password=password, tenant_name=tenant_name)
         sess = session.Session(auth=auth)
 
-        class ConnectionWrapper:
-
-            def __init__(self, nova, cinder, neutron, keystone):
-                self.nova = nova
-                self.neutron = neutron
-                self.cinder = cinder
-                self.keystone = keystone
-            pass
-
         self.__auth = auth
         self.__sess = sess
         __nova = client.Client('2', session=sess)
-        __cinder = cclient.Client('2', session=sess) 
+        __cinder = cclient.Client('2', session=sess)
         __neutron = nclient.Client('2.0', session=sess)
         __keystone = ksclient.Client(session=sess)
         self.__conn = ConnectionWrapper(__nova, __cinder, __neutron, __keystone)
         self.conn = ConnectionWrapper(__nova, __cinder, __neutron, __keystone)
-        del ConnectionWrapper
 
         self.userid = self.__conn.nova.client.get_user_id()
         self.user_is_project_admin = self.__conn.user_is_project_admin = bool(
@@ -389,7 +396,6 @@ class Connection:
         self.auth = auth
         self.sess = sess
         self.keystone = self.__conn.keystone
-        pass
 
     def add_user_role(self, user_id, tenant_name, role):
         tenant_id = self.__conn.keystone.tenants.find(
@@ -425,7 +431,14 @@ class Connection:
             values[item] = stats[USAGE_PARAMS[item]]
         return values
 
-    def baadal_vms(self, all_users=False):
+    @staticmethod
+    def __check_filter_sanity(collaborator, owner, requester):
+        c = bool(collaborator)
+        o = bool(owner)
+        r = bool(requester)
+        return c ^ o ^ r and not c & o & r
+
+    def baadal_vms(self, user=None, all_owners=False):
         """
         :param all_users: optional; list VMs belonging to all users in
         the project, requires admin role
@@ -433,19 +446,21 @@ class Connection:
         """
         if not self.__conn.nova:
             raise BaadalException('Not connected to openstack nova service')
-        if all_users:
+
+        all_vms = self.__conn.nova.servers.list()
+        all_vms = [BaadalVM(server=i, conn=self.__conn) for i in all_vms]
+        filtered_vms = []
+
+        if all_owners:
             if not self.user_is_project_admin:
                 raise BaadalException(
                     'Access denied! User must be project admin to list all VMs')
             else:
-                serverlist = self.__conn.nova.servers.list()
-        else:
-            serverlist = self.__conn.nova.servers.findall(
-                user_id=self.userid)
-        if serverlist:
-            serverlist = [BaadalVM(server=i, conn=self.__conn)
-                          for i in serverlist]
-        return serverlist or []
+                filtered_vms = all_vms
+        elif user:
+            filtered_vms = [vm for vm in all_vms if user in vm.allowed_users]
+
+        return filtered_vms
 
     def find_baadal_vm(self, **kwargs):
         """
@@ -457,7 +472,8 @@ class Connection:
         baadalvm = self.nova.servers.find(**kwargs)
         return BaadalVM(server=baadalvm, conn=self.conn)
 
-    def create_baadal_vm(self, name, image, template, nics, **kwargs):
+    def create_baadal_vm(self, name, image, template, nics, owner, requester,
+                         collaborators=None, **kwargs):
         """
         :param name:
         :param image:
@@ -480,6 +496,11 @@ class Connection:
                                                  nics=nics,
                                                  security_groups=[sec_group],
                                                  **kwargs)
+        while server.status != 'ACTIVE':
+            server = server.manager.find(id=server.id)
+        server.manager.set_meta_item(server, 'owner', owner)
+        server.manager.set_meta_item(server, 'requester', requester)
+        server.manager.set_meta_item(server, 'collaborators', collaborators)
         return BaadalVM(server=server, conn=self.__conn)
 
     def create_volume(self, size, imageref=None):
@@ -577,8 +598,9 @@ class Connection:
             if net['name'] == netname:
                 return net['id']
 
-    def create_network(self, network_name, provider_segmentation_id, shared=True,
-                       external=False, provider_network_type='gre',
+    def create_network(self, network_name, provider_segmentation_id,
+                       shared=True, external=False,
+                       provider_network_type='gre',
                        provider_physical_network=None, admin_state_up=True):
         request_body = dict()
         request_body['name'] = network_name
@@ -600,16 +622,21 @@ class Connection:
         """
         creates a subnet in the specified network
         :param name: string: name to give to the subnet
-        :param network_id: string: id of the network to which this subnet belongs
+        :param network_id: string: id of the network to which this subnet
+            belongs
         :param cidr: string: the CIDR to be assigned to the network
         :param ip_version: integer: 4 or 6, defaults to 4; optional
-        :param dns_nameservers: list: list of nameservers addresses to be used by this subnet; optional
+        :param dns_nameservers: list: list of nameservers addresses to be used
+            by this subnet; optional
         :param gateway_ip: string: default gateway IP of the subnet; optional
         :param enable_dhcp: boolean: True or False, default True; optional
-        :param host_routes: list: list of dictionaries of the format {destination:xxx, nexthop:xxx};
-                where destination is a CIDR and nexthop is IP address; optional
-        :param allocation_pool_start: string: starting address of the allocation pool; optional
-        :param allocation_pool_end: string: ending address of the allocation pool; optional
+        :param host_routes: list: list of dictionaries of the format
+            {destination:xxx, nexthop:xxx};
+            where destination is a CIDR and nexthop is IP address; optional
+        :param allocation_pool_start: string: starting address of the
+            allocation pool; optional
+        :param allocation_pool_end: string: ending address of the allocation
+            pool; optional
         :return:
         """
         if int(ip_version) not in (4, 6):
@@ -631,8 +658,12 @@ class Connection:
         request_body['ip_version'] = int(ip_version)
         request_body['host_routes'] = host_routes
         if allocation_pool_end is not None:
-            request_body['allocation_pools'] = [{'start': allocation_pool_start,
-                                                 'end': allocation_pool_end}]
+            request_body['allocation_pools'] = [
+                    {
+                        'start': allocation_pool_start,
+                        'end': allocation_pool_end
+                    }
+                ]
 
         subnet = self.__conn.neutron.\
             create_subnet(body={'subnet': request_body})

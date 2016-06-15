@@ -82,7 +82,8 @@ Configure keystone to use LDAP for identity
     - add entry of each enabled user in group enabled_users
 
 To implement custom access control
-    - configure /etc/nova/policy.json file to allow all users to list, start, shutdown VM owned by any user
+    - configure /etc/nova/policy.json file to allow all users to list, start,
+        get_vnc_console, shutdown VM owned by any user
 
 Set unlimited quotas for all services and theirs resources including
     cinder

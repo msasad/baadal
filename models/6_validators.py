@@ -123,16 +123,16 @@ def public_ip_is_valid(public_ip):
 
 
 def collaborators_is_valid(collaborators):
-    valid = True
-    return valid
+    if collaborators.strip() == '':
+        return True
+    for collaborator in collaborators.split(','):
+        if not ldap.fetch_user_info(collaborator.strip()):
+            return False
+    return True
 
 
 def faculty_is_valid(faculty):
-    valid = True
-
-    return valid
-    pass
-
+    return faculty is None or ldap.user_is_faculty(faculty)
 
 def validate_subnet_form(vars):
     fields = []

@@ -25,8 +25,8 @@ class BaadalMailer(object):
 
         class ApprovalReminder(object):
             subject = 'Request waiting for your approval'
-            mailbody = "Dear {0[approver]},\n\n{0[user]} has made a "\
-                "'{0[requestType]}' request on {0[requestTime]}. It is "\
+            mailbody = "Dear {0[approver]},\n\n{0[username]} has made a "\
+                "'{0[request_type]}' request on {0[request_time]}. It is "\
                 "waiting for your approval."
 
         class IPRequest(object):
@@ -39,8 +39,8 @@ class BaadalMailer(object):
             subject = 'Your BaadalVM has been created'
             mailbody = ("Dear {0[username]},\n\nThe VM {0[vm_name]}, requested"
                 " at {0[request_time]} is successfully created and is now"
-                " available for use. To access your VM from within the web"
-                " browser, login to Baadal using your credentials and click"
+                " available for use.\n To access your VM from within the web"
+                " browser, login to Baadal using your credentials\n and click"
                 " on the open console icon, which looks like >_\n"
                 " Default credentials for VM is as follows:"
                 " \nUsername:root/baadalservervm/baadaldesktopvm\n"
