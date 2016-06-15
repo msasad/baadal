@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-from gluon import current
 import datetime
 _EXTERNAL_NETWORK = 'ext-net'
 _UNKNOWN_ERROR_MSG = 'Unknown Error'

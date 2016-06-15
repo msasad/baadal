@@ -218,8 +218,8 @@
         for (i = response.length-1; i>=0; i--) {
           console.log(response[i]);
           var curr_config = response[i];
-          var text = curr_config['vcpus'] + 'CPU, ' + curr_config['ram'] + 'MB RAM';
-          configSelect.options[configSelect.options.length] = new Option(text, curr_config['id'], data.flavor == curr_config.id);
+          var text = curr_config['vcpus'] + ' VCPUs, ' + curr_config['ram'] + ' MB RAM';
+          configSelect.options[configSelect.options.length] = new Option(text, curr_config['id'], data.flavor == text);
         }
       }
     });
