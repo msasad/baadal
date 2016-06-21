@@ -203,6 +203,9 @@ def index():
 
 def __update_collaborators(vm):
     if collaborators_is_valid(request.vars.collaborators):
+        collaborators = collaborators.strip().split(',')
+        collaborators = ','.join([collaborator.strip() for collaborator \
+                in collaborators()])
         vm.update(collaborators=request.vars.collaborators)
         return 'VM collaborators has been updated successfully'
     else:

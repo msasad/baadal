@@ -500,6 +500,9 @@ class Connection:
             server = server.manager.find(id=server.id)
         server.manager.set_meta_item(server, 'owner', owner)
         server.manager.set_meta_item(server, 'requester', requester)
+        collaborators = collaborators.strip().split(',')
+        collaborators = ','.join([collaborator.strip() for collaborator \
+                in collaborators()])
         server.manager.set_meta_item(server, 'collaborators', collaborators)
         return BaadalVM(server=server, conn=self.__conn)
 
