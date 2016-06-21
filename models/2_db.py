@@ -21,8 +21,8 @@ password = config.get('database', 'password')
 dbname = config.get('database', 'database')
 
 db = DAL('mysql://' + username + ':' + password + '@' + dbhost + '/' + dbname,
-         migrate=True)
-#         fake_migrate_all=True)
+#         migrate=True)
+         fake_migrate_all=True)
 db.define_table('vm_requests',
                 Field('id', 'integer'),
                 Field('vm_name', 'string'),
