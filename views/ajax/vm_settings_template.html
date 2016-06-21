@@ -18,7 +18,7 @@
                 <th>State</th>
                 <th>IP Address(es)</th>
                 <th>Config</th>
-                <th>Users</th>
+                <th>Owner</th>
               </tr>
               </thead>
               <tbody>
@@ -27,7 +27,7 @@
                 <td>{{status}}</td>
                 <td>{{{ip-addresses}}}</td>
                 <td>{{flavor.id}}</td>
-                <td>{{user_id}}</td>
+                <td>{{owner}}</td>
               </tr>
               </tbody>
             </table>
@@ -131,7 +131,7 @@
               <form class="form-inline">
                 <div class="form-group">
                   <label for="collaborators" class="control-label">Collaborators</label>
-                  <input class="form-control" name="collaborators" id="collaborators" value={{metadata.collaborators}} />
+                  <input class="form-control" name="collaborators" id="collaborators" value="{{metadata.collaborators}}" />
                   <button class="btn btn-primary btn-sm" id="update-collaborators">
                     Update Collaborators
                   </button>
