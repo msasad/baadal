@@ -502,7 +502,7 @@ class Connection:
         server.manager.set_meta_item(server, 'requester', requester)
         collaborators = collaborators.strip().split(',')
         collaborators = ','.join([collaborator.strip() for collaborator \
-                in collaborators()])
+                in collaborators])
         server.manager.set_meta_item(server, 'collaborators', collaborators)
         return BaadalVM(server=server, conn=self.__conn)
 
