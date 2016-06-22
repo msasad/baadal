@@ -206,7 +206,7 @@ def __update_collaborators(vm):
         collaborators = request.vars.collaborators.strip().split(',')
         collaborators = ','.join([collaborator.strip() for collaborator \
                 in collaborators])
-        vm.update(collaborators=request.vars.collaborators)
+        vm.update(collaborators=collaborators)
         return 'VM collaborators has been updated successfully'
     else:
         raise HTTP(400, body='Invalid collaborators')
