@@ -127,6 +127,7 @@ var baadalApp = (function ($) {
         { "data": "flavor.id" },
         { "data": "image.info" },
         { "data": null },
+        { "data": null },
         { "data": "OS-EXT-SRV-ATTR:instance_name"  },
         { "data": "OS-EXT-SRV-ATTR:host" },
         { "data": null }
@@ -162,6 +163,20 @@ var baadalApp = (function ($) {
           "mData": null,
           "mRender": function (data, type, full) {
             if (type === 'display' || type === 'filter') {
+              var arr = [];
+              data.security_groups.forEach(function(sgroup) {
+                arr.push(sgroup.name);
+              });
+              return arr.length ? arr.join(', ') : 'None';
+            }
+            return data;
+          }
+        },{
+          "aTargets": [6],
+          "bSortable": false,
+          "mData": null,
+          "mRender": function (data, type, full) {
+            if (type === 'display' || type === 'filter') {
               var addresses = data.addresses;
               if (typeof addresses === "object") {
                 return baadalApp.ipObjectToString(addresses);
@@ -170,7 +185,7 @@ var baadalApp = (function ($) {
             return data;
           }
         }, {
-          "aTargets": [isAdmin ? 8 : 6],
+          "aTargets": [isAdmin ? 9 : 7],
           "bSortable": false,
           "mData": null,
           "mRender": function (data, type, full) {
