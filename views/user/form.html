@@ -194,6 +194,7 @@
           for ( var id of response.fields ) {
             document.getElementById(id).parentElement.classList.add('has-error');
           }
+          e.currentTarget.disabled = false;
         }
       }
     });
