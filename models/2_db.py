@@ -106,7 +106,7 @@ auth.settings.login_methods.append(ldap_auth(mode='custom',
                                    custom_scope='subtree',
                                    server=ldap_host, base_dn=ldap_dn))
 auth.settings.create_user_groups = False
-auth.settings.login_onaccept = [login_callback]
+#auth.settings.login_onaccept = [login_callback]
 
 auth.settings.remember_me_form = False
 auth.settings.logout_next = '/baadal/default/user/login'
