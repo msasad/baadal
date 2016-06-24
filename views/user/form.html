@@ -177,7 +177,9 @@
       'dataType' : 'json',
       'success' : function(response){
         if(response.status == 'success') {
-          $('#success-message').fadeIn();
+          $('#success-message').fadeIn(500, function() {
+            window.location = window.location.origin;
+          });
         }
       },
       'error' : function(response) {
@@ -195,6 +197,7 @@
         }
       }
     });
+    e.currentTarget.disabled = true;
   });
 
   $('#vm_request').on('focusin', '.form-control, #public_ip', function(e) {
