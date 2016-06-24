@@ -144,7 +144,8 @@
       for (var i = response.length-1; i>=0; i--) {
         var curr_template = response[i];
         var text = curr_template['os_name'] + ' ' + curr_template['os_version']
-          + ' ' + curr_template['os_arch'] + ' ' + curr_template['disk_size'];
+          + ' ' + curr_template['os_arch'] + ' ' + curr_template['disk_size'] 
+          + ' ' + curr_template['os_edition'];
         templateSelect.options[templateSelect.options.length] = new Option(text, curr_template['id']);
       }
     }
