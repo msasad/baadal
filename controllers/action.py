@@ -143,8 +143,8 @@ def __get_console_url(vm):
         return '<a target="_blank" href="{0}">{0}</a>'.format(consoleurl)
 
 
-def __migrate(vmid):
-    pvars = dict(auth=auth, vmid=vmid, live=False)
+def __migrate(vm):
+    pvars = dict(auth=auth, vmid=vm.id, live=False)
     if vm.get_status() == 'Running':
         pvars['live'] = True
     scheduler.queue_task(task_migrate_vm, timeout=600, pvars=pvars)
