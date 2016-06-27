@@ -144,6 +144,7 @@ def __get_console_url(vm):
 
 
 def __migrate(vm):
+    auth = b64encode(dumps(dict(u=session.username, p=session.password)))
     pvars = dict(auth=auth, vmid=vm.id, live=False)
     if vm.get_status() == 'Running':
         pvars['live'] = True
