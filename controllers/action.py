@@ -144,7 +144,9 @@ def __get_console_url(vm):
 
 
 def __migrate(vmid):
-    pvars = dict(auth=auth, vmid=vmid)
+    pvars = dict(auth=auth, vmid=vmid, live=False)
+    if vm.get_status() == 'Running':
+        pvars['live'] = True
     scheduler.queue_task(task_migrate_vm, timeout=600, pvars=pvars)
 
 
@@ -186,7 +188,7 @@ def index():
         elif action == 'delete-snapshot':
             message = __delete_snapshot(vmid)
         elif action == 'migrate':
-            message = __migrate(vmid)
+            message = __migrate(vm)
         elif action == 'add-virtual-disk':
             message = __add_virtual_disk(vmid, request.vars.disksize)
         elif action == 'attach-public-ip':

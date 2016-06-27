@@ -73,10 +73,9 @@ def task_create_vm(reqid, auth):
 def task_migrate_vm(auth, vmid, live=False, destination=None):
     auth = Storage(loads(b64decode(auth)))
     conn = Baadal.Connection(_authurl, _tenant, auth.u, auth.p)
-    if live:
-        pass
-    else:
-        pass
+    vm = conn.find_baadal_vm(id=vmid)
+    if vm:
+        vm.migrate(live=live)
 
 
 def task_snapshot_vm(auth, vmid):

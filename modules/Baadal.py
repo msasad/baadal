@@ -248,11 +248,14 @@ class BaadalVM(object):
         snapshots.sort(cmp=self.__cmp, reverse=True)
         return snapshots[0]
 
-    def migrate(self, live=False):
-        if live is True:
+    def migrate(self, live=False, target=None):
+        if live is False:
             res = self.server.migrate()
         else:
-            res = self.server.live_migrate()
+            if target:
+                res = self.server.live_migrate(host=target)
+            else:
+                res = self.server.live_migrate()
         return res
 
     def pause(self, ):
