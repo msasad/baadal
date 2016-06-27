@@ -260,7 +260,7 @@ class BaadalVM(object):
             self.refresh_status()
         else:
             if self.get_status() == 'Error':
-                logger.error('There was some error while migrating the ' +
+                logger.error('There was some error while migrating the ' + \
                         'instance ' + vm.id)
             elif:
                 self.get_status() == 'Resizing':
