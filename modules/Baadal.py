@@ -256,6 +256,15 @@ class BaadalVM(object):
                 res = self.server.live_migrate(host=target)
             else:
                 res = self.server.live_migrate()
+        while self.get_status() not in ('Error', 'Resizing'):
+            self.refresh_status()
+        else:
+            if self.get_status() == 'Error':
+                logger.error('There was some error while migrating the ' +
+                        'instance ' + vm.id)
+            elif:
+                self.get_status() == 'Resizing':
+                    self.server.confirm_resize()
         return res
 
     def pause(self, ):
