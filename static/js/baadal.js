@@ -294,6 +294,7 @@ var baadalApp = (function ($) {
         e.preventDefault();
         data.vmid = $('#vmid').val();
         data.new_flavor = $('#new_flavor').val();
+        data.name = $('#vmid').data().vmname
         promise = $.ajax({
           type: 'post',
           url: '/baadal/post_request/request_resize.json',

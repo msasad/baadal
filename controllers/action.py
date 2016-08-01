@@ -481,6 +481,23 @@ def __attach_vm_public_ip():
          except:
             pass
 
+
+
+def debug_info_message():
+    try:
+        row = db(db.scheduler_run.task_id == request.vars.id).select()[0]
+        logger.debug(row)
+        msg = row.traceback
+        logger.debug(msg)
+        return jsonify(message = msg)
+    except Exception as e:
+        message = e.message or str(e.__class__)
+        logger.error(message)
+        return jsonify(status='fail', message=message)
+    finally:
+            pass
+
+
 @auth.requires(user_is_project_admin)
 def handle_clone_request():
     try:

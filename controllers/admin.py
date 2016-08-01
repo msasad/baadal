@@ -286,6 +286,373 @@ def account_requests():
 
 
 @auth.requires(user_is_project_admin)
+def tasks():
+    if request.extension in ('', None, 'html'):
+        return dict()
+    elif request.extension == 'json':
+        response = []
+        spurious_requests = []
+        cache = {}
+        try:
+            rows = db(db.virtual_disk_requests.status == 0).select()
+            conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                     session.password)
+            for row in rows:
+                try:
+                    cr = {}
+                    if not cache.has_key(row.vmid):
+                        vm = conn.find_baadal_vm(id=row.vmid)
+                        cache[row.vmid] = vm.name
+                    cr['vm_name'] = cache[row.vmid]
+                    cr['id'] = row.id
+                    cr['request_time'] = seconds_to_localtime((row.request_time))
+                    cr['user'] = row.user
+                    cr['disk_size'] = row.disk_size
+                    response.append(cr)
+                except NotFound:
+                    spurious_requests.append(str(row.id))
+                    continue
+            if len(spurious_requests):
+                query = 'delete from virtual_disk_requests where id in (%s)' % \
+                           (','.join(spurious_requests))
+                logger.info('query is ' + query)
+                db.executesql(query)
+                db.commit()
+
+            return jsonify(data=response)
+        except Exception as e:
+            logger.exception(e.message or str(e.__class__))
+            return jsonify(status='fail', message=e.message or str(e.__class__))
+        finally:
+            try:
+                conn.close()
+            except:
+                pass
+
+
+
+def pending_tasks():
+    if request.extension in ('', None, 'html'):
+        return dict()
+    elif request.extension == 'json':
+        response = []
+        spurious_requests = []
+        try:
+            rows = db(db.scheduler_task.status == "QUEUED").select(orderby=~db.scheduler_task.start_time)
+            conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                     session.password)
+            import re
+            for row in rows:
+                try:
+                    cr = {}
+                    row_data= row.vars
+                    row_id = int((re.findall('\d+', row_data)[0]))
+                    #logger.info(row_data)
+                    #logger.info(type(row_data))
+                    #logger.info(row_id)
+                    #logger.info(type(row_id))
+                    if row.task_name == "task_create_vm":
+                        vm = db(db.vm_requests.id == row_id).select()
+                        #logger.info(vm)
+                        for vm_data in vm:
+                            cr['vm_name'] = vm_data.vm_name
+                            cr['task'] = row.task_name
+                            cr['request_time'] =  seconds_to_localtime((vm_data.request_time))
+                            cr['requester'] = vm_data.requester
+                            cr['final_time'] =  "None"
+                            response.append(cr)
+                    elif row.task_name == "task_resize_vm":
+                        vm = db(db.resize_requests.id == row_id).select()
+                        for vm_data in vm:
+                            cr['vm_name'] = vm_data.vmname
+                            cr['task'] = row.task_name
+                            cr['request_time'] =  seconds_to_localtime((vm_data.request_time))
+                            cr['requester'] = vm_data.user
+                            cr['final_time'] =  "None"
+                            response.append(cr)
+                    elif row.task_name == "task_clone_vm":
+                        vm = db(db.clone_requests.id == row_id).select()
+                        for vm_data in vm:
+                            vmid = vm_data['vm_id']
+                            vmobj = conn.find_baadal_vm(id=vmid)
+                            cr['vm_name'] = vmobj.name
+                            cr['task'] = row.task_name
+                            cr['request_time'] =  seconds_to_localtime((vm_data.request_time))
+                            cr['requester'] = vm_data.user
+                            cr['final_time'] =  "None"
+                            response.append(cr)
+                    elif row.task_name == "task_snapshot_vm":
+                        vmid = row.vars[10:46]
+                        vmobj = conn.find_baadal_vm(id=vmid)
+                        cr['vm_name'] = vmobj.name
+                        cr['task'] = row.task_name
+                        cr['request_time'] =  str(row.start_time)
+                        cr['requester'] = vmobj.owner
+                        cr['final_time'] =  "None"
+                        logger.info(cr)
+                        response.append(cr)
+                    elif row.task_name == "task_delete_snapshot":
+                        vmid = row.vars[10:46]
+                        vmobj = conn.find_baadal_vm(id=vmid)
+                        cr['vm_name'] = vmobj.name
+                        cr['task'] = row.task_name
+                        cr['request_time'] =  str(row.start_time)
+                        cr['requester'] = vmobj.owner
+                        cr['final_time'] =  "None"
+                        logger.info(cr)
+                        response.append(cr)
+                    elif row.task_name == "task_restore_snapshot":
+                        vmid = row.vars[10:46]
+                        vmobj = conn.find_baadal_vm(id=vmid)
+                        cr['vm_name'] = vmobj.name
+                        cr['task'] = row.task_name
+                        cr['request_time'] =  str(row.start_time)
+                        cr['requester'] = vmobj.owner
+                        cr['final_time'] =  "None"
+                        logger.info(cr)
+                        response.append(cr)
+                    else :
+                        pass
+                except NotFound:
+                    spurious_requests.append(str(row_id))
+                    logger.info(str(row_id))
+                    continue
+            if len(spurious_requests):
+                #query = 'delete from  vm_requests where id in (%s)' % \
+                         #  (','.join(spurious_requests))
+                #logger.info('query is ' + query)
+                #db.executesql(query)
+                #db.commit()
+                pass
+            return jsonify(data=response)
+        except Exception as e:
+            logger.exception(e.message or str(e.__class__))
+            return jsonify(status='fail', message=e.message or str(e.__class__))
+        finally:
+            try:
+                conn.close()
+            except:
+                pass
+
+
+
+def completed_tasks():
+    if request.extension in ('', None, 'html'):
+        return dict()
+    elif request.extension == 'json':
+        response = []
+        spurious_requests = []
+        try:
+            rows = db(db.scheduler_task.status == "COMPLETED").select(orderby=~db.scheduler_task.start_time)
+            conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                     session.password)
+            import re
+            for row in rows:
+                try:
+                    cr = {}
+                    row_data= row.vars
+                    row_id = int((re.findall('\d+', row_data)[0]))
+                    #logger.info(row_data)
+                    #logger.info(type(row_data))
+                    #logger.info(row_id)
+                    #logger.info(type(row_id))
+                    if row.task_name == "task_create_vm":
+                        vm = db(db.vm_requests.id == row_id).select()
+                        #logger.info(vm)
+                        for vm_data in vm: 
+                            cr['vm_name'] = vm_data.vm_name
+                            cr['task'] = row.task_name
+                            cr['request_time'] =  seconds_to_localtime((vm_data.request_time))
+                            cr['requester'] = vm_data.requester
+                            cr['final_time'] =  str(row.next_run_time)
+                            response.append(cr)
+                    elif row.task_name == "task_resize_vm":
+                        vm = db(db.resize_requests.id == row_id).select()
+                        for vm_data in vm:
+                            cr['vm_name'] = vm_data.vmname
+                            cr['task'] = row.task_name
+                            cr['request_time'] =  seconds_to_localtime((vm_data.request_time))
+                            cr['requester'] = vm_data.user
+                            cr['final_time'] =  str(row.next_run_time)
+                            response.append(cr)
+                    elif row.task_name == "task_clone_vm":
+                        vm = db(db.clone_requests.id == row_id).select()
+                        for vm_data in vm:
+                            vmid = vm_data['vm_id']
+                            vmobj = conn.find_baadal_vm(id=vmid)
+                            cr['vm_name'] = vmobj.name
+                            cr['task'] = row.task_name
+                            cr['request_time'] =  seconds_to_localtime((vm_data.request_time))
+                            cr['requester'] = vm_data.user
+                            cr['final_time'] =  str(row.next_run_time)
+                            response.append(cr)
+                    elif row.task_name == "task_snapshot_vm":
+                        vmid = row.vars[10:46]
+                        vmobj = conn.find_baadal_vm(id=vmid)
+                        cr['vm_name'] = vmobj.name
+                        cr['task'] = row.task_name
+                        cr['request_time'] =  str(row.start_time)
+                        cr['requester'] = vmobj.owner
+                        cr['final_time'] =  str(row.next_run_time)
+                        logger.info(cr)
+                        response.append(cr)
+                    elif row.task_name == "task_delete_snapshot":
+                        vmid = row.vars[10:46]
+                        vmobj = conn.find_baadal_vm(id=vmid)
+                        cr['vm_name'] = vmobj.name
+                        cr['task'] = row.task_name
+                        cr['request_time'] =  str(row.start_time)
+                        cr['requester'] = vmobj.owner
+                        cr['final_time'] =  str(row.next_run_time)
+                        logger.info(cr)
+                        response.append(cr)
+                    elif row.task_name == "task_restore_snapshot":
+                        vmid = row.vars[10:46]
+                        vmobj = conn.find_baadal_vm(id=vmid)
+                        cr['vm_name'] = vmobj.name
+                        cr['task'] = row.task_name
+                        cr['request_time'] =  str(row.start_time)
+                        cr['requester'] = vmobj.owner
+                        cr['final_time'] =  str(row.next_run_time)
+                        logger.info(cr)
+                        response.append(cr)
+                    else :
+                        pass
+                except NotFound:
+                    spurious_requests.append(str(row_id))
+                    continue
+            if len(spurious_requests):
+                #query = 'delete from  vm_requests where id in (%s)' % \
+                         #  (','.join(spurious_requests))
+                #logger.info('query is ' + query)
+                #db.executesql(query)
+                #db.commit()
+                pass
+            return jsonify(data=response)
+        except Exception as e:
+            logger.exception(e.message or str(e.__class__))
+            return jsonify(status='fail', message=e.message or str(e.__class__))
+        finally:
+            try:
+                conn.close()
+            except:
+                pass
+
+
+def failed_tasks():
+    if request.extension in ('', None, 'html'):
+        return dict()
+    elif request.extension == 'json':
+        response = []
+        spurious_requests = []
+        try:
+            rows = db(db.scheduler_task.status == "FAILED" or "TIMEOUT").select(orderby=~db.scheduler_task.start_time)
+            conn = Baadal.Connection(_authurl, _tenant, session.username,
+                                     session.password)
+            import re
+            for row in rows:
+                try:
+                    cr = {}
+                    row_data= row.vars
+                    row_id = int((re.findall('\d+', row_data)[0]))
+                    #logger.info(row_data)
+                    #logger.info(type(row_data))
+                    #logger.info(row_id)
+                    #logger.info(type(row_id))
+                    if row.task_name == "task_create_vm":
+                        vm = db(db.vm_requests.id == row_id).select()
+                        #logger.info(vm)
+                        for vm_data in vm:
+                            cr['vm_name'] = vm_data.vm_name
+                            cr['task'] = row.task_name
+                            cr['request_time'] =  seconds_to_localtime((vm_data.request_time))
+                            cr['requester'] = vm_data.requester
+                            cr['final_time'] =  str(row.next_run_time)
+                            cr['id'] = row.id
+                            response.append(cr)
+                    elif row.task_name == "task_resize_vm":
+                        vm = db(db.resize_requests.id == row_id).select()
+                        for vm_data in vm:
+                            cr['vm_name'] = vm_data.vmname
+                            cr['task'] = row.task_name
+                            cr['request_time'] =  seconds_to_localtime((vm_data.request_time))
+                            cr['requester'] = vm_data.user
+                            cr['final_time'] =  str(row.next_run_time)
+                            cr['id'] = row.id
+                            response.append(cr)
+                    elif row.task_name == "task_clone_vm":
+                        vm = db(db.clone_requests.id == row_id).select()
+                        for vm_data in vm:
+                            vmid = vm_data['vm_id']
+                            vmobj = conn.find_baadal_vm(id=vmid)
+                            cr['vm_name'] = vmobj.name
+                            cr['task'] = row.task_name
+                            cr['request_time'] =  seconds_to_localtime((vm_data.request_time))
+                            cr['requester'] = vm_data.user
+                            cr['final_time'] =  str(row.next_run_time)
+                            cr['id'] = row.id
+                            response.append(cr)
+                    elif row.task_name == "task_snapshot_vm":
+                        vmid = row.vars[10:46]
+                        vmobj = conn.find_baadal_vm(id=vmid)
+                        cr['vm_name'] = vmobj.name
+                        cr['task'] = row.task_name
+                        cr['request_time'] =  str(row.start_time)
+                        cr['requester'] = vmobj.owner
+                        cr['final_time'] =  str(row.next_run_time)
+                        cr['id'] = row.id
+                        logger.info(cr)
+                        response.append(cr)
+                    elif row.task_name == "task_delete_snapshot":
+                        vmid = row.vars[10:46]
+                        vmobj = conn.find_baadal_vm(id=vmid)
+                        cr['vm_name'] = vmobj.name
+                        cr['task'] = row.task_name
+                        cr['request_time'] =  str(row.start_time)
+                        cr['requester'] = vmobj.owner
+                        cr['final_time'] =  str(row.next_run_time)
+                        cr['id'] = row.id
+                        logger.info(cr)
+                        response.append(cr)
+                    elif row.task_name == "task_restore_snapshot":
+                        vmid = row.vars[10:46]
+                        vmobj = conn.find_baadal_vm(id=vmid)
+                        cr['vm_name'] = vmobj.name
+                        cr['task'] = row.task_name
+                        cr['request_time'] =  str(row.start_time)
+                        cr['requester'] = vmobj.owner
+                        cr['final_time'] =  str(row.next_run_time)
+                        cr['id'] = row.id
+                        logger.info(cr)
+                        response.append(cr)
+                    else :
+                        pass
+                except NotFound:
+                    spurious_requests.append(str(row_id))
+                    logger.info(str(row_id))
+                    continue
+            if len(spurious_requests):
+                #query = 'delete from  vm_requests where id in (%s)' % \
+                         #  (','.join(spurious_requests))
+                #logger.info('query is ' + query)
+                #db.executesql(query)
+                #db.commit()
+                pass
+            return jsonify(data=response)
+        except Exception as e:
+            logger.info(str(row_id))
+            logger.exception(e.message or str(e.__class__))
+            return jsonify(status='fail', message=e.message or str(e.__class__))
+        finally:
+            try:
+                conn.close()
+            except:
+                pass
+
+
+
+
+@auth.requires(user_is_project_admin)
 def disk_requests():
     if request.extension in ('', None, 'html'):
         return dict()
