@@ -286,51 +286,6 @@ def account_requests():
 
 
 @auth.requires(user_is_project_admin)
-def tasks():
-    if request.extension in ('', None, 'html'):
-        return dict()
-    elif request.extension == 'json':
-        response = []
-        spurious_requests = []
-        cache = {}
-        try:
-            rows = db(db.virtual_disk_requests.status == 0).select()
-            conn = Baadal.Connection(_authurl, _tenant, session.username,
-                                     session.password)
-            for row in rows:
-                try:
-                    cr = {}
-                    if not cache.has_key(row.vmid):
-                        vm = conn.find_baadal_vm(id=row.vmid)
-                        cache[row.vmid] = vm.name
-                    cr['vm_name'] = cache[row.vmid]
-                    cr['id'] = row.id
-                    cr['request_time'] = seconds_to_localtime((row.request_time))
-                    cr['user'] = row.user
-                    cr['disk_size'] = row.disk_size
-                    response.append(cr)
-                except NotFound:
-                    spurious_requests.append(str(row.id))
-                    continue
-            if len(spurious_requests):
-                query = 'delete from virtual_disk_requests where id in (%s)' % \
-                           (','.join(spurious_requests))
-                logger.info('query is ' + query)
-                db.executesql(query)
-                db.commit()
-
-            return jsonify(data=response)
-        except Exception as e:
-            logger.exception(e.message or str(e.__class__))
-            return jsonify(status='fail', message=e.message or str(e.__class__))
-        finally:
-            try:
-                conn.close()
-            except:
-                pass
-
-
-
 def pending_tasks():
     if request.extension in ('', None, 'html'):
         return dict()
@@ -347,13 +302,8 @@ def pending_tasks():
                     cr = {}
                     row_data= row.vars
                     row_id = int((re.findall('\d+', row_data)[0]))
-                    #logger.info(row_data)
-                    #logger.info(type(row_data))
-                    #logger.info(row_id)
-                    #logger.info(type(row_id))
                     if row.task_name == "task_create_vm":
                         vm = db(db.vm_requests.id == row_id).select()
-                        #logger.info(vm)
                         for vm_data in vm:
                             cr['vm_name'] = vm_data.vm_name
                             cr['task'] = row.task_name
@@ -418,11 +368,6 @@ def pending_tasks():
                     logger.info(str(row_id))
                     continue
             if len(spurious_requests):
-                #query = 'delete from  vm_requests where id in (%s)' % \
-                         #  (','.join(spurious_requests))
-                #logger.info('query is ' + query)
-                #db.executesql(query)
-                #db.commit()
                 pass
             return jsonify(data=response)
         except Exception as e:
@@ -435,7 +380,7 @@ def pending_tasks():
                 pass
 
 
-
+@auth.requires(user_is_project_admin)
 def completed_tasks():
     if request.extension in ('', None, 'html'):
         return dict()
@@ -452,13 +397,8 @@ def completed_tasks():
                     cr = {}
                     row_data= row.vars
                     row_id = int((re.findall('\d+', row_data)[0]))
-                    #logger.info(row_data)
-                    #logger.info(type(row_data))
-                    #logger.info(row_id)
-                    #logger.info(type(row_id))
                     if row.task_name == "task_create_vm":
                         vm = db(db.vm_requests.id == row_id).select()
-                        #logger.info(vm)
                         for vm_data in vm: 
                             cr['vm_name'] = vm_data.vm_name
                             cr['task'] = row.task_name
@@ -522,11 +462,6 @@ def completed_tasks():
                     spurious_requests.append(str(row_id))
                     continue
             if len(spurious_requests):
-                #query = 'delete from  vm_requests where id in (%s)' % \
-                         #  (','.join(spurious_requests))
-                #logger.info('query is ' + query)
-                #db.executesql(query)
-                #db.commit()
                 pass
             return jsonify(data=response)
         except Exception as e:
@@ -538,7 +473,7 @@ def completed_tasks():
             except:
                 pass
 
-
+@auth.requires(user_is_project_admin)
 def failed_tasks():
     if request.extension in ('', None, 'html'):
         return dict()
@@ -555,13 +490,8 @@ def failed_tasks():
                     cr = {}
                     row_data= row.vars
                     row_id = int((re.findall('\d+', row_data)[0]))
-                    #logger.info(row_data)
-                    #logger.info(type(row_data))
-                    #logger.info(row_id)
-                    #logger.info(type(row_id))
                     if row.task_name == "task_create_vm":
                         vm = db(db.vm_requests.id == row_id).select()
-                        #logger.info(vm)
                         for vm_data in vm:
                             cr['vm_name'] = vm_data.vm_name
                             cr['task'] = row.task_name
@@ -632,11 +562,6 @@ def failed_tasks():
                     logger.info(str(row_id))
                     continue
             if len(spurious_requests):
-                #query = 'delete from  vm_requests where id in (%s)' % \
-                         #  (','.join(spurious_requests))
-                #logger.info('query is ' + query)
-                #db.executesql(query)
-                #db.commit()
                 pass
             return jsonify(data=response)
         except Exception as e:
@@ -648,8 +573,6 @@ def failed_tasks():
                 conn.close()
             except:
                 pass
-
-
 
 
 @auth.requires(user_is_project_admin)

@@ -95,6 +95,7 @@
                 <th>VM Name</th>
                 <th>Requested By</th>
                 <th>Config</th>
+                <th>Extra Storage (GB)</th>
                 <th>Public IP</th>
                 <th>Security Domain</th>
                 <th>Request Time</th>
@@ -127,6 +128,7 @@
       { "data": "vm_name" },
       { "data": "owner" },
       { "data": "flavor" },
+      { "data": "extra_storage" },
       { "data": "public_ip_required" },
       { "data": "sec_domain" },
       { "data": "request_time" },
@@ -135,7 +137,7 @@
     ],
     "aoColumnDefs": [
       {
-        "aTargets": [8],
+        "aTargets": [9],
         "mData": null,
         "mRender": function (data, type, full) {
           return '<div class="btn-group" role="group" aria-label="..."> \
