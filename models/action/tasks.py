@@ -45,6 +45,7 @@ def task_create_vm(reqid, auth):
                 mailer.send(mailer.MailTypes.VMCreated, context.user_email,
                             context)
                 collaborator_list=collaborators.strip()
+                owner = context.username
                 while len(collaborator_list) > 0:
                     requester=""
                     if "," in collaborator_list:
@@ -57,15 +58,14 @@ def task_create_vm(reqid, auth):
                         collaborator_list = collaborator_list[len(requester)+1:].strip()
                     requester = requester.strip()
                     context = Storage()
-                    user_info = ldap.fetch_user_info(requester)
-                    context.username = user_info['user_name']
-                    context.user_email = user_info['user_email']
+                    collaborator_info = ldap.fetch_user_info(requester)
+                    context.collaborator = collaborator_info['user_name']
+                    context.user_email = collaborator_info['user_email']
                     context.vm_name = name
+                    context.requester = owner
                     context.mail_support = mail_support
                     context.gateway_server = gateway_server
-                    context.request_time = seconds_to_localtime(req.request_time)
-                    logger.info('sending mail')
-                    mailer.send(mailer.MailTypes.VMCreated, context.user_email,
+                    mailer.send(mailer.MailTypes.VMCollaborator, context.user_email,
                             context)
                 logger.info('mail sent')
                 if pub_ip == 1 or vdisk:
