@@ -296,6 +296,7 @@ def pending_tasks():
             rows = db(db.scheduler_task.status == "QUEUED").select(orderby=~db.scheduler_task.start_time)
             conn = Baadal.Connection(_authurl, _tenant, session.username,
                                      session.password)
+            vms = conn.baadal_vms(all_owners=True)
             import re
             for row in rows:
                 try:
@@ -324,41 +325,41 @@ def pending_tasks():
                         vm = db(db.clone_requests.id == row_id).select()
                         for vm_data in vm:
                             vmid = vm_data['vm_id']
-                            vmobj = conn.find_baadal_vm(id=vmid)
-                            cr['vm_name'] = vmobj.name
+                            vmobj = find_vm_details(vmid, vms)
+                            cr['vm_name'] = vmobj['name']
                             cr['task'] = row.task_name
                             cr['request_time'] =  seconds_to_localtime((vm_data.request_time))
                             cr['requester'] = vm_data.user
-                            cr['final_time'] =  "None"
+                            cr['final_time'] =  str(row.next_run_time)
                             response.append(cr)
                     elif row.task_name == "task_snapshot_vm":
                         vmid = row.vars[10:46]
-                        vmobj = conn.find_baadal_vm(id=vmid)
-                        cr['vm_name'] = vmobj.name
+                        vmobj = find_vm_details(vmid, vms)
+                        cr['vm_name'] = vmobj['name']
                         cr['task'] = row.task_name
                         cr['request_time'] =  str(row.start_time)
-                        cr['requester'] = vmobj.owner
-                        cr['final_time'] =  "None"
+                        cr['requester'] = vmobj['owner']
+                        cr['final_time'] =  str(row.next_run_time)
                         logger.info(cr)
                         response.append(cr)
                     elif row.task_name == "task_delete_snapshot":
                         vmid = row.vars[10:46]
-                        vmobj = conn.find_baadal_vm(id=vmid)
-                        cr['vm_name'] = vmobj.name
+                        vmobj = find_vm_details(vmid, vms)
+                        cr['vm_name'] = vmobj['name']
                         cr['task'] = row.task_name
                         cr['request_time'] =  str(row.start_time)
-                        cr['requester'] = vmobj.owner
-                        cr['final_time'] =  "None"
+                        cr['requester'] = vmobj['owner']
+                        cr['final_time'] =  str(row.next_run_time)
                         logger.info(cr)
                         response.append(cr)
                     elif row.task_name == "task_restore_snapshot":
                         vmid = row.vars[10:46]
-                        vmobj = conn.find_baadal_vm(id=vmid)
-                        cr['vm_name'] = vmobj.name
+                        vmobj = find_vm_details(vmid, vms)
+                        cr['vm_name'] = vmobj['name']
                         cr['task'] = row.task_name
                         cr['request_time'] =  str(row.start_time)
-                        cr['requester'] = vmobj.owner
-                        cr['final_time'] =  "None"
+                        cr['requester'] = vmobj['owner']
+                        cr['final_time'] =  str(row.next_run_time)
                         logger.info(cr)
                         response.append(cr)
                     else :
@@ -380,6 +381,19 @@ def pending_tasks():
                 pass
 
 
+def find_vm_details(vmid, vms): 
+        a={}
+        for vm_data in vms:
+                vm = vm_data.properties()
+                if vm['id'] == vmid :
+                     a['name'] = vm['name']
+                     a['owner'] = vm['owner']
+                     logger.debug(a)
+                     return a
+                else :
+                     pass
+        raise NotFound('VM not found') 
+
 @auth.requires(user_is_project_admin)
 def completed_tasks():
     if request.extension in ('', None, 'html'):
@@ -391,6 +405,8 @@ def completed_tasks():
             rows = db(db.scheduler_task.status == "COMPLETED").select(orderby=~db.scheduler_task.start_time)
             conn = Baadal.Connection(_authurl, _tenant, session.username,
                                      session.password)
+            vms = conn.baadal_vms(all_owners=True)
+            logger.debug(vms)
             import re
             for row in rows:
                 try:
@@ -415,49 +431,50 @@ def completed_tasks():
                             cr['requester'] = vm_data.user
                             cr['final_time'] =  str(row.next_run_time)
                             response.append(cr)
-                    elif row.task_name == "task_clone_vm":
-                        vm = db(db.clone_requests.id == row_id).select()
-                        for vm_data in vm:
-                            vmid = vm_data['vm_id']
-                            vmobj = conn.find_baadal_vm(id=vmid)
-                            cr['vm_name'] = vmobj.name
-                            cr['task'] = row.task_name
-                            cr['request_time'] =  seconds_to_localtime((vm_data.request_time))
-                            cr['requester'] = vm_data.user
-                            cr['final_time'] =  str(row.next_run_time)
-                            response.append(cr)
-                    elif row.task_name == "task_snapshot_vm":
-                        vmid = row.vars[10:46]
-                        vmobj = conn.find_baadal_vm(id=vmid)
-                        cr['vm_name'] = vmobj.name
-                        cr['task'] = row.task_name
-                        cr['request_time'] =  str(row.start_time)
-                        cr['requester'] = vmobj.owner
-                        cr['final_time'] =  str(row.next_run_time)
-                        logger.info(cr)
-                        response.append(cr)
-                    elif row.task_name == "task_delete_snapshot":
-                        vmid = row.vars[10:46]
-                        vmobj = conn.find_baadal_vm(id=vmid)
-                        cr['vm_name'] = vmobj.name
-                        cr['task'] = row.task_name
-                        cr['request_time'] =  str(row.start_time)
-                        cr['requester'] = vmobj.owner
-                        cr['final_time'] =  str(row.next_run_time)
-                        logger.info(cr)
-                        response.append(cr)
-                    elif row.task_name == "task_restore_snapshot":
-                        vmid = row.vars[10:46]
-                        vmobj = conn.find_baadal_vm(id=vmid)
-                        cr['vm_name'] = vmobj.name
-                        cr['task'] = row.task_name
-                        cr['request_time'] =  str(row.start_time)
-                        cr['requester'] = vmobj.owner
-                        cr['final_time'] =  str(row.next_run_time)
-                        logger.info(cr)
-                        response.append(cr)
+	            elif row.task_name == "task_clone_vm":
+			vm = db(db.clone_requests.id == row_id).select()
+			for vm_data in vm:
+			    vmid = vm_data['vm_id']
+		            vmobj = find_vm_details(vmid, vms)
+			    cr['vm_name'] = vmobj['name']
+		            cr['task'] = row.task_name
+		            cr['request_time'] =  seconds_to_localtime((vm_data.request_time))
+		            cr['requester'] = vm_data.user
+		            cr['final_time'] =  str(row.next_run_time)
+		            response.append(cr)
+		    elif row.task_name == "task_snapshot_vm":
+		        vmid = row.vars[10:46]
+		        vmobj = find_vm_details(vmid, vms)
+		        cr['vm_name'] = vmobj['name']
+			cr['task'] = row.task_name
+			cr['request_time'] =  str(row.start_time)
+			cr['requester'] = vmobj['owner']
+			cr['final_time'] =  str(row.next_run_time)
+			logger.info(cr)
+			response.append(cr)
+		    elif row.task_name == "task_delete_snapshot":
+			vmid = row.vars[10:46]
+			vmobj = find_vm_details(vmid, vms)
+			cr['vm_name'] = vmobj['name']
+			cr['task'] = row.task_name
+			cr['request_time'] =  str(row.start_time)
+			cr['requester'] = vmobj['owner']
+			cr['final_time'] =  str(row.next_run_time)
+			logger.info(cr)
+			response.append(cr)
+		    elif row.task_name == "task_restore_snapshot":
+		        vmid = row.vars[10:46]
+			vmobj = find_vm_details(vmid, vms)
+			cr['vm_name'] = vmobj['name']
+			cr['task'] = row.task_name
+			cr['request_time'] =  str(row.start_time)
+			cr['requester'] = vmobj['owner']
+			cr['final_time'] =  str(row.next_run_time)
+			logger.info(cr)
+			response.append(cr)
                     else :
                         pass
+                    logger.info(cr)
                 except NotFound:
                     spurious_requests.append(str(row_id))
                     continue
@@ -484,6 +501,7 @@ def failed_tasks():
             rows = db(db.scheduler_task.status == "FAILED" or "TIMEOUT").select(orderby=~db.scheduler_task.start_time)
             conn = Baadal.Connection(_authurl, _tenant, session.username,
                                      session.password)
+            vms = conn.baadal_vms(all_owners=True)
             import re
             for row in rows:
                 try:
@@ -514,8 +532,8 @@ def failed_tasks():
                         vm = db(db.clone_requests.id == row_id).select()
                         for vm_data in vm:
                             vmid = vm_data['vm_id']
-                            vmobj = conn.find_baadal_vm(id=vmid)
-                            cr['vm_name'] = vmobj.name
+                            vmobj = find_vm_details(vmid, vms)
+                            cr['vm_name'] = vmobj['name']
                             cr['task'] = row.task_name
                             cr['request_time'] =  seconds_to_localtime((vm_data.request_time))
                             cr['requester'] = vm_data.user
@@ -524,33 +542,33 @@ def failed_tasks():
                             response.append(cr)
                     elif row.task_name == "task_snapshot_vm":
                         vmid = row.vars[10:46]
-                        vmobj = conn.find_baadal_vm(id=vmid)
-                        cr['vm_name'] = vmobj.name
+                        vmobj = find_vm_details(vmid, vms)
+                        cr['vm_name'] = vmobj['name']
                         cr['task'] = row.task_name
                         cr['request_time'] =  str(row.start_time)
-                        cr['requester'] = vmobj.owner
+                        cr['requester'] = vmobj['owner']
                         cr['final_time'] =  str(row.next_run_time)
                         cr['id'] = row.id
                         logger.info(cr)
                         response.append(cr)
                     elif row.task_name == "task_delete_snapshot":
                         vmid = row.vars[10:46]
-                        vmobj = conn.find_baadal_vm(id=vmid)
-                        cr['vm_name'] = vmobj.name
+                        vmobj = find_vm_details(vmid, vms)
+                        cr['vm_name'] = vmobj['name']
                         cr['task'] = row.task_name
                         cr['request_time'] =  str(row.start_time)
-                        cr['requester'] = vmobj.owner
+                        cr['requester'] = vmobj['owner']
                         cr['final_time'] =  str(row.next_run_time)
                         cr['id'] = row.id
                         logger.info(cr)
                         response.append(cr)
                     elif row.task_name == "task_restore_snapshot":
                         vmid = row.vars[10:46]
-                        vmobj = conn.find_baadal_vm(id=vmid)
-                        cr['vm_name'] = vmobj.name
+                        vmobj = find_vm_details(vmid, vms)
+                        cr['vm_name'] = vmobj['name']
                         cr['task'] = row.task_name
                         cr['request_time'] =  str(row.start_time)
-                        cr['requester'] = vmobj.owner
+                        cr['requester'] = vmobj['owner']
                         cr['final_time'] =  str(row.next_run_time)
                         cr['id'] = row.id
                         logger.info(cr)
