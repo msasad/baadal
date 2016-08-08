@@ -1,7 +1,7 @@
 import json
 from novaclient.exceptions import NotFound
 import gluon
-
+import datetime
 
 @auth.requires(user_is_project_admin)
 def pending_requests():
@@ -308,7 +308,8 @@ def pending_tasks():
                         for vm_data in vm:
                             cr['vm_name'] = vm_data.vm_name
                             cr['task'] = row.task_name
-                            cr['request_time'] =  seconds_to_localtime((vm_data.request_time))
+                            request_time = datetime.datetime.fromtimestamp(vm_data.request_time)
+                            cr['request_time'] = str(request_time)
                             cr['requester'] = vm_data.requester
                             cr['final_time'] =  "None"
                             response.append(cr)
@@ -317,7 +318,8 @@ def pending_tasks():
                         for vm_data in vm:
                             cr['vm_name'] = vm_data.vmname
                             cr['task'] = row.task_name
-                            cr['request_time'] =  seconds_to_localtime((vm_data.request_time))
+                            request_time = datetime.datetime.fromtimestamp(vm_data.request_time)
+                            cr['request_time'] = str(request_time)
                             cr['requester'] = vm_data.user
                             cr['final_time'] =  "None"
                             response.append(cr)
@@ -328,7 +330,8 @@ def pending_tasks():
                             vmobj = find_vm_details(vmid, vms)
                             cr['vm_name'] = vmobj['name']
                             cr['task'] = row.task_name
-                            cr['request_time'] =  seconds_to_localtime((vm_data.request_time))
+                            request_time = datetime.datetime.fromtimestamp(vm_data.request_time)
+                            cr['request_time'] = str(request_time)
                             cr['requester'] = vm_data.user
                             cr['final_time'] =  str(row.next_run_time)
                             response.append(cr)
@@ -418,7 +421,8 @@ def completed_tasks():
                         for vm_data in vm: 
                             cr['vm_name'] = vm_data.vm_name
                             cr['task'] = row.task_name
-                            cr['request_time'] =  seconds_to_localtime((vm_data.request_time))
+                            request_time = datetime.datetime.fromtimestamp(vm_data.request_time)
+                            cr['request_time'] = str(request_time)
                             cr['requester'] = vm_data.requester
                             cr['final_time'] =  str(row.next_run_time)
                             response.append(cr)
@@ -427,7 +431,8 @@ def completed_tasks():
                         for vm_data in vm:
                             cr['vm_name'] = vm_data.vmname
                             cr['task'] = row.task_name
-                            cr['request_time'] =  seconds_to_localtime((vm_data.request_time))
+                            request_time = datetime.datetime.fromtimestamp(vm_data.request_time)
+                            cr['request_time'] = str(request_time)
                             cr['requester'] = vm_data.user
                             cr['final_time'] =  str(row.next_run_time)
                             response.append(cr)
@@ -438,7 +443,8 @@ def completed_tasks():
 		            vmobj = find_vm_details(vmid, vms)
 			    cr['vm_name'] = vmobj['name']
 		            cr['task'] = row.task_name
-		            cr['request_time'] =  seconds_to_localtime((vm_data.request_time))
+                            request_time = datetime.datetime.fromtimestamp(vm_data.request_time)
+                            cr['request_time'] = str(request_time)
 		            cr['requester'] = vm_data.user
 		            cr['final_time'] =  str(row.next_run_time)
 		            response.append(cr)
@@ -498,7 +504,7 @@ def failed_tasks():
         response = []
         spurious_requests = []
         try:
-            rows = db(db.scheduler_task.status == "FAILED" or "TIMEOUT").select(orderby=~db.scheduler_task.start_time)
+            rows = db((db.scheduler_task.status == "TIMEOUT") | (db.scheduler_task.status == "FAILED")).select(orderby=~db.scheduler_task.start_time)
             conn = Baadal.Connection(_authurl, _tenant, session.username,
                                      session.password)
             vms = conn.baadal_vms(all_owners=True)
@@ -512,20 +518,22 @@ def failed_tasks():
                         vm = db(db.vm_requests.id == row_id).select()
                         for vm_data in vm:
                             cr['vm_name'] = vm_data.vm_name
-                            cr['task'] = row.task_name
-                            cr['request_time'] =  seconds_to_localtime((vm_data.request_time))
+                            request_time = datetime.datetime.fromtimestamp(vm_data.request_time)
+                            cr['request_time'] = str(request_time)
                             cr['requester'] = vm_data.requester
                             cr['final_time'] =  str(row.next_run_time)
+                            cr['task'] = row.task_name
                             cr['id'] = row.id
                             response.append(cr)
                     elif row.task_name == "task_resize_vm":
                         vm = db(db.resize_requests.id == row_id).select()
                         for vm_data in vm:
                             cr['vm_name'] = vm_data.vmname
-                            cr['task'] = row.task_name
-                            cr['request_time'] =  seconds_to_localtime((vm_data.request_time))
+                            request_time = datetime.datetime.fromtimestamp(vm_data.request_time)
+                            cr['request_time'] = str(request_time)
                             cr['requester'] = vm_data.user
                             cr['final_time'] =  str(row.next_run_time)
+                            cr['task'] = row.task_name
                             cr['id'] = row.id
                             response.append(cr)
                     elif row.task_name == "task_clone_vm":
@@ -534,33 +542,32 @@ def failed_tasks():
                             vmid = vm_data['vm_id']
                             vmobj = find_vm_details(vmid, vms)
                             cr['vm_name'] = vmobj['name']
-                            cr['task'] = row.task_name
-                            cr['request_time'] =  seconds_to_localtime((vm_data.request_time))
+                            request_time = datetime.datetime.fromtimestamp(vm_data.request_time)
+                            cr['request_time'] = str(request_time)
                             cr['requester'] = vm_data.user
                             cr['final_time'] =  str(row.next_run_time)
+                            cr['task'] = row.task_name
                             cr['id'] = row.id
                             response.append(cr)
                     elif row.task_name == "task_snapshot_vm":
                         vmid = row.vars[10:46]
                         vmobj = find_vm_details(vmid, vms)
                         cr['vm_name'] = vmobj['name']
-                        cr['task'] = row.task_name
                         cr['request_time'] =  str(row.start_time)
                         cr['requester'] = vmobj['owner']
                         cr['final_time'] =  str(row.next_run_time)
+                        cr['task'] = row.task_name
                         cr['id'] = row.id
-                        logger.info(cr)
                         response.append(cr)
                     elif row.task_name == "task_delete_snapshot":
                         vmid = row.vars[10:46]
                         vmobj = find_vm_details(vmid, vms)
                         cr['vm_name'] = vmobj['name']
-                        cr['task'] = row.task_name
                         cr['request_time'] =  str(row.start_time)
                         cr['requester'] = vmobj['owner']
                         cr['final_time'] =  str(row.next_run_time)
+                        cr['task'] = row.task_name
                         cr['id'] = row.id
-                        logger.info(cr)
                         response.append(cr)
                     elif row.task_name == "task_restore_snapshot":
                         vmid = row.vars[10:46]
@@ -570,8 +577,8 @@ def failed_tasks():
                         cr['request_time'] =  str(row.start_time)
                         cr['requester'] = vmobj['owner']
                         cr['final_time'] =  str(row.next_run_time)
+                        cr['task'] = row.task_name
                         cr['id'] = row.id
-                        logger.info(cr)
                         response.append(cr)
                     else :
                         pass
