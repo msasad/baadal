@@ -1,0 +1,47 @@
+<? extend 'blank-page.html' ?>
+
+<div class="panel">
+  <h3>Tasks</h3>
+  <ul class=" panel-heading nav nav-pills">
+    <li><a href="/baadal/admin/pending_tasks.html">Pending Tasks</a></li>
+    <li class="active"><a href="#">Completed Tasks</a></li>
+    <li><a href="/baadal/admin/failed_tasks.html">Failed Tasks</a></li></br></br></br>
+        <table id="requests" class="table table-striped table-condensed table-bordered table-hover sortable">  
+        <thead>
+            <tr>
+                <th>Task</th>
+                <th>VM Name</th>
+                <th>Requested By</th>
+                <th>Request Time</th>
+                <th>Final Time</th>
+            </tr>
+        </thead>
+    </table>
+  </div>
+<? include 'default-scripts.html' ?>
+<script src="/baadal/static/js/datatables.min.js"></script>
+<script src="/baadal/static/js/dataTables.bootstrap.min.js"></script>
+<script>
+(function(){
+  var $requests = $('#requests');
+  var $table = $requests.DataTable( {
+    "ajax": "/baadal/admin/completed_tasks.json",
+    "oLanguage": {
+      "sEmptyTable": "No pending requests!"
+    },
+    "columns": [
+      { "data": "task" },
+      { "data": "vm_name" },
+      { "data": "requester" },
+      { "data": "request_time" },
+      { "data": "final_time" }
+    ],
+    "fnCreatedRow": function( nRow, aData, iDataIndex ) {
+      nRow.setAttribute('data-reqid',aData.id);
+    }
+  });
+})();
+</script>
+</ul>
+</div>
+<? include 'wrap.html' ?>
