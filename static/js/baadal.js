@@ -245,6 +245,13 @@ var baadalApp = (function ($) {
           }
         });
       });
+	
+      // Event handler for click of performance
+      $this.table.on('click', '.btn-performance', function (e) {
+        var vmid = $(this).closest('tr').data('vmid');
+	
+       document.location.pathname="/baadal/user/show_vm_performance?vmid="+vmid
+      });
 
       // Event handler for click of settings button
       $this.table.on('click', '.btn-settings', function (e) {
@@ -309,6 +316,7 @@ var baadalApp = (function ($) {
         e.preventDefault();
         data.vmid = $('#vmid').val();
         data.new_flavor = $('#new_flavor').val();
+        data.name = $('#vmid').data().vmname
         promise = $.ajax({
           type: 'post',
           url: '/baadal/post_request/request_resize.json',

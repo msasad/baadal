@@ -1,4 +1,7 @@
 #!/usr/bin/python
+import logging
+import logging.config
+logger = logging.getLogger("web2py.app.baadal")
 
 import datetime
 _EXTERNAL_NETWORK = 'ext-net'
@@ -142,6 +145,7 @@ class BaadalVM(object):
 
         clone_name = clone_name or self.server.name + '_clone'
         flavor_id = self.server.flavor['id']
+        image_name = self.server.image
         networks = self.get_networks().keys()
         network_ids = [
             self.__conn.neutron.list_networks(name=net)['networks'][0]['id']
@@ -157,6 +161,7 @@ class BaadalVM(object):
                                                flavor, nics=nics,
                                                security_groups=networks,
                                                meta=self.server.metadata)
+            #clone.server.manager.set_meta_item(clone.server, 'image' , image_name)
             while clone.status != 'ACTIVE':
                 clone = clone.manager.find(id=clone.id)
             else:
@@ -176,7 +181,7 @@ class BaadalVM(object):
 
     def create_snapshot(self, snapshot_name=None):
         snapshot_name = snapshot_name or self.server.name + \
-            "snapshot" + datetime.datetime.now().isoformat()
+            "_snapshot" + datetime.datetime.now().isoformat()
         snapshot_id = self.server.create_image(snapshot_name)
         return snapshot_id
 
@@ -248,22 +253,11 @@ class BaadalVM(object):
         snapshots.sort(cmp=self.__cmp, reverse=True)
         return snapshots[0]
 
-    def migrate(self, live=False, target=None):
-        if live is False:
+    def migrate(self, live=False):
+        if live is True:
             res = self.server.migrate()
         else:
-            if target:
-                res = self.server.live_migrate(host=target)
-            else:
-                res = self.server.live_migrate()
-        while self.get_status() not in ('Error', 'Resizing'):
-            self.refresh_status()
-        else:
-            if self.get_status() == 'Error':
-                logger.error('There was some error while migrating the ' + \
-                        'instance ' + vm.id)
-            elif self.get_status() == 'Resizing':
-                    self.server.confirm_resize()
+            res = self.server.live_migrate()
         return res
 
     def pause(self, ):
@@ -344,14 +338,14 @@ class BaadalVM(object):
         Shutdown the virtual machine
         :return: None
         """
-        self.server.stop()
+        return self.server.stop()
 
     def start(self, ):
         """
         starts the virtual machine,
         :return: None
         """
-        self.server.start()
+        return self.server.start()
 
     def update(self, **kwargs):
         for item, value in kwargs.iteritems():
@@ -363,12 +357,12 @@ class BaadalVM(object):
 
 class ConnectionWrapper:
 
-    def __init__(self, nova, cinder, neutron, keystone):
+    def __init__(self, nova, cinder, neutron, keystone,ceilometer):
         self.nova = nova
         self.neutron = neutron
         self.cinder = cinder
         self.keystone = keystone
-
+	self.ceilometer = ceilometer
 
 class Connection:
     """
@@ -383,8 +377,9 @@ class Connection:
         from novaclient import client
         from neutronclient.neutron import client as nclient
         from cinderclient import client as cclient
+	from ceilometerclient import client as Cclient
         auth = v2.Password(auth_url=authurl, user_id=username,
-                           password=password, tenant_name=tenant_name)
+                           tenant_name=tenant_name, password=password)
         sess = session.Session(auth=auth)
 
         self.__auth = auth
@@ -393,12 +388,14 @@ class Connection:
         __cinder = cclient.Client('2', session=sess)
         __neutron = nclient.Client('2.0', session=sess)
         __keystone = ksclient.Client(session=sess)
-        self.__conn = ConnectionWrapper(__nova, __cinder, __neutron, __keystone)
-        self.conn = ConnectionWrapper(__nova, __cinder, __neutron, __keystone)
+	__ceilometer=Cclient.get_client('2',session=sess)
+        self.__conn = ConnectionWrapper(__nova, __cinder, __neutron, __keystone,__ceilometer)
+        self.conn = ConnectionWrapper(__nova, __cinder, __neutron, __keystone,__ceilometer)
 
         self.userid = self.__conn.nova.client.get_user_id()
         self.user_is_project_admin = self.__conn.user_is_project_admin = bool(
             self.get_user_roles().count('admin'))
+        logger.debug("after user admin assignment")
 
         # FIXME Retain these lines during testing only
         self.nova = self.__conn.nova
@@ -407,18 +404,31 @@ class Connection:
         self.auth = auth
         self.sess = sess
         self.keystone = self.__conn.keystone
+        self.ceilometer=self.__conn.ceilometer
+
+    def users_create(self,username,password,tenant_name):
+        tenant_id = self.__conn.keystone.tenants.find(
+             name=tenant_name).to_dict()['id']
+        my_user=self.__conn.keystone.users.create(name=username,
+                password=password,tenant_id=tenant_id)
+        user_id = self.__conn.keystone.users.find(name=username).to_dict()['id']
+        return user_id
 
     def add_user_role(self, user_id, tenant_name, role):
         tenant_id = self.__conn.keystone.tenants.find(
             name=tenant_name).to_dict()['id']
+        logger.debug("tenant id is : " + str(tenant_id))
         # user_id = self.__conn.keystone.users.find(name=username).to_dict()['id']
         role_id = self.__conn.keystone.roles.find(name=role).to_dict()['id']
-        self.__conn.keystone.users.role_manager.add_user_role(
+        logger.debug("role_id  is : " + str(role_id))
+        xyz=self.__conn.keystone.users.role_manager.add_user_role(
             user_id, role_id, tenant_id)
+        logger.debug("xyz is : " + str(xyz))
 
     def get_user_roles(self):
         roles = []
         roles_list = self.__auth.get_access(self.__sess)['user']['roles']
+        logger.debug(" roles list is : " + str(roles_list))
         for entry in roles_list:
             roles.append(str(entry['name']))
         return roles
@@ -523,6 +533,19 @@ class Connection:
         volume = self.__conn.cinder.volumes.create(
             size, imageRef=imageref)
         return volume
+    
+    def fetch_sample_data(self,vm_id,g_type,limits=None):
+        #logger.debug("fetch_sample_data")
+        logger.info("fetch_sample_data")
+        if not self.__conn.ceilometer:
+            raise BaadalException('Not connected to openstack ceilometer service')
+        print vm_id
+        query = [dict(field='resource_id', op='eq', value=vm_id),dict(field='meter', op='eq', value=g_type)]#,dict(field='limit', op='eq', value=limit)]
+        #query = [dict(field='resource_id', op='eq', value=vm_id),dict(field='meter', op='eq', value=g_type),dict(field='timestamp',op='ge',value="2016-07-31T18:00:00"),dict(field='timestamp',op='le',value="2016-08-15T17:00:00"),dict(field='timestamp', op='eq', value='DESC')]
+        #order_by=[dict(field='timestamp',op='eq',value="DESC")]
+        logger.info("query is : " + str(query))
+        output = self.__conn.ceilometer.new_samples.list(q=query,limit=limits)
+        return output
 
     def create_template(self, name, ram, disk, vcpus):
         if not self.__conn.nova:

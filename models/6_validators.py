@@ -1,5 +1,14 @@
 from gluon import validators
+import logging
+logger = logging.getLogger("web2py.app.baadal")
 
+if auth.is_logged_in():
+   new_db=mdb.connect("10.237.22.50","root","baadal","baadal")
+   n_db=new_db.cursor()
+   n_db.execute("select user_id,password from auth_user where username= %s",session.auth.user.username)
+   data=n_db.fetchall()
+   session.username=data[0][0]
+   session.password=data[0][1]
 
 def validate_registration_form(vars):
     """
@@ -27,8 +36,8 @@ def userid_is_valid(userid):
     length = len(userid)
     validator = validators.IS_IN_DB(db, db.account_requests.userid)
     valid = valid and validator(userid)[1] is not None and (4 <= length <= 12)
-    validator = validators.IS_ALPHANUMERIC()
-    valid = valid and validator(userid)[1] is None
+    #validator = validators.IS_ALPHANUMERIC()
+    #valid = valid and validator(userid)[1] is None
     return valid
 
 
@@ -69,6 +78,7 @@ def validate_vm_request_form(vars):
     if not collaborators_is_valid(vars.collaborators):
         fields.append('collaborators')
     if not faculty_is_valid(vars.faculty):
+        logger.debug("inside validate faculty")
         fields.append('faculty')
     return fields
 
@@ -126,13 +136,22 @@ def collaborators_is_valid(collaborators):
     if collaborators.strip() == '':
         return True
     for collaborator in collaborators.split(','):
-        if not ldap.fetch_user_info(collaborator.strip()):
+        if not ldap.check_valid_user(collaborator.strip()):
             return False
+        temp=collaborator.strip()+","
+    collaborators = temp.rstrip(',')
     return True
 
 
 def faculty_is_valid(faculty):
-    return faculty is None or ldap.user_is_faculty(faculty)
+    logger.debug("inside faculty is valid : " + str(faculty))
+    #return faculty is None or ldap.user_is_faculty(faculty)
+    if faculty is None:
+       return True
+    else:
+       result = ldap.user_is_faculty(faculty)
+       logger.debug("result is : " + str(result))
+       return result
 
 def validate_subnet_form(vars):
     fields = []

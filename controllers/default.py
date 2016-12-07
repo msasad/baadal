@@ -27,9 +27,9 @@ def user():
                 if i.attributes['_type'] == 'submit':
                     i.add_class('btn btn-primary btn-lg btn-block')
                 el.append(i)
-        link = A('Request an account', callback='/baadal/user/register')
-        link.add_class('btn btn-link')
-        el.append(link)
+       # link = A('Request an account', callback='/baadal/user/register')
+       #link.add_class('btn btn-link')
+        #el.append(link)
         form.components = el
         form.add_class('form-signin')
         return dict(form=form)

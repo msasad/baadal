@@ -1,5 +1,25 @@
 from novaclient.exceptions import NotFound
+import MySQLdb as mdb
+import ConfigParser
+from gluon import *  # @UnusedWildImport
+#from gluon import request,session
+import json,datetime,time
+import threading,os
+import Baadal
+from utilization import *
 
+if auth.is_logged_in():
+   logger.debug("inside controller user.py session is " + str(session))
+   logger.debug("inside controller user.py session username is " + str(session.username))
+   new_db=mdb.connect("10.237.22.50","root","baadal","baadal")
+   n_db=new_db.cursor()
+   n_db.execute("select user_id,password from auth_user where username= %s",session.auth.user.username)
+   data=n_db.fetchall()
+   logger.debug("inside controller user.py data is " + str(data))
+   session.username=data[0][0]
+   session.password=data[0][1]
+   n_db.close()
+   new_db.close()
 
 @auth.requires_login()
 def index():
@@ -22,7 +42,8 @@ def my_vms():
         conn = Baadal.Connection(_authurl, _tenant, session.username,
                                  session.password)
         images = dict()
-        vms = conn.baadal_vms(user=session.username)
+        logger.debug("inside my vms session.username and passwd is " + str(session.username) + " !!!!!!! " + str(session.password))
+        vms = conn.baadal_vms(user=session.auth.user.username)
         response = list()
         for vm in vms:
             vm_properties = vm.properties()
@@ -95,7 +116,7 @@ def requests():
 
 @auth.requires_login()
 def my_requests():
-    rows = db((db.vm_requests.requester == session.username) & (db.vm_requests.state < 2)).select()
+    rows = db((db.vm_requests.requester == session.auth.user.username) & (db.vm_requests.state < 2)).select()
     l = rows.as_list()
     net_names = dict()
     STATES = ['Pending', 'Pending Admin Approval', 'Approved']
@@ -105,7 +126,7 @@ def my_requests():
         if not net_names.has_key(net_id):
             net_names[net_id] = network_name_from_id(net_id)
         i['sec_domain'] = net_names[net_id]
-        i['request_time'] = seconds_to_localtime(i['request_time'])
+        i['request_time'] = str(datetime.datetime.fromtimestamp(i['request_time']))
         i['public_ip_required'] = 'Required' if i['public_ip_required'] == 1 \
             else 'Not Required'
         i['state'] = STATES[i['state']]
@@ -119,3 +140,206 @@ def my_requests_list():
 
 def register():
     return dict()
+
+
+###################################GRAPH##############################
+
+
+#convert graph type from client side into ceilometer type
+def get_graph_type(g_type):
+    if g_type=="cpu":
+        return "cpu_util"
+    if g_type=="ram":
+        return "memory.usage"
+    if g_type=="disk":
+        output=[]
+        output.append("disk.write.bytes.rate")
+        output.append("disk.read.bytes.rate")
+        logger.debug(output)
+        return output
+    if g_type=="nw":
+        output=[]
+        output.append("network.incoming.bytes.rate")
+        output.append("network.outgoing.bytes.rate")
+        logger.debug(output)
+        return output
+    
+
+def get_limit_value(graph_period):
+    if graph_period == 'hour':	
+        value=12
+    elif graph_period == 'day':
+        value=12*24
+    elif graph_period == 'month':
+        value=12*24*30
+    elif graph_period == 'week':
+        value=12*24*7
+    elif graph_period == 'year':
+        value=12*24*30*12
+    
+    return value
+
+  
+#fetching graph data from ceilometer 
+def fetch_graph_data(vm_info):
+    result=[]
+    try:
+
+        for data in vm_info:
+            info={}
+            for key,value in data.__dict__.items():
+                if key=='volume':
+                    info['y']=value
+                if key=='timestamp':
+                    str_date=str(value[0:18]).split("T")
+                    datetime=str_date[0] + " " + str_date[1]
+                    info['x']=int(time.mktime(time.strptime(datetime, "%Y-%m-%d %H:%M:%S")))*1000
+            result.append(info)
+
+        return result
+    except Exception as e:
+        logger.exception(e.message() or str(e.__class__))
+
+
+
+def create_graph():
+    ret={}
+    vmid=request.vars['vmIdentity']
+    graph_period=request.vars['graphPeriod']
+    vm_ram=request.vars['vm_RAM']
+    g_type=request.vars['graphType']
+    m_type=request.vars['mtype']
+    result=[]
+    logger.debug(vmid)
+    logger.error(graph_period)
+    logger.error(vm_ram)  
+    logger.error(g_type)
+    gtype=get_graph_type(g_type)
+    logger.error(gtype)
+    logger.error("welcome")
+    limit=get_limit_value(graph_period)
+    logger.debug(limit)
+    try:
+        logger.debug(len(vmid))
+        if (len(vmid)==0):
+            ret['data']=[]
+            json_str = json.dumps(ret,ensure_ascii=False)
+            return json_str
+        conn = Baadal.Connection(_authurl, _tenant, session.username,session.password)
+        if (g_type=="ram") or (g_type=="cpu"):
+            vm_info = conn.fetch_sample_data(vmid,gtype,limit)
+           
+            graph_data=fetch_graph_data(vm_info)
+            
+            result=graph_data
+           
+        if (g_type=="disk") or (g_type=="nw"):
+            for graph_type in gtype:
+                vm_info = conn.fetch_sample_data(vmid,graph_type,limit)
+                graph_data=[]
+                graph_data=fetch_graph_data(vm_info)
+                result.append(graph_data)
+        title=check_graph_type(g_type,vm_ram,m_type)
+        host_cpu=request.vars['host_CPU']
+        ret['valueformat']=check_graph_period(graph_period)
+        ret['y_title']=title['y_title']
+        ret['g_title']=title['g_title']
+        mem=float(vm_ram)/(1024) if int(vm_ram)>1024 else vm_ram
+        ret['data']=result
+        ret['mem']=mem
+        if g_type=='disk':
+            ret['legend_read']='disk read'
+            ret['legend_write']='disk write'
+        elif g_type=='nw':
+            ret['legend_read']='network read'
+            ret['legend_write']='network write'
+        elif g_type=='cpu':
+            ret['name']='cpu'
+        else:
+            ret['name']='mem'
+        json_str = json.dumps(ret,ensure_ascii=False)
+	logger.error(json_str)
+        return json_str
+    except Exception as e:
+        logger.exception(e.message() or str(e.__class__))
+
+
+@auth.requires_login()
+def show_vm_performance():
+    try:
+        logger.exception("Entered Performance!!!!!!!!!!!!!")
+        logger.exception(session.username)
+	logger.exception(session.password)
+	logger.exception(_authurl)
+	logger.exception(_tenant)
+        vmid=request.vars['vmid']
+	logger.error(vmid)
+        logger.error(session.username)
+        conn = Baadal.Connection(_authurl, _tenant, session.username,session.password)
+        logger.exception(conn)
+        vm_info = conn.fetch_sample_data(str(vmid),"cpu_util",1)
+	logger.exception(vm_info)
+        if (vm_info == None or len(vm_info)==0):
+                 return dict(m_type="vm",vm_ram="",vm_cpu="",vm_identity="",vm_id = "")
+        logger.debug("mirror") 
+        for data in vm_info:
+            logger.exception("inside for loop")
+            info={}
+	    logger.debug(data)
+            for key,value in data.__dict__.items():
+                if key=='metadata':
+                    logger.debug(value)
+                    ram=value['flavor.ram']
+                    cpu=value['vcpus']
+                logger.debug("mini baadal")
+        return dict(m_type="vm",vm_ram=ram,vm_cpu=cpu,vm_identity=vmid,vm_id = vmid)
+    except Exception as e:
+        logger.exception(e.message() or str(e.__class__))
+    
+    finally:
+        try:
+            conn.close()
+        except NameError:
+            pass
+
+def vpn():
+   return dict()
+
+def vpn_setup_guide():
+   return dict()
+
+@auth.requires_login()
+def request_user_vpn():
+    var = request_vpn()
+    logger.debug("request user vpn var value "+str(var))
+    #if var== 1 :
+        #session.flash = T("Download your client.conf ca.crt baadalVPN.crt  baadalVPN.key files from the link given below  ")
+
+    #elif var == 2 :
+        #session.flash =T("Unable to process  your Request. Please contact Baadal Team")
+    #else :
+        #session.flash = "You already have VPN files  you can  download it from  Download option "
+    redirect(URL(r = request, c = 'user', f = 'vpn'))
+
+
+def download_vpn_keys():
+    user_info=get_vpn_user_details()
+    logger.debug(type(user_info))
+    user_name=user_info['username']
+    logger.debug(user_name+"\n")
+    file_name = user_name+'_baadalVPN.tar'
+    file_path = '/home/www-data/web2py/application/baadal/private/VPN/' + str(file_name)
+    logger.debug(file_path+"\n")
+
+    #import contenttype as c
+    response.headers['Content-Type'] = "application/zip"
+    #response.headers['ContentType'] ="application/octet-stream";
+    response.headers['Content-Disposition']="attachment; filename=" +file_name
+    logger.debug("******************************************************")
+    try:
+        return response.stream(get_file_stream(file_path),chunk_size=4096)
+    except Exception:
+        #session.flash = "Unable to download your VPN files. Please Register first if you have not registered yet."
+        logger.debug("Unable to download your VPN files. Please Register first if you have not registered yet.")
+
+    redirect(URL(r = request, c = 'user', f = 'vpn'))
