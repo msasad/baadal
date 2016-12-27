@@ -18,7 +18,7 @@
                 <th>State</th>
                 <th>IP Address(es)</th>
                 <th>Config</th>
-                <th>Owner</th>
+                <th>Users</th>
               </tr>
               </thead>
               <tbody>
@@ -131,7 +131,7 @@
               <form class="form-inline">
                 <div class="form-group">
                   <label for="collaborators" class="control-label">Collaborators</label>
-                  <input class="form-control" name="collaborators" id="collaborators" value="{{metadata.collaborators}}" />
+                  <input class="form-control" name="collaborators" id="collaborators" value={{metadata.collaborators}} />
                   <button class="btn btn-primary btn-sm" id="update-collaborators">
                     Update Collaborators
                   </button>

@@ -3,7 +3,11 @@ from gluon.contrib.login_methods.ldap_auth import ldap_auth
 import ConfigParser
 from gluon import current
 from gluon.scheduler import Scheduler
-
+from gluon.contrib.login_methods.oauth20_account import OAuthAccount
+import json,simplejson,requests
+ADMIN = 'admin'
+current.ADMIN = ADMIN
+#added to make auth and db objects available in modules
 REQUEST_STATUS_POSTED = 0
 REQUEST_STATUS_FACULTY_APPROVED = 1
 REQUEST_STATUS_PROCESSING = 3
@@ -22,7 +26,47 @@ dbname = config.get('database', 'database')
 
 db = DAL('mysql://' + username + ':' + password + '@' + dbhost + '/' + dbname,
 #         migrate=True)
-         fake_migrate_all=True)
+         fake_migrate_all=False)
+auth = Auth(db)
+current.db = db
+## configure custom auth tables
+auth.settings.table_user_name = 'auth_user'
+auth.settings.table_group_name = 'auth_group'
+auth.settings.table_membership_name = 'auth_membership'
+db.define_table(
+            auth.settings.table_user_name,
+            Field('first_name', length = 128, default = ''),
+            Field('last_name', length = 128, default = ''),
+            Field('email', length = 128, unique = True), # required
+            Field('username', length = 128, default = '', unique = True),
+            Field('password', 'password', length = 512, readable = False, label = 'Password'), # required
+            Field('registration_key', length = 512, writable = False, readable = False, default = ''), # required
+            Field('reset_password_key', length = 512, writable = False, readable = False, default = ''), # required
+            Field('user_id', length = 512, default = ''),
+            Field('registration_id', length = 512, writable = False, readable = False, default = ''),
+            format = '%(first_name)s %(last_name)s') # required
+
+custom_auth_table = db[auth.settings.table_user_name]
+custom_auth_table.first_name.requires =   IS_NOT_EMPTY(error_message = auth.messages.is_empty)
+custom_auth_table.last_name.requires =   IS_NOT_EMPTY(error_message = auth.messages.is_empty)
+custom_auth_table.password.requires =   IS_NOT_EMPTY(error_message = auth.messages.is_empty)
+custom_auth_table.email.requires = [
+          IS_EMAIL(error_message = auth.messages.invalid_email),
+          IS_NOT_IN_DB(db, custom_auth_table.email)]
+auth.settings.table_user = custom_auth_table
+
+auth.settings.table_group = db.define_table(
+            auth.settings.table_group_name,
+            Field('role', 'string', length = 100, notnull = True, unique = True),
+            Field('description', length = 255, default = ''),
+            format = '%(role)s')
+
+auth.settings.table_membership = db.define_table(
+            auth.settings.table_membership_name,
+            Field('user_id', db.auth_user),
+            Field('group_id', db.auth_group),
+            primarykey = ['user_id', 'group_id'])
+
 db.define_table('vm_requests',
                 Field('id', 'integer'),
                 Field('vm_name', 'string'),
@@ -99,14 +143,58 @@ db.define_table('vm_activity_log',
                 Field('remarks', 'string')
                 )
 
-auth = Auth(db)
+#auth = Auth(db)
 auth.define_tables(username=True)
-auth.settings.login_methods.append(ldap_auth(mode='custom',
-                                   username_attrib='uid',
-                                   custom_scope='subtree',
-                                   server=ldap_host, base_dn=ldap_dn))
+#auth.settings.login_methods.append(ldap_auth(mode='custom',
+#                                   username_attrib='uid',
+#                                   custom_scope='subtree',
+#                                   server=ldap_host, base_dn=ldap_dn))
+############for oauth  ##############
+from gluon.http import HTTP
+cl_id=config.get("OAUTH_CONF","client_id")
+cl_secret=config.get("OAUTH_CONF","client_secret")
+#Derived class from base class OAuthAccount    
+class IITD_Oauth(OAuthAccount):
+     auth_url= config.get("OAUTH_CONF","auth_url")
+     token_url=config.get("OAUTH_CONF","token_url")
+     def __init__(self,g=globals()):
+         OAuthAccount.__init__(self,g,client_id=cl_id,client_secret=cl_secret,auth_url=self.auth_url,token_url=self.token_url,state='xyz')
+     def get_user(self):
+             token=self.accessToken()
+             if not token:
+                return None
+             uri=config.get("OAUTH_CONF","resource_url")
+             r=requests.get(uri,params={'access_token':token})
+             userdata=r.json()
+             logger.debug("userdata is !!!!!!!!!!!!!! : " + str(userdata))
+             user_info={}
+             if ' ' in userdata['name']:
+                #user_info['first_name'],user_info['middle_name'],user_info['last_name']=userdata['name'].split()
+                data=userdata['name'].split()
+                if len(data) > 2:
+                    user_info['first_name']=data[0]
+                    user_info['middle_name']=data[1]
+                    user_info['last_name']=data[2]
+                else:
+                    user_info['first_name']=data[0]
+                    user_info['last_name']=data[1]
+             else:
+                user_info['first_name']=userdata['name']
+                user_info['last_name']=' '
+             hd=userdata['hd']
+             user_info['user_name'] = userdata['user_id']
+             user_info['email'] = userdata['email']
+             # If user has super admin rights; it is added to separate organization
+             #if current.ADMIN in user_info['roles']:
+             #   user_info['organisation'] = 'ADMIN'
+             #else:
+             #   user_info['organisation'] = 'IITD'
+             # create_or_update_user(user_info, False)
+             return dict(first_name=user_info['first_name'],last_name=user_info['last_name'],email=userdata['email'],username = userdata['user_id'] )
+
+oauth_login = IITD_Oauth(globals())
 auth.settings.create_user_groups = False
-auth.settings.login_onaccept = [login_callback]
+#auth.settings.login_onaccept = [login_callback]
 
 auth.settings.remember_me_form = False
 auth.settings.logout_next = '/baadal/default/user/login'

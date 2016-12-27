@@ -46,6 +46,16 @@ class BaadalMailer(object):
                 " \nUsername:root/baadalservervm/baadaldesktopvm\n"
                 " Password:baadal\n\n")
 
+        class VMCollaborator(object):
+           subject = 'You are added as Collaborator'
+           mailbody = "Dear {0[collaborator]},\n\n {0[requester]} added you as a" \
+               " collaborator for the vm \"{0[vm_name]}\".\n To access your VM from within" \
+               " the web browser, login to Baadal using your credentials\n and click" \
+               " on the open console icon, which looks like >_\n" \
+               " Default credentials for VM is as follows: \n" \
+               " Username:root/baadalservervm/baadaldesktopvm\n" \
+               " Password:baadal\n\n"
+
         class TaskComplete(object):
             subject = '{0[taskType]} task successful'
             mailbody = "Dear {0[userName]},\n\n The '{0[taskType]}' task for"\

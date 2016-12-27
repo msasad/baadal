@@ -1,8 +1,22 @@
+#import ConfigParser
+#config = ConfigParser.ConfigParser()
+#config.read('/etc/baadal/baadal.conf')
+
+if auth.is_logged_in():
+   new_db=mdb.connect("127.0.0.1","root","baadal","baadal")
+   n_db=new_db.cursor()
+   n_db.execute("select user_id,password from auth_user where username= %s",session.auth.user.username)
+   data=n_db.fetchall()
+   session.username=data[0][0]
+   session.password=data[0][1]
+   n_db.close()
+   new_db.close()
+
+
 @auth.requires_login()
 def configs():
     try:
-        conn = Baadal.Connection(_authurl, _tenant, session.username,
-                                 session.password)
+        conn = Baadal.Connection(_authurl, _tenant, "e7221625e0c04660b22179605e8f6c52","baadal")# session.username,session.password)
         if conn:
             templates = conn.templates()
             values = []
@@ -35,8 +49,7 @@ def templates():
         os-edition, (desktop/server)
     """
     try:
-        conn = Baadal.Connection(_authurl, _tenant, session.username,
-                                 session.password)
+        conn = Baadal.Connection(_authurl, _tenant,"e7221625e0c04660b22179605e8f6c52","baadal")# session.username,session.password)
         if conn:
             images = conn.images(image_type='template')
             values = []
@@ -59,8 +72,7 @@ def templates():
 @auth.requires_login()
 def networks():
     try:
-        conn = Baadal.Connection(_authurl, _tenant, session.username,
-                                 session.password)
+        conn = Baadal.Connection(_authurl, _tenant,"e7221625e0c04660b22179605e8f6c52","baadal")# session.username,session.password)
         if conn:
             network_list = conn.networks()
             # logger.debug(network_list)

@@ -102,11 +102,12 @@
             <li><a href="/baadal/user/">Home</a></li>
             <li><a href="/baadal/user/form/">Request VM</a></li>
             <li><a href="/baadal/user/my_requests_list/">My Requests</a></li>
+            <li><a href="/baadal/user/vpn/">VPN</a></li>
             <!-- <li><a href="#">My Tasks</a></li>
             <li><a href="#">Mail Admin</a></li> -->
           </ul>
         </li>
-        <?if (ldap.user_is_faculty(session.username)):?>
+        <?if (ldap.user_is_faculty(session.auth.user.username)):?>
         <li>
           <a href="javascript:;" data-toggle="collapse" data-target="#faculty-menu">
             <i class="fa fa-fw fa-arrows-v"></i> Faculty Menu <i class="fa fa-fw fa-caret-down"></i>
@@ -132,12 +133,13 @@
           <ul id="admin-menu" class="collapse">
             <li><a href="/baadal/admin/">All VMs</a></li>
             <li><a href="/baadal/admin/pending_requests.html">VM Requests</a></li>
+            <li><a href="/baadal/admin/pending_tasks.html">Tasks</a></li>
             <li><a href="/baadal/admin/resize_requests.html">VM Resize Requests</a></li>
             <li><a href="/baadal/admin/clone_requests.html">VM Clone Requests</a></li>
-            <li><a href="/baadal/admin/account_requests.html">Account Requests</a></li>
+            <!--<li><a href="/baadal/admin/account_requests.html">Account Requests</a></li> -->
             <li><a href="/baadal/admin/disk_requests.html">Disk Requests</a></li>
             <li><a href="/baadal/admin/public_ip_requests.html">Public IP  Request</a></li>
-            <li><a href="#">VM Utilization</a></li>
+            <!-- <li><a href="#">VM Utilization</a></li> -->
             <!-- <li><a href="#">Tasks</a></li>
             <li><a href="#">Sanity Check</a></li> -->
             <li><a href="/baadal/admin/hosts.html">Compute Hosts</a></li>

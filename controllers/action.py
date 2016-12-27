@@ -1,8 +1,22 @@
 import gluon
 import time
+import datetime
 from base64 import b64encode
 from json import dumps
-
+import json
+#import ConfigParser
+#config = ConfigParser.ConfigParser()
+#config.read('/etc/baadal/baadal.conf')
+#session.password = config.get('user_info', 'session.password')
+if auth.is_logged_in():
+   new_db=mdb.connect("127.0.0.1","root","baadal","baadal")
+   n_db=new_db.cursor()
+   n_db.execute("select user_id,password from auth_user where username= %s",session.auth.user.username)
+   data=n_db.fetchall()
+   session.username=data[0][0]
+   session.password=data[0][1]
+   n_db.close()
+   new_db.close()
 
 '''def __do(action, vmid):
     try:
@@ -66,7 +80,22 @@ from json import dumps
 
 
 def __start(vm):
-    vm.start()
+    try:
+        req_time=str((datetime.datetime.now()))
+        vm = conn.find_baadal_vm(id=request.vars.vmid)
+        vm_name=vm.name 
+        msg=vm.start()
+        finish_time=str((datetime.datetime.now()))
+        if msg==None:
+              pvars = finish_time
+        else:
+              pvars = finish_time + "," + str(msg)
+        db.vm_activity_log.insert(vmid=vm_name,
+                                  user=session.auth.user.username,task='vm_start',time=req_time,
+                                  remarks=pvars )
+        db.commit()
+    except Exception as e:
+        logger.exception(e.message or str(e.__class__))
 
 
 def __start_resume(vm):
@@ -78,7 +107,22 @@ def __start_resume(vm):
 
 
 def __shutdown(vm):
-    vm.shutdown()
+    try:
+        req_time=str((datetime.datetime.now()))
+        vm = conn.find_baadal_vm(id=request.vars.vmid)
+        vm_name=vm.name
+        msg=vm.shutdown()
+        finish_time=str((datetime.datetime.now()))
+        if msg==None:
+              pvars = finish_time
+        else:
+              pvars = finish_time + "," + str(msg)
+        db.vm_activity_log.insert(vmid=vm_name,
+                                  user=session.auth.user.username,task='vm_shutdown',time=req_time,
+                                  remarks=pvars )
+        db.commit()
+    except Exception as e:
+        logger.exception(e.message or str(e.__class__))
 
 
 def __pause(vm):
@@ -90,11 +134,26 @@ def __reboot(vm):
 
 
 def __delete(vm):
-    vm.delete()
-
+    try:
+        req_time=str((datetime.datetime.now()))
+        vm = conn.find_baadal_vm(id=request.vars.vmid)
+        vm_name=vm.name
+        msg=vm.delete()
+        finish_time=str((datetime.datetime.now()))
+        if msg==None:
+              pvars = finish_time
+        else:
+              pvars = finish_time + "," + str(msg)
+        db.vm_activity_log.insert(vmid=vm_name,
+                                  user=session.auth.user.username,task='vm_delete',time=req_time,
+                                  remarks=pvars )
+        db.commit()
+    except Exception as e:
+        logger.exception(e.message or str(e.__class__))
 
 def __resume(vm):
     vm.resume()
+
 
 
 def __snapshot(vmid):
@@ -104,10 +163,9 @@ def __snapshot(vmid):
 
 
 def __clone_vm(vmid):
-    import time
     db.clone_requests.insert(vm_id=request.vars.vmid,
                              request_time=int(time.time()),
-                             user=session.username,
+                             user=session.auth.user.username,
                              full_clone=1,
                              status=0
                              )
@@ -116,6 +174,7 @@ def __clone_vm(vmid):
 
 def __power_off(vm):
     vm.shutdown(force=True)
+    logger.debug("inside power_off")
 
 
 def __restore_snapshot(vmid):
@@ -144,6 +203,8 @@ def __get_console_url(vm):
 
 
 def __migrate(vmid):
+    auth = b64encode(dumps(dict(u=session.username, p=session.password)))
+    logger.debug("inside migrate  ###### vmid is " + str(vmid) + " !!!! auth is " + str(auth))
     pvars = dict(auth=auth, vmid=vmid)
     scheduler.queue_task(task_migrate_vm, timeout=600, pvars=pvars)
 
@@ -193,6 +254,10 @@ def index():
             message =  __attach_public_ip(vmid)
         elif action == 'update-collaborators':
             message =  __update_collaborators(vm)
+	elif action == 'show-vm-performance':
+	    logger.error("entered inside")
+            message = __graph(vmid)
+
         message = message or action.capitalize() + ' request has been accepted.'
         return jsonify(message=message)
     except HTTP as e:
@@ -203,9 +268,12 @@ def index():
 
 def __update_collaborators(vm):
     if collaborators_is_valid(request.vars.collaborators):
-        collaborators = request.vars.collaborators.strip().split(',')
-        collaborators = ','.join([collaborator.strip() for collaborator \
-                in collaborators])
+        collaborators=request.vars.collaborators
+        if len(collaborators)>0 :
+            temp=""
+            for collaborator in collaborators.split(','):
+                temp=temp+collaborator.strip()+","
+            collaborators=temp.rstrip(',')
         vm.update(collaborators=collaborators)
         return 'VM collaborators has been updated successfully'
     else:
@@ -214,7 +282,7 @@ def __update_collaborators(vm):
 
 def __add_virtual_disk(vmid, size):
     try:
-        db.virtual_disk_requests.insert(user=session.username, vmid=vmid,
+        db.virtual_disk_requests.insert(user=session.auth.user.username, vmid=vmid,
                                         disk_size=int(size), status=0)
     except Exception as e:
         logger.exception(e.message or str(e.__class__))
@@ -235,7 +303,7 @@ def __attach_public_ip(vmid):
     try:
        if __check_public_ip_entry(vmid):
             db.floating_ip_requests.insert(vmid=request.vars.vmid,
-                                            user=session.username,
+                                            user=session.auth.user.username,
                                             status=0
                                            )
             db.commit()
@@ -274,7 +342,7 @@ def handle_disk_request():
                        action=request.vars.action)
 
 
-@auth.requires(user_is_project_admin or ldap.user_is_faculty(session.username))
+@auth.requires(user_is_project_admin or ldap.user_is_faculty(session.auth.user.username))
 def handle_request():
     action = request.vars.action
     if action == 'approve':
@@ -462,10 +530,10 @@ def __attach_vm_public_ip():
          vm.attach_floating_ip()
          req.update_record(status=1)
          context = Storage()
-         context.username = session.username
+         context.username = session.auth.user.username
          context.vm_name = vm_name
          context.mail_support = mail_support
-         user_info = ldap.fetch_user_info(session.username)
+         user_info = ldap.fetch_user_info(session.auth.user.username)
          context.user_email = user_info['user_email']
          context.gateway_server = gateway_server
          context.req_time = req.request_time
@@ -483,6 +551,23 @@ def __attach_vm_public_ip():
             conn.close()
          except:
             pass
+
+
+
+def debug_info_message():
+    try:
+        row = db(db.scheduler_run.task_id == request.vars.id).select()[0]
+        logger.debug(row)
+        msg = row.traceback
+        logger.debug(msg)
+        return jsonify(message = msg)
+    except Exception as e:
+        message = e.message or str(e.__class__)
+        logger.error(message)
+        return jsonify(status='fail', message=message)
+    finally:
+            pass
+
 
 @auth.requires(user_is_project_admin)
 def handle_clone_request():

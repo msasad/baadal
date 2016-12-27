@@ -5,37 +5,47 @@ from gluon.tools import Storage
 @auth.requires_login()
 def new_vm():
     request_time = time.time()
+    logger.debug("request var values : " + str(request.vars))
     fields = validate_vm_request_form(request.vars)
+    logger.debug("field value is : " + str(fields))
     approver_mail_required = False
     mail2 = True
     if len(fields):
         raise HTTP(400,body=jsonify(status='fail', fields=fields))
     try:
-        if (ldap.user_is_faculty(session.username)) or \
+        logger.debug("inside post request (session.auth.user.username is : " + str(session.auth.user.username))
+        if (ldap.user_is_faculty(session.auth.user.username)) or \
                 (user_is_project_admin):
-            owner_id = session.username
+            owner_id = session.auth.user.username
             vm_state = 1
         else:
             owner_id = request.vars.faculty
             approver_mail_required = True
             vm_state = 0
-
+        collaborators=request.vars.collaborators
+        if len(collaborators)>0 :
+            temp=""
+            for collaborator in collaborators.split(','):
+                temp=temp+collaborator.strip()+","
+            collaborators=temp.rstrip(',')
         public_ip_required = 1 if request.vars.public_ip == 'yes' else 0
         db.vm_requests.insert(vm_name=request.vars.vm_name,
                               flavor=request.vars.config,
                               sec_domain=request.vars.sec_domain,
                               image=request.vars.template,
                               owner=owner_id,
-                              requester=session.username,
+                              requester=session.auth.user.username,
                               purpose=request.vars.purpose,
                               public_ip_required=public_ip_required,
                               extra_storage=request.vars.storage,
-                              collaborators=request.vars.collaborators,
+                              collaborators=collaborators,
                               request_time=request_time,
                               state=vm_state
                               )
         context = Storage()
-        user_info = ldap.fetch_user_info(session.username)
+        logger.debug("before fetch user info ")
+        user_info = ldap.fetch_user_info(session.auth.user.username)
+        logger.debug("user info in post request function is : " + str(user_info))
         context.username = user_info['user_name']
         user_email = user_info['user_email']
         context.vm_name = request.vars.vm_name
@@ -81,7 +91,7 @@ def request_resize():
         db.resize_requests.insert(vm_id=request.vars.vmid,
                                   vmname=request.vars.name,
                                   new_flavor=request.vars.new_flavor,
-                                  user=session.username,
+                                  user=session.auth.user.username,
                                   status=0,
                                   request_time=int(time.time())
                                   )
@@ -125,7 +135,7 @@ def request_clone():
         db.clone_requests.insert(
             vm_id=request.vars.vmid,
             request_time=int(time.time()),
-            user=session.username,
+            user=session.auth.user.username,
             full_clone=1,
             status=0
         )

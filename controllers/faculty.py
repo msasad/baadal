@@ -12,7 +12,7 @@ def pending_requests():
         return dict()
     elif request.extension == 'json':
         rows = db((db.vm_requests.state == 0) &
-                  (db.vm_requests.owner == session.username)).select()
+                  (db.vm_requests.owner == session.auth.user.username)).select()
         l = rows.as_list()
         STR = 'public_ip_required'
         for i in l:

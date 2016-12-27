@@ -1,0 +1,281 @@
+
+<?extend 'blank-page.html' ?>
+ <? include 'default-scripts.html' ?>
+
+<script src="/baadal/static/js/jquery.canvasjs.min.js"></script>
+
+<style>
+
+#tabs-task { 
+    background: transparent; 
+    border: none; 
+   
+} 
+#tabs-task .ui-widget-header { 
+    background: transparent; 
+    border: none; 
+    border-bottom: 1px solid #c0c0c0; 
+    
+} 
+#tabs-task .nav { 
+    
+    display:table-row;
+} 
+#tabs-task .nav li{ 
+    display: table-cell;
+   
+} 
+#tabs-task .nav .active { 
+    background: transparent url(../images/uiTabsArrow.png) no-repeat bottom center; 
+    border: none; 
+} 
+#tabs-task .nav .default a { 
+    color: #c0c0c0; 
+    display: table-cell;
+} 
+#tabs-task .nav .active a { 
+    color: white;
+    background: #333333;
+    font-weight:bold;
+}
+    
+
+</style>
+
+
+  <script type="text/javascript">
+
+window.onload = function () {
+	var chart = new CanvasJS.Chart("target", { 
+    
+      zoomEnabled: true,
+      title:{
+        text: "Memory Performance", fontSize: 24
+      },
+
+      height: 460,
+      width: 620,
+      axisX:{
+        title: "time",
+        interval:6, 
+        tickColor: "#0057af",
+        tickLength: 5,
+        tickThickness: 2 ,
+        valueFormatString: "DDMMM ", 
+        labelAngle: -50,
+        titleFontSize: 20,
+        labelFontSize: 16,
+        labelFontColor: "black",
+	//labelFontColor:'#0057af',
+	titleFontColor :'#0057af'
+       
+	
+      },
+
+      toolTip: {
+        shared: true
+      },
+      axisY:{
+	
+        title: "mem(MB)",
+        fontSize: 16,
+        tickColor: "#0057af",
+        tickLength: 10,
+        tickThickness: 2,
+        titleFontSize: 20,
+        labelFontSize: 16,
+        labelFontColor: "black"
+	//labelFontColor:'#0057af'
+	
+      },
+	legend:{
+        fontSize: 15,
+             
+      },
+
+      data: [
+      {        
+      dataPoints: [],
+	type: "line"
+      },{}]
+      
+    
+});
+
+    chart.render();	
+    
+    function update_graph()
+{
+   //graph_type = jQuery("#tabs-task .nav .active a").attr("href").replace('#','');
+   a= location.href
+   graph_type = a.substring(a.indexOf("#") + 1);
+   if (graph_type.length>15)
+      graph_type = 'ram'
+   period = $('input[name=graph-period-radio]:radio:checked').val();
+    vm_identity = "<?=vm_identity?>";
+   vm_ram = "<?=vm_ram?>";
+   m_type = "<?=m_type?>";
+   vm_cpu = "<?=vm_cpu?>";
+  
+   jQuery.ajax({type:"POST",url:"create_graph", data:{graphType:graph_type, vmIdentity:vm_identity,vm_RAM:vm_ram,host_CPU:vm_cpu,
+   graphPeriod:period,mtype:m_type},dataType: "json", success:function(ret) {
+     
+	if (graph_type=='cpu' | graph_type=='ram'){
+	    var length=ret['data'].length;}
+	else{var length=ret['data'][0].length;}
+       
+	
+        if (length==0){
+	    alert("GRAPH IS UNAVAILABLE!!!!!!"); }
+	    //$("#target").html("<b>GRAPH IS UNAVAILABLE!!!!!!</b>");}
+        else
+	   { 
+	    chart.options.data[0].dataPoints=[];
+	    chart.options.data[1].dataPoints=[];
+	    chart.options.data[0].showInLegend=false;
+	   chart.options.data[1].showInLegend=false;
+	   var info = new Array(length); 
+	    var info1 = new Array(length); 
+
+	    var data2=ret['data'];
+	    
+            for (i =length-1; i >=0; i--) {
+
+                if (graph_type=='cpu' | graph_type=='ram'){
+                    var data1={};
+                    data1['y']=data2[i].y;
+	            data1['x']=new Date(data2[i].x);
+                    if (data1['y']>ret['mem']){
+                        data1['markerColor']='red';
+                        }
+		   
+	            info[i]=data1;
+		    }
+		if (graph_type=='disk' |  graph_type=='nw'){
+		    
+                    var data4={};
+		    var data3={};
+                    data4['y']=data2[0][i].y;
+	            data4['x']=new Date(data2[0][i].x);
+		    data3['y']=data2[1][i].y;
+	            data3['x']=new Date(data2[1][i].x);
+		    
+	            info[i]=data4;
+		    info1[i]=data3;
+		    }
+		
+
+
+
+	        }
+	    chart.options.axisX.valueFormatString=ret['valueformat'];
+            chart.options.axisY.title=ret['y_title'];
+	    chart.options.title.fontColor='#0057af';
+	    chart.options.axisY.titleFontColor='#0057af';
+	    chart.options.title.text=ret['g_title'];
+            if (graph_type=='cpu' | graph_type=='ram'){
+	        chart.options.data[0].dataPoints=info;
+		chart.options.data[0].name=ret['name'];
+	            }
+        
+	    if (graph_type=='disk' | graph_type=='nw'){
+	        chart.options.data[0].dataPoints=info;
+		chart.options.data[0].legendText=ret['legend_write'];
+		chart.options.data[0].name=ret['legend_write'];
+		chart.options.data[1].dataPoints=info1;
+		chart.options.data[0].showInLegend='true';
+		chart.options.data[1].showInLegend='true';
+		chart.options.data[1].type='line';
+		chart.options.data[1].name=ret['legend_read'];
+		chart.options.data[1].legendText=ret['legend_read'];
+       
+	            }
+        
+	  
+	    chart.render();
+		}
+		
+	
+   }});
+}
+
+function update_tab()
+{
+   $('.nav a').filter(function(){return this.href==location.href}).parent().addClass('active').siblings().removeClass('active')
+}
+
+jQuery(document).ready( function(){
+    update_graph();
+    $('input[name=graph-period-radio]:radio').click( function() {
+        update_graph();
+        });
+    $('#tabs-task ul li').click( function() {
+        $( 'ul.nav li' ).on( 'click',function(e) {
+            //e.preventDefault();
+            //$("#nav li a.active").removeClass("active"); //Remove any "active" class  
+            //$(this).addClass("active"); //Add "active" class to selected tab  
+            //$(activeTab).show();
+            //$('.nav a').filter(function(){return this.href==location.href}).parent().addClass('active').siblings().removeClass('active')
+	    setTimeout(update_tab,10);
+            //$('.nav a').filter(function(){return this.href==location.href})
+});
+        setTimeout(update_graph,10);
+        });
+    $('#refresh').click( function() {
+       update_graph();
+        });
+});
+
+
+
+
+};
+
+
+    
+    
+    
+
+
+
+ </script>
+<div id="tabs-task">
+<ul class='nav'>
+   <li class='active'><a  href="#ram">Memory</a></li>
+    <li><a href="#cpu">CPU</a></li>
+    <li><a href="#nw">Network</a></li>
+    <li ><a href="#disk">Disk</a></li>
+    </ul>
+
+<table>
+<tr>
+<td>
+<div id="graph-type">
+<input type="radio" value="hour" name="graph-period-radio" checked="checked">&nbsp;Hourly<br/><br/>
+<input type="radio" value="day" name="graph-period-radio">&nbsp;Daily<br/><br/>
+<input type="radio" value="week" name="graph-period-radio">&nbsp;Weekly<br/><br/>
+<input type="radio" value="month" name="graph-period-radio">&nbsp;Monthly<br/><br/>
+<input type="radio" value="year" name="graph-period-radio">&nbsp;Yearly<br/><br/>
+</div>
+</td>
+<td>
+<table>
+<tr>
+<td id="target" ></td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<input type="button" id="refresh" name="refresh" value="Refresh Graph">
+</td>
+</tr>
+</table>
+<div id="ram"></div>
+<div id="cpu"></div>
+<div id="nw"></div>
+<div id="disk"></div>
+</div>
+
+ <? include 'wrap.html' ?>

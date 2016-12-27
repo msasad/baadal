@@ -44,6 +44,29 @@ def task_create_vm(reqid, auth):
                 logger.info('sending mail')
                 mailer.send(mailer.MailTypes.VMCreated, context.user_email,
                             context)
+                collaborator_list=collaborators.strip()
+                owner = context.username
+                while len(collaborator_list) > 0:
+                    requester=""
+                    if "," in collaborator_list:
+                        start=0
+                        end = collaborator_list.find(',', start)
+                        requester = collaborator_list[start:end]
+                        collaborator_list = collaborator_list[len(requester)+1:].strip()
+                    else :
+                        requester = collaborator_list
+                        collaborator_list = collaborator_list[len(requester)+1:].strip()
+                    requester = requester.strip()
+                    context = Storage()
+                    collaborator_info = ldap.fetch_user_info(requester)
+                    context.collaborator = collaborator_info['user_name']
+                    context.user_email = collaborator_info['user_email']
+                    context.vm_name = name
+                    context.requester = owner
+                    context.mail_support = mail_support
+                    context.gateway_server = gateway_server
+                    mailer.send(mailer.MailTypes.VMCollaborator, context.user_email,
+                            context)
                 logger.info('mail sent')
                 if pub_ip == 1 or vdisk:
                     if pub_ip:
@@ -73,10 +96,12 @@ def task_create_vm(reqid, auth):
 def task_migrate_vm(auth, vmid, live=False, destination=None):
     auth = Storage(loads(b64decode(auth)))
     conn = Baadal.Connection(_authurl, _tenant, auth.u, auth.p)
-    if live:
-        pass
-    else:
-        pass
+    vm = conn.find_baadal_vm(id=vmid)
+    vm.migrate()
+    #if live:
+    #    pass
+    #else:
+    #    pass
 
 
 def task_snapshot_vm(auth, vmid):
